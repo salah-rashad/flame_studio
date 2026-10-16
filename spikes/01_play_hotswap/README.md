@@ -81,7 +81,8 @@ Then, with the driver still running:
    should update, from the IDE's reload.
 5. Back in the driver, type `s`, then `t`. `s` should rebuild the scene; `t` must log
    "scene unchanged". Without `--repoint-assets`, expect them to go wrong once VS Code has
-   reloaded (see "Asset shadowing" below); with it, they should stay correct.
+   attached and reloaded (see "Asset shadowing" below). With it, they should stay correct; the
+   first `s` after attaching logs one extra reload.
 6. Type `q`. VS Code's debug session should end with "Application finished" or similar.
 
 No VS Code? `flutter attach` exercises the same coexistence path from a second terminal:
@@ -101,7 +102,7 @@ Press `r` in that terminal for an IDE-style reload, then `s` in the driver.
 | `--ci` | off | Run checks (a)+(b), then quit with an exit code |
 | `--dds-port <n>` | 8181 | Fixed DDS port (the attach URL) |
 | `--no-disable-auth-codes` | off | Keep auth codes in the VM service URL, to test whether `--disable-service-auth-codes` is needed for a stable URL |
-| `--repoint-assets` | off | Before each reload, point the engine back at the driver's DevFS assets (`_flutter.setAssetBundlePath`). Workaround for asset shadowing by an attached IDE |
+| `--repoint-assets` | off | Before each reload, point the engine back at the driver's DevFS assets (`_flutter.setAssetBundlePath`); if that folder is gone, reload, re-point, evict the scene and reload again. Workaround for asset shadowing by an attached IDE |
 | `-v` | off | Pass `-v` to `flutter run` (shows DevFS sync and asset eviction) |
 | `--project <dir>` | `../game` | Game project to run |
 
@@ -114,7 +115,7 @@ Fill in as you go. Record the Flutter version and device for each row.
 | (a) scene edit rebuilds | ✅ ~58 ms | ✅ ~70 ms | ✅ ~250 ms | |
 | (b) Dart-only reload doesn't rebuild | ✅ | ✅ | ✅ | |
 | (c) second client (`flutter attach`) reloads while driver connected | ✅ | ✅ | | |
-| (c) driver scene edits still apply after the attached client reloads | ❌ / ✅ with `--repoint-assets` | ❌ (VS Code, manual) | | |
+| (c) driver scene edits still apply after an IDE attaches/reloads | ❌ / ✅ with `--repoint-assets` (one stale flash) | ❌ / ⚠️ with `--repoint-assets` before the fallback reload (VS Code, manual) — rerun | | |
 | (c) VS Code attach + breakpoint | | | | |
 | (c) VS Code reload while driver connected | | | | |
 | (c) needs `--disable-service-auth-codes`? | | | | |
@@ -136,14 +137,20 @@ the quickest loop for iterating on the spike.
   clients keep working. Each client has its own compiler, so both recompile the changed library;
   harmless. Stopping the game from the driver ends the attach session ("Lost connection to
   device").
-- **Asset shadowing (breaks Hot-swap while an IDE is attached).** Each flutter_tools client
-  syncs assets into its **own DevFS folder** and calls `_flutter.setAssetBundlePath` once, on
-  its first reload that syncs an asset. After the attached IDE's first such reload, the engine
-  serves `level1.scene.json` from the IDE's copy, which only updates when the IDE reloads. From
-  then on the driver's scene edits are ignored (logged "scene unchanged" though the file
-  changed), and the scene jumps to the latest version on the IDE's next reload. If reads
-  alternate between the two copies, a `t` (same bytes) can even log "REBUILT". Reproduced on
-  macOS with `flutter attach`; seen on the iOS simulator with VS Code.
+- **Asset shadowing (breaks Hot-swap while an IDE is attached).** Two flutter_tools behaviors
+  combine (reproduced on macOS with `flutter attach`; seen on the iOS simulator with VS Code):
+  1. The DevFS is named after the project folder (`game`). When the IDE attaches, its
+     flutter_tools finds that name taken and **destroys the driver's DevFS** before creating
+     its own (`DevFS: Creating failed. Destroying and trying again`). The engine is still
+     pointed at the deleted folder, so the driver's next scene edit reads the **original**
+     scene from the app bundle. The driver's next sync recreates its folder.
+  2. Each client calls `_flutter.setAssetBundlePath` only once, on its first reload that syncs
+     an asset. After the IDE's first such reload, the engine serves the scene from the IDE's
+     copy, which only updates when the IDE reloads. Driver edits are then ignored ("scene
+     unchanged" though the file changed) until the IDE reloads again.
+
+  Either way the game reads a different copy than the one the driver just wrote, and a `t`
+  (same bytes) can log "REBUILT" when the game switches back to the up-to-date copy.
 
   ```
   after s: disk=425f75a1  game: scene REBUILT #2 …->425f75a1
@@ -153,14 +160,21 @@ the quickest loop for iterating on the spike.
   after A (attach reload): game: scene REBUILT #3 …->34fe81c1   ← jumps to latest
   ```
 
-  **Workaround (`--repoint-assets`):** before each of its reloads, the driver calls
-  `_flutter.setAssetBundlePath` itself over the VM service, pointing the engine back at its own
-  `<DevFS base>/build/flutter_assets`. With it, every `s` rebuilt and every `t` stayed unchanged,
-  including after attach reloads. The first call fails harmlessly, before the driver's first
-  asset sync creates that folder. This uses a private (`_`-prefixed) engine extension, the
-  same one flutter_tools uses, so it may change between Flutter releases. **Decision needed for
-  §9.3 / ADR 0001:** adopt the re-point (the Studio needs a VM-service connection anyway), or
-  fall back to "the Studio stops reloading while an IDE is attached".
+  **Workaround (`--repoint-assets`):** before each reload, the driver calls
+  `_flutter.setAssetBundlePath` itself over the VM service, pointing the engine back at
+  `<its DevFS base>/build/flutter_assets`. If that fails because the folder was deleted (or
+  doesn't exist yet), it reloads (which recreates the folder), re-points, evicts the scene
+  (`ext.flutter.evict`) and reloads again. With it, the game matched the file on disk after
+  every step of `s ATTACH s t A s t A t s`. Remaining wart: on the first edit after an IDE
+  attaches, the game shows the original scene for one reload (~50 ms) and `onReloaded` fires
+  twice.
+
+  Caveats for the Studio: `_flutter.setAssetBundlePath` is a private engine extension (the
+  one flutter_tools uses), so it may change between Flutter releases. Running the game from a
+  folder whose name differs from the IDE's would avoid the DevFS name clash, but the Studio
+  runs from the user's project folder, so that isn't an option. **Decision needed for §9.3 /
+  ADR 0001:** adopt the re-point plus fallback reload (the Studio needs a VM-service
+  connection anyway), or fall back to "the Studio stops reloading while an IDE is attached".
 - Testing pitfall: if an edit writes the same bytes the file already has, the hash doesn't
   change and nothing rebuilds. That's correct behavior, but it looks like a failed Hot-swap.
   The driver now makes every edit unique.

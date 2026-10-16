@@ -212,8 +212,21 @@ Future<Object?> send(String method, Map<String, Object?> params) {
 }
 
 Future<bool> reload({bool full = false}) async {
+  if (!repointAssets) return _restart(full: full);
+  if (await repointAssetDirectory()) return _restart(full: full);
+  // Our DevFS folder is missing: either we haven't synced an asset yet, or an
+  // attached IDE recreated the DevFS and deleted it. This reload's sync
+  // recreates it, but the game reads stale assets during it. So point the
+  // engine at it afterwards, evict the scene and reload once more.
+  final ok = await _restart(full: full);
+  if (!await repointAssetDirectory()) return ok;
+  await _evict(scenePath);
+  say('reloading again with the engine pointed at our DevFS');
+  return _restart(full: full);
+}
+
+Future<bool> _restart({bool full = false}) async {
   final sw = Stopwatch()..start();
-  if (repointAssets) await repointAssetDirectory();
   try {
     final result = await send('app.restart', {
       'appId': appId,
@@ -269,25 +282,37 @@ Future<Map<String, dynamic>> _vmCall(
 /// attached IDE reloads, the engine serves assets from the IDE's copy and our
 /// edits are ignored. Point it back at our DevFS before every reload, the same
 /// way flutter_tools does (`_flutter.setAssetBundlePath`).
-Future<void> repointAssetDirectory() async {
+Future<bool> repointAssetDirectory() async {
   try {
-    final views = (await _vmCall('_flutter.listViews'))['views'] as List;
-    final view = views.first as Map<String, dynamic>;
-    final isolateId = (view['isolate'] as Map?)?['id'];
+    final view = await _firstView();
     final assetDir = Uri.parse(devFsBaseUri!)
         .resolve('build/flutter_assets')
         .toFilePath();
     await _vmCall('_flutter.setAssetBundlePath', {
-      'isolateId': ?isolateId,
+      'isolateId': ?(view['isolate'] as Map?)?['id'],
       'viewId': view['id'],
       'assetDirectory': assetDir,
     });
     say('re-pointed engine assets at $assetDir');
+    return true;
   } catch (e) {
-    // Expected before our first asset sync: our DevFS has no flutter_assets
-    // folder yet, and flutter_tools points the engine at it on that reload.
-    say('asset re-point skipped: ${e is Map ? e['message'] : e}');
+    // The engine can't open the folder (see reload()).
+    say('asset re-point failed: ${e is Map ? e['message'] : e}');
+    return false;
   }
+}
+
+Future<Map<String, dynamic>> _firstView() async {
+  final views = (await _vmCall('_flutter.listViews'))['views'] as List;
+  return views.first as Map<String, dynamic>;
+}
+
+Future<void> _evict(String asset) async {
+  final view = await _firstView();
+  await _vmCall('ext.flutter.evict', {
+    'isolateId': (view['isolate'] as Map)['id'],
+    'value': asset,
+  });
 }
 
 // ------------------------------------------------------------------- edits

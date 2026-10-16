@@ -49,6 +49,13 @@ iOS simulator, an Android emulator and a physical phone.
 dart run bin/studio_driver.dart -d <device-id> --auto
 ```
 
+For check (c), run it once without `--repoint-assets` (to see the problem) and once with it
+(to confirm the workaround):
+
+```bash
+dart run bin/studio_driver.dart -d <device-id> --auto --repoint-assets
+```
+
 Same checks, but the game keeps running afterwards. Type a command and press Enter:
 
 | Key | Action |
@@ -72,7 +79,9 @@ Then, with the driver still running:
 3. Set a breakpoint in `SpikeGame.update` (`lib/spike_game.dart`). It should hit; continue.
 4. Edit the `dartMarker` string in VS Code and save (or press the hot reload button). The HUD
    should update, from the IDE's reload.
-5. Back in the driver, type `s`. The scene should still rebuild through the driver's reload.
+5. Back in the driver, type `s`, then `t`. `s` should rebuild the scene; `t` must log
+   "scene unchanged". Without `--repoint-assets`, expect them to go wrong once VS Code has
+   reloaded (see "Asset shadowing" below); with it, they should stay correct.
 6. Type `q`. VS Code's debug session should end with "Application finished" or similar.
 
 No VS Code? `flutter attach` exercises the same coexistence path from a second terminal:
@@ -92,6 +101,7 @@ Press `r` in that terminal for an IDE-style reload, then `s` in the driver.
 | `--ci` | off | Run checks (a)+(b), then quit with an exit code |
 | `--dds-port <n>` | 8181 | Fixed DDS port (the attach URL) |
 | `--no-disable-auth-codes` | off | Keep auth codes in the VM service URL, to test whether `--disable-service-auth-codes` is needed for a stable URL |
+| `--repoint-assets` | off | Before each reload, point the engine back at the driver's DevFS assets (`_flutter.setAssetBundlePath`). Workaround for asset shadowing by an attached IDE |
 | `-v` | off | Pass `-v` to `flutter run` (shows DevFS sync and asset eviction) |
 | `--project <dir>` | `../game` | Game project to run |
 
@@ -103,7 +113,8 @@ Fill in as you go. Record the Flutter version and device for each row.
 |---|---|---|---|---|
 | (a) scene edit rebuilds | ✅ ~58 ms | ✅ ~70 ms | ✅ ~250 ms | |
 | (b) Dart-only reload doesn't rebuild | ✅ | ✅ | ✅ | |
-| (c) second client (`flutter attach`) reloads while driver connected | | ✅ | | |
+| (c) second client (`flutter attach`) reloads while driver connected | ✅ | ✅ | | |
+| (c) driver scene edits still apply after the attached client reloads | ❌ / ✅ with `--repoint-assets` | ❌ (VS Code, manual) | | |
 | (c) VS Code attach + breakpoint | | | | |
 | (c) VS Code reload while driver connected | | | | |
 | (c) needs `--disable-service-auth-codes`? | | | | |
@@ -120,12 +131,36 @@ the quickest loop for iterating on the spike.
 - Hot reload already syncs changed assets and evicts them from `rootBundle` before `reassemble`,
   so `rootBundle.loadString` with its default cache sees the new scene. No custom service
   extension is needed, as Q66 assumed.
-- Two flutter_tools clients coexist (iOS simulator): with the driver's `flutter run` connected,
-  `flutter attach --debug-url http://127.0.0.1:8181/` hot-reloaded a Dart change (scene
-  correctly not rebuilt), the driver's next scene edit still rebuilt the scene, and the attach
-  client reloaded again afterwards. Each client has its own compiler, so both recompile the
-  changed library; harmless. Stopping the game from the driver ends the attach session
-  ("Lost connection to device"). The VS Code breakpoint and reload checks are still to do by hand.
+- Two flutter_tools clients coexist for **code**. With the driver's `flutter run` connected,
+  `flutter attach --debug-url http://127.0.0.1:8181/` (or VS Code) can hot-reload, and both
+  clients keep working. Each client has its own compiler, so both recompile the changed library;
+  harmless. Stopping the game from the driver ends the attach session ("Lost connection to
+  device").
+- **Asset shadowing (breaks Hot-swap while an IDE is attached).** Each flutter_tools client
+  syncs assets into its **own DevFS folder** and calls `_flutter.setAssetBundlePath` once, on
+  its first reload that syncs an asset. After the attached IDE's first such reload, the engine
+  serves `level1.scene.json` from the IDE's copy, which only updates when the IDE reloads. From
+  then on the driver's scene edits are ignored (logged "scene unchanged" though the file
+  changed), and the scene jumps to the latest version on the IDE's next reload. If reads
+  alternate between the two copies, a `t` (same bytes) can even log "REBUILT". Reproduced on
+  macOS with `flutter attach`; seen on the iOS simulator with VS Code.
+
+  ```
+  after s: disk=425f75a1  game: scene REBUILT #2 …->425f75a1
+  after A (attach reload): game: scene unchanged hash=425f75a1
+  after s: disk=f1a41103  game: scene unchanged hash=425f75a1   ← ignored
+  after s: disk=34fe81c1  game: scene unchanged hash=425f75a1   ← ignored
+  after A (attach reload): game: scene REBUILT #3 …->34fe81c1   ← jumps to latest
+  ```
+
+  **Workaround (`--repoint-assets`):** before each of its reloads, the driver calls
+  `_flutter.setAssetBundlePath` itself over the VM service, pointing the engine back at its own
+  `<DevFS base>/build/flutter_assets`. With it, every `s` rebuilt and every `t` stayed unchanged,
+  including after attach reloads. The first call fails harmlessly, before the driver's first
+  asset sync creates that folder. This uses a private (`_`-prefixed) engine extension, the
+  same one flutter_tools uses, so it may change between Flutter releases. **Decision needed for
+  §9.3 / ADR 0001:** adopt the re-point (the Studio needs a VM-service connection anyway), or
+  fall back to "the Studio stops reloading while an IDE is attached".
 - Testing pitfall: if an edit writes the same bytes the file already has, the hash doesn't
   change and nothing rebuilds. That's correct behavior, but it looks like a failed Hot-swap.
   The driver now makes every edit unique.

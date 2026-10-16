@@ -4,7 +4,7 @@
 // `[studio_scene]` log lines to decide pass/fail.
 //
 // Usage: dart run bin/studio_driver.dart -d <device> [--auto | --ci]
-//        [--dds-port 8181] [--no-disable-auth-codes] [-v]
+//        [--dds-port 8181] [--no-disable-auth-codes] [--repoint-assets] [-v]
 //        [--project ../game]
 import 'dart:async';
 import 'dart:convert';
@@ -17,6 +17,8 @@ late final String projectDir;
 late final Process flutter;
 String? appId;
 String? vmServiceUri;
+String? devFsBaseUri;
+var repointAssets = false;
 var nextId = 1;
 final pending = <int, Completer<Object?>>{};
 final logs = StreamController<String>.broadcast();
@@ -45,6 +47,8 @@ Future<void> main(List<String> args) async {
       case '--ci':
         auto = true;
         ci = true;
+      case '--repoint-assets':
+        repointAssets = true;
       case '-v' || '--verbose':
         verbose = true;
       case '--project':
@@ -176,6 +180,7 @@ void _onEvent(String event, Map params) {
       appId = params['appId'] as String;
     case 'app.debugPort':
       vmServiceUri = params['wsUri'] as String?;
+      devFsBaseUri = params['baseUri'] as String?;
       say('app.debugPort wsUri=$vmServiceUri baseUri=${params['baseUri']}');
     case 'app.started':
       if (!started.isCompleted) started.complete();
@@ -208,6 +213,7 @@ Future<Object?> send(String method, Map<String, Object?> params) {
 
 Future<bool> reload({bool full = false}) async {
   final sw = Stopwatch()..start();
+  if (repointAssets) await repointAssetDirectory();
   try {
     final result = await send('app.restart', {
       'appId': appId,
@@ -222,6 +228,65 @@ Future<bool> reload({bool full = false}) async {
   } catch (e) {
     say('${full ? 'hot restart' : 'hot reload'} failed: $e');
     return false;
+  }
+}
+
+// ------------------------------------------------- asset directory re-point
+
+WebSocket? _vmSocket;
+var _vmNextId = 1;
+final _vmPending = <String, Completer<Map<String, dynamic>>>{};
+
+Future<Map<String, dynamic>> _vmCall(
+  String method, [
+  Map<String, Object?> params = const {},
+]) async {
+  if (_vmSocket == null) {
+    final socket = await WebSocket.connect(vmServiceUri!);
+    socket.listen((data) {
+      final m = jsonDecode(data as String) as Map<String, dynamic>;
+      final c = _vmPending.remove(m['id']);
+      if (c == null) return;
+      if (m.containsKey('error')) {
+        c.completeError(m['error'] as Object);
+      } else {
+        c.complete(m['result'] as Map<String, dynamic>);
+      }
+    });
+    _vmSocket = socket;
+  }
+  final id = 'driver-${_vmNextId++}';
+  final c = Completer<Map<String, dynamic>>();
+  _vmPending[id] = c;
+  _vmSocket!.add(jsonEncode(
+    {'jsonrpc': '2.0', 'id': id, 'method': method, 'params': params},
+  ));
+  return c.future;
+}
+
+/// Each flutter_tools client (this `flutter run`, an attached IDE) syncs
+/// assets into its own DevFS folder and points the engine at it once. After an
+/// attached IDE reloads, the engine serves assets from the IDE's copy and our
+/// edits are ignored. Point it back at our DevFS before every reload, the same
+/// way flutter_tools does (`_flutter.setAssetBundlePath`).
+Future<void> repointAssetDirectory() async {
+  try {
+    final views = (await _vmCall('_flutter.listViews'))['views'] as List;
+    final view = views.first as Map<String, dynamic>;
+    final isolateId = (view['isolate'] as Map?)?['id'];
+    final assetDir = Uri.parse(devFsBaseUri!)
+        .resolve('build/flutter_assets')
+        .toFilePath();
+    await _vmCall('_flutter.setAssetBundlePath', {
+      'isolateId': ?isolateId,
+      'viewId': view['id'],
+      'assetDirectory': assetDir,
+    });
+    say('re-pointed engine assets at $assetDir');
+  } catch (e) {
+    // Expected before our first asset sync: our DevFS has no flutter_assets
+    // folder yet, and flutter_tools points the engine at it on that reload.
+    say('asset re-point skipped: ${e is Map ? e['message'] : e}');
   }
 }
 

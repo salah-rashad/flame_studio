@@ -8,7 +8,7 @@
 PRODUCT_NAME = flame_studio
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = io.github.salahrashad.flameStudio
+PRODUCT_BUNDLE_IDENTIFIER = io.github.salah-rashad.flameStudio
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 io.github.salahrashad. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 Salah Rashad. All rights reserved.

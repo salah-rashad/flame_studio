@@ -16,7 +16,8 @@ scenes into it, and still let the developer attach an IDE for breakpoints and co
 This was the deciding test for [ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md).
 
 **Answer:** yes, with two workarounds for how flutter_tools handles a second client
-([*Q74*](decisions.md)), plus `--disable-service-auth-codes` for a stable attach URL (*Q75*).
+([*Q74*](decisions.md)). The spike also passed `--disable-service-auth-codes` for a stable attach
+URL (*Q75*); the Studio doesn't, and hands each run's authenticated URI to the IDE instead (*Q81*).
 
 Code and step-by-step instructions: [`spikes/01_play_hotswap/`](../spikes/01_play_hotswap/README.md).
 A Flame game with a minimal content-hashed `StudioScene`, and a Dart driver that plays the
@@ -31,7 +32,8 @@ Tested with Flutter 3.44.2, Flame 1.38.2, macOS 26.2, 2026-10-16.
 | (a) Scene save → `app.restart` → `onHotReload` rebuilds | ✅ ~58 ms | ✅ ~70 ms | ✅ ~250 ms | ✅ ~156 ms |
 | (b) Dart-only reload doesn't rebuild the scene | ✅ | ✅ | ✅ | ✅ |
 | (c) IDE attaches via the fixed DDS port | ✅ `flutter attach` | ✅ VS Code | — | ✅ VS Code |
-| (c) IDE breakpoints hit | — | ✅ | — | — |
+| (c) IDE attaches with auth codes on via the info file (*Q81*) | ✅ VS Code, before or after Play | — | — | — |
+| (c) IDE breakpoints hit | ✅ VS Code (info file) | ✅ | — | — |
 | (c) IDE hot reload while the Studio is connected | ✅ | ✅ | — | ✅ |
 | (c) Studio saves still apply after the IDE attaches and reloads | ✅ with both workarounds | ✅ with re-point | — | ✅ with both workarounds |
 | (c) Studio hot restart while the IDE is attached | ✅ with `--project-root` | — | — | ✅ with `--project-root` (❌ without) |
@@ -82,8 +84,8 @@ hot restart failed to complete: _flutter.runInView: (-32000) Could not run confi
 
   ```
   <app support>/run/<project-id>/<name>-studio  →  <user's project>
-  flutter run --machine -d <device> --dds-port <port> --disable-service-auth-codes \
-              --project-root <that link>          (working directory: the real project)
+  flutter run --machine -d <device> --project-root <that link>
+              (working directory: the real project)
   ```
 
 - **Re-point before every reload.** Before each `app.restart`, the Studio calls
@@ -108,6 +110,34 @@ with `Could not update asset directory.` and changes nothing.
 `ws://127.0.0.1:8282/EMWbRKFTAe4=/ws`, then `/rY9Oy8-nQ1I=/ws`), which breaks a saved
 `launch.json`. With it and a fixed `--dds-port`, `app.debugPort` reports `ws://127.0.0.1:<port>/ws`
 every time (*Q75*).
+
+*Q81 reverses this:* the Studio keeps auth codes on and doesn't need a stable URL. It writes
+each run's URI to `.dart_tool/flame_studio/vm_service.json`, which a VS Code attach entry
+reads through the debug adapter's `vmServiceInfoFile` argument (flutter_tools 3.44.2,
+`flutter_adapter.dart` `attachImpl`: it waits for the file and reads its `uri` field).
+flutter_tools itself marks `--disable-service-auth-codes` deprecated and "not recommended", and
+on a wirelessly connected iOS device the VM service listens on all interfaces
+(`--vm-service-host=0.0.0.0`), so disabling auth there exposes the game to the network.
+flutter's own `--vmservice-out-file` isn't usable for this: it writes the bare URI, not the
+JSON the adapter expects.
+
+Tried on 2026-10-17 (macOS desktop, Flutter 3.44.2, Dart-Code 3.144.0), with the spike driver
+in its new default (auth codes on, no fixed DDS port, info file written on `app.debugPort`,
+owner-only, deleted on stop). A scripted DAP client on `flutter debug-adapter`, the adapter
+Dart-Code runs for Flutter, attached through the info file in all three orders: game already
+running; adapter started first with no file; adapter started first with no
+`.dart_tool/flame_studio/` folder at all. Started first, it connected ~0.3 s after the file
+appeared. A hot reload through the adapter worked with the driver still connected, and the
+driver's (a)+(b) checks pass with auth codes on. Then from the VS Code UI, with the "info file"
+entry in `launch.json`: VS Code attached without asking for a URI, both with the game already
+running and when the entry was started before the driver. Breakpoints hit and IDE hot reload
+worked, with no errors. Two details for the Attach guide:
+
+- The adapter runs `flutter attach --debug-uri <uri>`, which still picks a device. With more
+  than one connected and no `-d` it exits with "More than one device connected". VS Code adds
+  the device selected in its status bar, so the developer must select the game's device there.
+- The IDE's Debug Console prints the full URI ("Connecting to VM Service at …"). That log is the
+  IDE's, not the Studio's, so it doesn't break "the URI stays out of the Studio's logs".
 
 **6. VS Code shows a stale "paused" after any hot restart while both are connected.** The
 nonsense top frames (`List.add`, `int.&`) come from sampling a running isolate. A debug adapter
@@ -140,6 +170,7 @@ Worth checking against the Dart-Code issue tracker.
 | `ext.flutter.evict` | Framework debug service extension | Same fallback |
 | Daemon `app.restart` syncs + evicts changed assets before `reassemble` | flutter_tools behavior | Core Hot-swap breaks; would need the Live bridge (v0.4) |
 | Flame calls `onHotReload` from `GameWidget.reassemble` | Flame ≥ 1.36 API | Runtime floor in §12 |
+| Debug adapter `vmServiceInfoFile` attach argument (JSON with `uri`) | Documented launch.json argument of the Dart/Flutter debug adapters | Attach still works by pasting the copied URI ("Flutter: Attach to Process"); drop the generated attach config |
 
 The Studio re-checks these on every Flutter stable release with the manual end-to-end test
 (`project-plan.md` §13). Running the spike driver against the new SDK is the quickest check:
@@ -148,6 +179,9 @@ The Studio re-checks these on every Flutter stable release with the manual end-t
 ### Open items
 
 - Physical iOS device, and Android Studio as the attaching IDE: not yet tested.
+- Watching for the info file when `.dart_tool/flame_studio/` doesn't exist yet worked on macOS.
+  Linux and Windows are untested; the Studio keeps the folder (deletes only the file) and can
+  create it when it writes the attach config.
 - On Windows (v0.3), the run link needs a directory junction or Developer Mode symlinks. ◇
   proposed
 - First save after launch costs an extra reload. The Studio could avoid it by re-pointing only

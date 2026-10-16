@@ -312,9 +312,11 @@ Content
   project has that platform; web is not offered.
 - Play button states: Ready, Booting device, Building (progress + elapsed time + Cancel), Running
   (becomes Stop, plus a Hot-reload button and a "Restart" in an overflow), Error.
-- "Attach debugger" button while running: copies the debugger URL, with a popover showing it,
-  short "VS Code" / "Android Studio" instructions, and an optional "Add VS Code attach config…"
-  link. A small "IDE attached" indicator when a debugger is connected.
+- "Attach debugger" button while running: copies this run's debugger URL (it changes every
+  run), with a popover showing it, short "VS Code" / "Android Studio" instructions, and an
+  optional "Add VS Code attach config…" link. A small "IDE attached" indicator when a debugger
+  is connected. When the project allows unauthenticated debugger connections (a development-only
+  setting), a small "Unauthenticated" warning badge next to Stop.
 - Small transient toasts while running: "Scene reloaded on <device>"; "Image changed — Restart
   game" (with a Restart action).
 - Status-bar generator indicator: up to date / generating / error / "External build_runner".

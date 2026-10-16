@@ -621,7 +621,7 @@ Play/setup if none is found. The Studio bundles no SDK.
   Missing component states re-evaluate.
 - Status bar shows: up to date / generating / error / external / stopped.
 
-### 9.3 Play and Hot-swap (*Q17, Q41, Q43, Q66, Q74, Q75*)
+### 9.3 Play and Hot-swap (*Q17, Q41, Q43, Q66, Q74, Q81*)
 
 ```mermaid
 sequenceDiagram
@@ -632,9 +632,10 @@ sequenceDiagram
   participant I as IDE (optional)
 
   U->>S: Pick device, press Play
-  S->>F: spawn flutter run --machine -d <device> --dds-port <project port><br/>--disable-service-auth-codes --project-root <run link>
-  F-->>S: app.started, app.debugPort (VM service URL, DevFS base URI)
-  I-->>G: Attach (optional, via the VM service URL)
+  S->>F: spawn flutter run --machine -d <device> --project-root <run link>
+  F-->>S: app.started, app.debugPort (authenticated VM service URI, DevFS base URI)
+  S->>S: write the URI to .dart_tool/flame_studio/vm_service.json
+  I-->>G: Attach (optional, with the URI the Studio hands over)
   U->>S: Edit scene, Save
   S->>S: Write scene file atomically
   S->>G: _flutter.setAssetBundlePath (point engine at the Studio's DevFS)
@@ -658,15 +659,42 @@ sequenceDiagram
 - **Image changes (*Q72*):** images are not part of the hash. When an image the running game uses
   changes on disk, the Studio shows "Image changed: *Restart game*", which does a hot restart
   (`fullRestart: true`). Image Hot-swap comes with the Live bridge.
-- **Attach (*Q60*):**
-  - The Studio shows an **Attach debugger** button that copies the VM service URL, with short
-    guides for VS Code ("Flutter: Attach to Process") and Android Studio.
-  - Each project gets a **fixed DDS port**, picked from free ports on first Play and remembered in
-    the Studio's own settings (not the user's project). If it is busy later, the Studio picks a new
-    one and says any saved attach configuration needs updating. Play always passes
-    `--disable-service-auth-codes`; without it the URL changes on every run (*Q75*).
+- **Attach (*Q60, Q81*):** VM service authentication stays on. Each run's URI
+  (`ws://127.0.0.1:<port>/<auth code>=/ws`, from `app.debugPort`) is different, so instead of
+  making it stable the Studio hands the current one to the debugger.
+  - The **Attach debugger** button copies the current run's URI, with short guides for VS Code
+    ("Flutter: Attach to Process", paste the URI) and Android Studio. The VS Code guide says to
+    select the game's device in the status bar first: the adapter runs `flutter attach`, which
+    still needs a device and stops with "More than one device connected" otherwise.
+  - On every `app.debugPort`, the Studio writes `{"uri": "<URI>"}` to
+    `.dart_tool/flame_studio/vm_service.json` in the project (atomic write, owner-only
+    permissions; `.dart_tool/` is already gitignored) and deletes it when the game stops. The
+    Dart and Flutter debug adapters wait for a `vmServiceInfoFile` to appear and read `uri` from
+    it, so a file left over from an earlier run would send the IDE to a dead URI.
   - An opt-in **"Add VS Code attach config"** writes `.vscode/launch.json` only after showing the
-    diff; it is the one change to the user's project beyond setup, and only on explicit approval.
+    diff: an attach entry with
+    `"vmServiceInfoFile": "${workspaceFolder}/.dart_tool/flame_studio/vm_service.json"`. It holds
+    no URI, so it is safe to commit and never needs updating, and it can be started before Play
+    (the adapter waits for the file). It is the one change to the user's project beyond setup,
+    and only on explicit approval. Verified end to end in VS Code (Dart-Code 3.144.0, flutter
+    3.44.2, macOS), started both before and after Play, with auth codes on
+    ([`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach) finding 5).
+  - No fixed DDS port: flutter picks a free one on each run.
+  - **The URI stays out of logs.** It grants full control of the game process. The Console shows
+    "Debugger available" instead of it and strips the auth code from any line that carries one
+    (on desktop the engine prints its VM service URI to stdout, which reaches the Console as a raw
+    line). The Studio's own logs, crash reports and settings never contain it; the info file is
+    the only place it is written.
+  - **Unauthenticated mode** (escape hatch for a tool that only takes a fixed address): a
+    per-project setting, *Allow unauthenticated debugger connections (development only)*, off by
+    default and kept in the Studio's settings, never the project. It adds
+    `--disable-service-auth-codes` and a fixed `--dds-port`, so the address is the same every run.
+    It is offered only for devices running on this machine (desktop, iOS simulator, Android
+    emulator): on a physical device the flag also turns authentication off in the VM on the
+    device, and on a wirelessly connected iOS device that VM listens on all network interfaces.
+    The Studio also checks that the reported URI's host is a loopback address and stops the run
+    with an explanation if not. While such a run is active, the toolbar shows an
+    "Unauthenticated" warning. The URI is still kept out of logs.
 - **Devices (*Q62, Q70*):** the dropdown lists running devices plus available emulators and
   simulators (`flutter devices --machine`, `flutter emulators`); choosing one that isn't booted
   launches it first. Desktop devices appear only if the project has that target (no prompt to add
@@ -716,7 +744,8 @@ sequenceDiagram
 Merged, filterable log of generator output, game output (`app.log`, `daemon.logMessage`, and raw
 stdout lines, which is how desktop targets report the game's `print` output) and
 Studio events, with clickable `file:line` links that open the user's external editor
-(configurable: VS Code, IntelliJ/Android Studio, custom command).
+(configurable: VS Code, IntelliJ/Android Studio, custom command). VM service URIs are redacted
+before display (§9.3, *Q81*).
 
 ---
 
@@ -848,7 +877,7 @@ Studio stops issuing reloads while an IDE is attached) remains the escape hatch.
 | 8 | Runtime: loader, two-pass references, asset loading, lookup API, unknown-type handling, Hot-swap (`onHotReload`, hash, `onReloaded`) | 4.5 |
 | 9 | Behaviors in the inspector: add/remove/reorder, compatibility filtering, Missing behavior UI | 3 |
 | 10 | Asset browser + pubspec sync (incl. subfolders) | 2.5 |
-| 11 | Play: device list + emulator boot, daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, Attach (URL, DDS port, launch.json), lifecycle, image-restart toast | 9 |
+| 11 | Play: device list + emulator boot, daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, Attach (current URI, info file, launch.json, unauthenticated mode), lifecycle, image-restart toast | 9 |
 | 12 | CI contract test | 1 |
 | 13 | `example/` game | 2 |
 | 14 | Implement Claude Design visual design (theme, components) | 4 |
@@ -918,8 +947,8 @@ Q-F (→ *Q56*) and Q-G (→ *Q50*), and Q-H, the developer preview scope (→ *
 
 1. ✅ Play → Hot-swap through `app.restart` and `onHotReload` on simulator, emulator and a
    physical phone; Dart-only reloads don't rebuild scenes; an IDE attached via a fixed DDS port
-   can hot-reload alongside the Studio. Done in spike #1, with the workarounds in §9.3 (*Q74,
-   Q75*); findings in [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach).
+   can hot-reload alongside the Studio. Done in spike #1, with the workarounds in §9.3 (*Q74;
+   Q75 since superseded by Q81*); findings in [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach).
 2. ✅ `$lib$` aggregator output to `lib/`, watch latency, and the build_runner lock probe (§7.3,
    §9.2). Done in spike #2 (~0.9–1.0 s per save on 300- and 1000-file projects; *Q76, Q77*);
    findings in [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-2--generator-shape-and-latency).

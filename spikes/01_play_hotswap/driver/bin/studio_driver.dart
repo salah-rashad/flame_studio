@@ -5,7 +5,7 @@
 //
 // Usage: dart run bin/studio_driver.dart -d <device> [--auto | --ci]
 //        [--dds-port 8181] [--no-disable-auth-codes] [--repoint-assets] [-v]
-//        [--project ../game]
+//        [--project ../game] [--project-root <dir>]
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -34,6 +34,7 @@ Future<void> main(List<String> args) async {
   var ci = false;
   var verbose = false;
   var project = '../game';
+  String? projectRoot;
   for (var i = 0; i < args.length; i++) {
     switch (args[i]) {
       case '-d' || '--device':
@@ -51,6 +52,8 @@ Future<void> main(List<String> args) async {
         repointAssets = true;
       case '-v' || '--verbose':
         verbose = true;
+      case '--project-root':
+        projectRoot = args[++i];
       case '--project':
         project = args[++i];
       default:
@@ -76,6 +79,8 @@ Future<void> main(List<String> args) async {
     '$ddsPort',
     if (disableAuthCodes) '--disable-service-auth-codes',
     if (verbose) '-v',
+    // Hidden flutter_tools option; its basename names the DevFS (see README).
+    if (projectRoot != null) ...['--project-root', projectRoot],
   ];
   say('spawn: flutter ${runArgs.join(' ')}  (in $projectDir)');
   final stopwatch = Stopwatch()..start();

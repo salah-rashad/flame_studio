@@ -56,6 +56,17 @@ For check (c), run it once without `--repoint-assets` (to see the problem) and o
 dart run bin/studio_driver.dart -d <device-id> --auto --repoint-assets
 ```
 
+On a **physical device**, also run the game under a differently named project root so the IDE
+doesn't delete the driver's DevFS (see "DevFS name clash" below):
+
+```bash
+ln -sfn "$(cd ../game && pwd)" /tmp/game-studio
+```
+
+```bash
+dart run bin/studio_driver.dart -d <device-id> --auto --repoint-assets --project-root /tmp/game-studio
+```
+
 Same checks, but the game keeps running afterwards. Type a command and press Enter:
 
 | Key | Action |
@@ -103,6 +114,7 @@ Press `r` in that terminal for an IDE-style reload, then `s` in the driver.
 | `--dds-port <n>` | 8181 | Fixed DDS port (the attach URL) |
 | `--no-disable-auth-codes` | off | Keep auth codes in the VM service URL, to test whether `--disable-service-auth-codes` is needed for a stable URL |
 | `--repoint-assets` | off | Before each reload, point the engine back at the driver's DevFS assets (`_flutter.setAssetBundlePath`); if that folder is gone, reload, re-point, evict the scene and reload again. Workaround for asset shadowing by an attached IDE |
+| `--project-root <dir>` | (none) | Pass flutter's hidden `--project-root`. Its folder name names the DevFS; use a symlink to the game with another name to avoid clashing with an attached IDE |
 | `-v` | off | Pass `-v` to `flutter run` (shows DevFS sync and asset eviction) |
 | `--project <dir>` | `../game` | Game project to run |
 
@@ -118,7 +130,7 @@ Fill in as you go. Record the Flutter version and device for each row.
 | (c) VS Code attach | | ✅ | | |
 | (c) VS Code breakpoint hits | | ✅ (`SpikeGame.update`) | | |
 | (c) VS Code hot reload while driver connected | | ✅ | | |
-| (c) driver scene edits still apply after an IDE attaches/reloads | ❌ without / ✅ with `--repoint-assets` | ❌ without / ✅ with `--repoint-assets` (VS Code) | | |
+| (c) driver scene edits still apply after an IDE attaches/reloads | ❌ without / ✅ with `--repoint-assets` (✅ cleaner with `--project-root` too) | ❌ without / ✅ with `--repoint-assets` (VS Code) | | ❌ with `--repoint-assets` alone (VS Code): driver hot restart breaks; retest with `--project-root` |
 | (c) `--disable-service-auth-codes` needed for a stable URL? | Yes: with auth codes the URL changes every run (`/EMWbRKFTAe4=/ws`, `/rY9Oy8-nQ1I=/ws`) | | | |
 
 Flutter 3.44.2 / Flame 1.38.2, macOS 26.2. macOS desktop isn't a v0.1 Play target, but it's
@@ -171,6 +183,27 @@ the quickest loop for iterating on the spike.
   the first of the two reloads reads a stale copy (the original scene from the app bundle, or
   the IDE's copy if the IDE has already reloaded), so the scene can flash for ~50 ms and
   `onReloaded` can fire twice.
+
+  **On physical devices the re-point isn't enough.** Simulators and desktop use a local DevFS
+  writer that recreates the driver's folder on its next sync. Physical Android and iOS devices
+  write through the VM service under the DevFS *name*, which the IDE now owns, so the driver's
+  folder never comes back. Every re-point then fails, and the driver's hot restart breaks
+  because it launches from its old `baseUri` (seen on Android CPH2737 with VS Code):
+
+  ```
+  E/flutter: [ERROR:flutter/runtime/dart_isolate.cc(146)] Could not prepare isolate.
+  hot restart → code=1 "hot restart failed to complete: _flutter.runInView: (-32000) Could not run configuration in engine."
+  ```
+
+  **DevFS name clash fix (`--project-root`):** flutter_tools names the DevFS after
+  `basename(projectRootPath)`, and `flutter run` has a hidden `--project-root` option. Running
+  with `--project-root` pointing at a symlink to the game named `game-studio` gives the driver
+  its own DevFS name, so the attaching IDE creates `game…` without destroying anything. On
+  macOS with `flutter attach`, `--project-root` plus `--repoint-assets` was correct at every
+  step of `s ATTACH s t A s t R s d A s t`: hot restart worked, and no fallback reload was
+  needed after attaching. Not yet verified on a physical device. For the Studio, the symlink
+  would live in its own support folder, e.g. `<app support>/run/<project>-studio`. `--project-root`
+  is hidden and undocumented, so this is a second private-API dependency.
 
   Caveats for the Studio: `_flutter.setAssetBundlePath` is a private engine extension (the
   one flutter_tools uses), so it may change between Flutter releases. Running the game from a

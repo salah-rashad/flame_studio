@@ -6,14 +6,16 @@ Findings go into `ARCHITECTURE.md`; nothing here ships.
 | Folder | What it is |
 |---|---|
 | `game/` | A Flame game with a minimal `StudioScene` (`lib/studio_scene.dart`) that loads `assets/scenes/level1.scene.json` and, on Flame's `onHotReload()`, rebuilds the scene only if the file's content hash changed. The HUD shows the rebuild count, the hash and a Dart-code marker. |
-| `driver/` | A Dart CLI that plays the Studio's part: spawns `flutter run --machine` with a fixed DDS port, edits files, hot-reloads through the daemon (`app.restart`), and reads the game's `[studio_scene]` log lines to decide pass/fail. |
+| `driver/` | A Dart CLI that plays the Studio's part: spawns `flutter run --machine` (VM service auth codes on), writes each run's VM service URI to `game/.dart_tool/flame_studio/vm_service.json` for the IDE, edits files, hot-reloads through the daemon (`app.restart`), and reads the game's `[studio_scene]` log lines to decide pass/fail. |
 
 ## What is being checked
 
 - **(a)** Scene edit → `app.restart` (hot reload) → `StudioScene.onHotReload` rebuilds the scene.
 - **(b)** A Dart-only hot reload does **not** rebuild the scene.
-- **(c)** VS Code attaches through the fixed DDS port: breakpoints hit, and IDE hot reload works
-  while the driver's `flutter run` is still connected (the deciding test for ADR 0001).
+- **(c)** VS Code attaches: breakpoints hit, and IDE hot reload works while the driver's
+  `flutter run` is still connected (the deciding test for ADR 0001).
+- **(d)** VS Code attaches with auth codes on through the `vmServiceInfoFile` entry
+  (`docs/decisions.md` Q81), whether it is started after the game or before it.
 
 Run (a) and (b) on the iOS simulator, an Android emulator **and one physical phone**.
 
@@ -75,18 +77,24 @@ Same checks, but the game keeps running afterwards. Type a command and press Ent
 | `d` | Bump `dartMarker` in `lib/dart_marker.dart` and hot reload. The HUD's `code:` changes; the scene must not rebuild. |
 | `t` | Touch the scene file (same bytes) and hot reload. The scene must not rebuild. |
 | `r` / `R` | Hot reload / hot restart |
-| `u` | Print the VM service URL to attach to |
+| `u` | Print the VM service URI (with its auth code; it isn't printed otherwise) |
 | `q` | Stop the game and restore the edited files |
 
 Always quit with `q` (or Ctrl-C) so the driver restores `level1.scene.json` and
 `dart_marker.dart`. If a run is killed hard, restore them with
 `git checkout -- spikes/01_play_hotswap/game`.
 
+On each `app.debugPort` the driver writes `{"uri": "<ws URI>"}` to
+`game/.dart_tool/flame_studio/vm_service.json` (temp file + rename, owner-only), and deletes it
+when the game stops or the driver quits. It deletes only the file: the debug adapter watches
+the folder, so the folder must already exist when an attach entry starts before the game.
+
 Then, with the driver still running:
 
 1. Open `spikes/01_play_hotswap/game` in VS Code (Dart + Flutter extensions installed).
-2. Run and Debug → **Attach to Studio game (DDS 8181)** (from `game/.vscode/launch.json`).
-   If that fails, try **Attach to Studio game (pick URI)** and paste the URL from `u`.
+2. Run and Debug → **Attach to Studio game (info file)** (from `game/.vscode/launch.json`). It
+   holds no URI; the adapter reads it from the info file. If that fails, try **Attach to Studio
+   game (pick URI)** and paste the URI from `u`.
 3. Set a breakpoint in `SpikeGame.update` (`lib/spike_game.dart`). It should hit; continue.
 4. Edit the `dartMarker` string in VS Code and save (or press the hot reload button). The HUD
    should update, from the IDE's reload.
@@ -96,10 +104,19 @@ Then, with the driver still running:
    first `s` after attaching logs one extra reload.
 6. Type `q`. VS Code's debug session should end with "Application finished" or similar.
 
-No VS Code? `flutter attach` exercises the same coexistence path from a second terminal:
+Check (d), attach before the game runs:
+
+1. Stop the driver (`q`) and make sure `game/.dart_tool/flame_studio/vm_service.json` is gone
+   (the folder stays).
+2. In VS Code, start **Attach to Studio game (info file)**. It should sit at "Attaching…".
+3. Start the driver (`--auto`). VS Code should attach on its own once the game is up; repeat
+   steps 3–4 above, then `q`.
+
+No VS Code? `flutter attach` exercises the same coexistence path from a second terminal (`u`
+prints the URI):
 
 ```bash
-flutter attach -d <device-id> --debug-url http://127.0.0.1:8181/
+flutter attach -d <device-id> --debug-url <URI from u>
 ```
 
 Press `r` in that terminal for an IDE-style reload, then `s` in the driver.
@@ -111,8 +128,8 @@ Press `r` in that terminal for an IDE-style reload, then `s` in the driver.
 | `-d <id>` | (required) | Device to run on |
 | `--auto` | off | Run checks (a)+(b), then stay interactive |
 | `--ci` | off | Run checks (a)+(b), then quit with an exit code |
-| `--dds-port <n>` | 8181 | Fixed DDS port (the attach URL) |
-| `--no-disable-auth-codes` | off | Keep auth codes in the VM service URL, to test whether `--disable-service-auth-codes` is needed for a stable URL |
+| `--dds-port <n>` | (none; flutter picks a free port) | Fixed DDS port. 8181 when `--disable-auth-codes` is on |
+| `--disable-auth-codes` | off | Dev-only escape hatch (Q81): pass `--disable-service-auth-codes` for a stable, unauthenticated URL (`ws://127.0.0.1:8181/ws`). Use only with local devices; pair with the "unauthenticated, DDS 8181" attach entry |
 | `--repoint-assets` | off | Before each reload, point the engine back at the driver's DevFS assets (`_flutter.setAssetBundlePath`); if that folder is gone, reload, re-point, evict the scene and reload again. Workaround for asset shadowing by an attached IDE |
 | `--project-root <dir>` | (none) | Pass flutter's hidden `--project-root`. Its folder name names the DevFS; use a symlink to the game with another name to avoid clashing with an attached IDE |
 | `-v` | off | Pass `-v` to `flutter run` (shows DevFS sync and asset eviction) |
@@ -133,12 +150,32 @@ Fill in as you go. Record the Flutter version and device for each row.
 | (c) driver hot restart while an IDE is attached | ✅ (`flutter attach`, `--project-root`) | | | ❌ without / ✅ with `--project-root` (VS Code shows a stale "paused" afterwards, see notes) |
 | (c) driver scene edits still apply after an IDE attaches/reloads | ❌ without / ✅ with `--repoint-assets` (✅ cleaner with `--project-root` too) | ❌ without / ✅ with `--repoint-assets` (VS Code) | | ❌ with `--repoint-assets` alone (driver hot restart breaks) / ✅ with `--repoint-assets --project-root` (VS Code) |
 | (c) `--disable-service-auth-codes` needed for a stable URL? | Yes: with auth codes the URL changes every run (`/EMWbRKFTAe4=/ws`, `/rY9Oy8-nQ1I=/ws`) | | | |
+| (a)+(b) with auth codes on, no fixed DDS port (Q81 default) | ✅ (2026-10-17) | | | |
+| (d) Flutter debug adapter attaches via `vmServiceInfoFile`, auth codes on | ✅ scripted DAP client on `flutter debug-adapter`: game first; adapter first, folder present; adapter first, folder missing. Hot reload through the adapter ✅ | | | |
+| (d) VS Code attaches via the "info file" entry | ✅ game first and entry first; no URI prompt, breakpoint hits, hot reload works (Dart-Code 3.144.0) | | | |
 
 Flutter 3.44.2 / Flame 1.38.2, macOS 26.2. macOS desktop isn't a v0.1 Play target, but it's
 the quickest loop for iterating on the spike.
 
 ## Notes so far
 
+- **Attach through the info file (Q81), 2026-10-17, macOS desktop.** A scripted DAP client
+  drove `flutter debug-adapter` (the adapter Dart-Code runs for Flutter) with
+  `{"vmServiceInfoFile": ".../.dart_tool/flame_studio/vm_service.json", "toolArgs": ["-d", "macos"]}`.
+  It attached with auth codes on in all three orders: game already running; adapter started
+  first with the folder present but no file; adapter started first with
+  `.dart_tool/flame_studio/` missing. When started first, it connected within ~0.3 s of the
+  driver writing the file. A hot reload through the adapter worked while the driver stayed
+  connected. Dart-Code 3.144.0 passes `vmServiceInfoFile` through without prompting for a URI
+  (read from its bundled `extension.js`).
+  - The adapter runs `flutter attach --debug-uri <uri>`, which still picks a device: with more
+    than one connected ("macOS" plus "Mac Designed for iPad" here) and no `-d`, it exits with
+    "More than one device connected". VS Code adds the device selected in its status bar, so
+    that has to be the game's device.
+  - The IDE's Debug Console prints the full URI ("Connecting to VM Service at ws://…/<code>=/ws").
+    That's the IDE's own log, outside the Studio.
+  - The driver now masks auth codes in everything it echoes (the engine's "listening on" line
+    on desktop, `app.devTools`, `app.dtd`); `u` prints the URI on request.
 - On desktop targets, `flutter run --machine` passes the game's `print` output through as
   raw stdout lines, not `app.log` events. The Studio's Console must handle both.
 - With `--dds-port 8181 --disable-service-auth-codes`, `app.debugPort` reports

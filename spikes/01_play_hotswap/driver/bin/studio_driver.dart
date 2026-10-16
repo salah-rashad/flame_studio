@@ -1,10 +1,11 @@
 // Plays the Studio's part in spike #1 (project-plan §9.3, §14 v0.0):
-// spawns `flutter run --machine` with a fixed DDS port, edits the scene file,
-// hot-reloads through the daemon (`app.restart`), and watches the game's
-// `[studio_scene]` log lines to decide pass/fail.
+// spawns `flutter run --machine`, edits the scene file, hot-reloads through the
+// daemon (`app.restart`), and watches the game's `[studio_scene]` log lines to
+// decide pass/fail. VM service auth codes stay on (Q81): each run's URI goes to
+// `<game>/.dart_tool/flame_studio/vm_service.json` for the IDE's attach config.
 //
 // Usage: dart run bin/studio_driver.dart -d <device> [--auto | --ci]
-//        [--dds-port 8181] [--no-disable-auth-codes] [--repoint-assets] [-v]
+//        [--dds-port <n>] [--disable-auth-codes] [--repoint-assets] [-v]
 //        [--project ../game] [--project-root <dir>]
 import 'dart:async';
 import 'dart:convert';
@@ -12,6 +13,7 @@ import 'dart:io';
 
 const scenePath = 'assets/scenes/level1.scene.json';
 const markerPath = 'lib/dart_marker.dart';
+const infoFilePath = '.dart_tool/flame_studio/vm_service.json';
 
 late final String projectDir;
 late final Process flutter;
@@ -28,8 +30,8 @@ var editCount = 0;
 
 Future<void> main(List<String> args) async {
   String? device;
-  var ddsPort = 8181;
-  var disableAuthCodes = true;
+  int? ddsPort;
+  var disableAuthCodes = false;
   var auto = false;
   var ci = false;
   var verbose = false;
@@ -41,8 +43,9 @@ Future<void> main(List<String> args) async {
         device = args[++i];
       case '--dds-port':
         ddsPort = int.parse(args[++i]);
-      case '--no-disable-auth-codes':
-        disableAuthCodes = false;
+      case '--disable-auth-codes':
+        // Dev-only escape hatch (Q81): a stable, unauthenticated URL.
+        disableAuthCodes = true;
       case '--auto':
         auto = true;
       case '--ci':
@@ -66,6 +69,9 @@ Future<void> main(List<String> args) async {
     exit(64);
   }
   projectDir = Directory(project).absolute.path;
+  // A file left by a killed run would send the IDE to a dead URI.
+  _deleteInfoFile();
+  if (disableAuthCodes) ddsPort ??= 8181;
   for (final p in [scenePath, markerPath]) {
     originals[p] = File('$projectDir/$p').readAsStringSync();
   }
@@ -75,8 +81,7 @@ Future<void> main(List<String> args) async {
     '--machine',
     '-d',
     device,
-    '--dds-port',
-    '$ddsPort',
+    if (ddsPort != null) ...['--dds-port', '$ddsPort'],
     if (disableAuthCodes) '--disable-service-auth-codes',
     if (verbose) '-v',
     // Hidden flutter_tools option; its basename names the DevFS (see README).
@@ -96,13 +101,16 @@ Future<void> main(List<String> args) async {
   flutter.stderr
       .transform(utf8.decoder)
       .transform(const LineSplitter())
-      .listen((l) => say('stderr: $l'));
+      .listen((l) => say('stderr: ${redact(l)}'));
   unawaited(flutter.exitCode.then((code) async {
     say('flutter run exited with $code');
+    _deleteInfoFile();
     await _restoreFiles();
+    await stdout.flush();
     exit(code == 0 ? 0 : 1);
   }));
   ProcessSignal.sigint.watch().listen((_) => _quit());
+  ProcessSignal.sigterm.watch().listen((_) => _quit());
 
   // Don't touch the scene until the game has loaded it, or the first edit
   // races the initial load.
@@ -137,15 +145,66 @@ void say(String message) {
   stdout.writeln('\x1B[36m[driver $t]\x1B[0m $message');
 }
 
+/// Masks auth codes (`http://127.0.0.1:1234/AbCd123=/`, also DTD's
+/// `ws://127.0.0.1:1235/AbCd123=`) in output we didn't write ourselves, e.g.
+/// the engine's "listening on" line on desktop.
+String redact(String line) => line.replaceAllMapped(
+      RegExp(r'((?:https?|wss?)://[^/\s"]+/)[A-Za-z0-9_\-]+=(?=[/"\s]|$)'),
+      (m) => '${m[1]}<auth-code>=',
+    );
+
 void _printHelp() {
   say('commands (type + Enter):  s = edit scene + reload   '
       'd = Dart-only edit + reload   t = touch scene + reload   '
       'r = hot reload   '
-      'R = hot restart   u = attach URL   q = quit');
+      'R = hot restart   u = print attach URI   q = quit');
 }
 
 void _printAttachHelp() {
-  say('VM service (attach here): ${vmServiceUri ?? '(not reported yet)'}');
+  say(vmServiceUri == null
+      ? 'VM service not reported yet'
+      : 'Debugger available: attach with the "info file" entry in '
+          'game/.vscode/launch.json ($infoFilePath); u prints the URI');
+}
+
+void _printAttachUri() {
+  // Only on request: the URI grants full control of the game process.
+  say('VM service URI: ${vmServiceUri ?? '(not reported yet)'}');
+}
+
+// ---------------------------------------------------------- VM service info
+
+File get _infoFile => File('$projectDir/$infoFilePath');
+
+/// Writes `{"uri": ...}` for the debug adapter's `vmServiceInfoFile`: temp
+/// file made owner-only before the URI goes in, then renamed into place, so
+/// the adapter never reads a half-written file.
+void _writeInfoFile(String uri) {
+  final dir = _infoFile.parent..createSync(recursive: true);
+  final tmp = File('${_infoFile.path}.tmp')..writeAsStringSync('');
+  if (!Platform.isWindows) {
+    Process.runSync('chmod', ['700', dir.path]);
+    Process.runSync('chmod', ['600', tmp.path]);
+  }
+  tmp.writeAsStringSync(jsonEncode({'uri': uri}), flush: true);
+  tmp.renameSync(_infoFile.path);
+  say('wrote $infoFilePath');
+}
+
+/// Deletes only the file: the adapter watches its folder, so the folder must
+/// already exist when an attach config starts before the game does.
+void _deleteInfoFile() {
+  final info = _infoFile;
+  for (final f in [info, File('${info.path}.tmp')]) {
+    try {
+      if (f.existsSync()) {
+        f.deleteSync();
+        if (f == info) say('deleted $infoFilePath');
+      }
+    } on FileSystemException catch (e) {
+      say('could not delete ${f.path}: ${e.message}');
+    }
+  }
 }
 
 // ---------------------------------------------------------------- protocol
@@ -153,7 +212,7 @@ void _printAttachHelp() {
 void _onStdout(String line) {
   if (!(line.startsWith('[{') && line.endsWith('}]'))) {
     // Desktop targets pass the game's stdout through raw, not as app.log.
-    stdout.writeln('  $line');
+    stdout.writeln('  ${redact(line)}');
     logs.add(line);
     return;
   }
@@ -161,7 +220,7 @@ void _onStdout(String line) {
   try {
     messages = jsonDecode(line) as List<dynamic>;
   } on FormatException {
-    stdout.writeln('  $line');
+    stdout.writeln('  ${redact(line)}');
     logs.add(line);
     return;
   }
@@ -186,23 +245,27 @@ void _onEvent(String event, Map params) {
     case 'app.debugPort':
       vmServiceUri = params['wsUri'] as String?;
       devFsBaseUri = params['baseUri'] as String?;
-      say('app.debugPort wsUri=$vmServiceUri baseUri=${params['baseUri']}');
+      final authOn = redact(vmServiceUri ?? '') != vmServiceUri;
+      say('app.debugPort: debugger available (auth code '
+          '${authOn ? 'on' : 'OFF'}) baseUri=${params['baseUri']}');
+      if (vmServiceUri != null) _writeInfoFile(vmServiceUri!);
     case 'app.started':
       if (!started.isCompleted) started.complete();
     case 'app.log':
       final log = (params['log'] as String).trimRight();
-      stdout.writeln('  game: $log');
+      stdout.writeln('  game: ${redact(log)}');
       logs.add(log);
     case 'app.progress':
       if (params['finished'] != true && params['message'] != null) {
-        say('progress: ${params['message']}');
+        say('progress: ${redact('${params['message']}')}');
       }
     case 'daemon.logMessage':
-      say('${params['level']}: ${params['message']}');
+      say('${params['level']}: ${redact('${params['message']}')}');
     case 'app.stop':
       say('app.stop received — game stopped');
+      _deleteInfoFile();
     default:
-      say('event $event ${jsonEncode(params)}');
+      say('event $event ${redact(jsonEncode(params))}');
   }
 }
 
@@ -422,7 +485,7 @@ Future<void> _onCommand(String cmd) async {
     case 'R':
       await reload(full: true);
     case 'u':
-      _printAttachHelp();
+      _printAttachUri();
     case 'q':
       await _quit();
     case '':
@@ -435,10 +498,12 @@ Future<void> _onCommand(String cmd) async {
 Future<void> _quit({int code = 0}) async {
   say('stopping game (app.stop) and restoring edited files');
   await _restoreFiles();
+  _deleteInfoFile();
   try {
     await send('app.stop', {'appId': appId})
         .timeout(const Duration(seconds: 5));
   } catch (_) {}
   flutter.kill();
+  await stdout.flush();
   exit(code);
 }

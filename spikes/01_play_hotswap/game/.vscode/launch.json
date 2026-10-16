@@ -2,7 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Attach to Studio game (DDS 8181)",
+      "name": "Attach to Studio game (info file)",
+      "type": "dart",
+      "request": "attach",
+      "vmServiceInfoFile": "${workspaceFolder}/.dart_tool/flame_studio/vm_service.json"
+    },
+    {
+      "name": "Attach to Studio game (unauthenticated, DDS 8181)",
       "type": "dart",
       "request": "attach",
       "vmServiceUri": "http://127.0.0.1:8181/"

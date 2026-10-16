@@ -1,0 +1,21 @@
+# Workspace root (Dart pub workspaces, Q28). Not a package: it only lists the
+# members and holds the shared dev tooling. One `dart pub get` here resolves
+# everything into a single pubspec.lock and .dart_tool/.
+#
+# spikes/ is deliberately not a member: the spike projects are throwaway and
+# resolve on their own.
+name: flame_studio_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.12.0
+
+workspace:
+  - packages/flame_studio_annotations
+  - packages/flame_studio_runtime
+  - packages/flame_studio_generator
+  - apps/flame_studio
+
+dev_dependencies:
+  # Provides the base rule set the root analysis_options.yaml includes.
+  lints: ^6.0.0

@@ -1,0 +1,16 @@
+name: flame_studio_annotations
+description: >-
+  Annotations that mark Flame components and behaviors for Flame Studio.
+  Pure Dart, no dependencies.
+version: 0.0.1
+publish_to: none # Until the package names are cleared with the Flame maintainers (Q36).
+
+environment:
+  sdk: ^3.12.0
+
+resolution: workspace
+
+# No dependencies, by design (Q44): the generator runs on the plain Dart VM.
+
+dev_dependencies:
+  test: ^1.25.0

@@ -1,0 +1,44 @@
+# Shared analyzer and lint settings. Every workspace member includes this file
+# from its own analysis_options.yaml; Flutter members also add
+# package:flutter_lints/flutter.yaml.
+include: package:lints/recommended.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - spikes/**
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_dynamic_calls
+    - avoid_print
+    - avoid_relative_lib_imports
+    - avoid_slow_async_io
+    - avoid_type_to_string
+    - avoid_unused_constructor_parameters
+    - cancel_subscriptions
+    - close_sinks
+    - directives_ordering
+    - discarded_futures
+    - only_throw_errors
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_final_fields
+    - prefer_final_locals
+    - prefer_single_quotes
+    - public_member_api_docs
+    - sort_pub_dependencies
+    - test_types_in_equals
+    - throw_in_finally
+    - unawaited_futures
+    - unnecessary_await_in_return
+    - unnecessary_lambdas
+    - unnecessary_parenthesis
+    - unnecessary_statements
+    - use_super_parameters

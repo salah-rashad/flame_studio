@@ -1,0 +1,115 @@
+# CI for the Flame Studio workspace (project plan §13, Q33).
+# Signed macOS releases live in release.yml.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Flutter stable only (Q18). Bump together with the local toolchain; Flutter
+  # 3.44.x caps build_runner at 2.15.1 (Q76), which matters once the contract
+  # job runs the generator.
+  FLUTTER_VERSION: "3.44.2"
+
+jobs:
+  analyze-test:
+    name: Analyze and test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Resolve the workspace
+        run: dart pub get
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed packages apps
+      - name: Analyze pure-Dart packages
+        run: dart analyze --fatal-infos packages/flame_studio_annotations packages/flame_studio_generator
+      - name: Analyze Flutter packages and the app
+        run: flutter analyze --fatal-infos packages/flame_studio_runtime apps/flame_studio
+      - name: Test flame_studio_annotations
+        working-directory: packages/flame_studio_annotations
+        run: dart test
+      - name: Test flame_studio_generator
+        working-directory: packages/flame_studio_generator
+        run: dart test
+      - name: Test flame_studio_runtime
+        working-directory: packages/flame_studio_runtime
+        run: flutter test
+      - name: Test the Studio app
+        working-directory: apps/flame_studio
+        run: flutter test
+
+  build-studio:
+    name: Build the Studio (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: macos
+          - os: windows-latest
+            platform: windows
+          - os: ubuntu-latest
+            platform: linux
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Linux desktop build dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Resolve the workspace
+        run: dart pub get
+      - name: Build (unsigned release)
+        working-directory: apps/flame_studio
+        run: flutter build ${{ matrix.platform }} --release
+
+  contract:
+    # TODO(v0.1 #12, Q59): the contract test. Once example/ and the generator
+    # exist:
+    #   1. dart pub get, then run the generator on example/
+    #      (dart run build_runner build in example/).
+    #   2. Check the committed Registry and Manifest (§7.3, Q76). On Flutter
+    #      3.44 (build_runner <= 2.15.1) that is
+    #        git diff --exit-code lib/flame_studio.g.dart lib/flame_studio.manifest.json
+    #      and on Flutter >= 3.47
+    #        dart run build_runner build --only-check
+    #   3. Check the Manifest against its golden file.
+    #   4. Load every example/ scene with flame_test against the generated
+    #      Registry.
+    name: Contract test (TODO)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder
+        run: |
+          echo "::notice title=Contract test::TODO(v0.1 #12) - not implemented yet; example/ and the generator don't exist."

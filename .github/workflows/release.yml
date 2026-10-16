@@ -1,0 +1,24 @@
+# Signed macOS release (project plan §12, §13, Q33, Q40).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos-release:
+    # TODO(v0.1 #15): build, Developer ID sign (hardened runtime, not
+    # sandboxed), notarize and staple the macOS app, package a .dmg and attach
+    # it to a GitHub Release (needs contents: write and the signing secrets).
+    # Fails on purpose until then, so a tag never looks like a release.
+    name: Signed macOS release (TODO)
+    runs-on: macos-latest
+    steps:
+      - name: Placeholder
+        run: |
+          echo "::error title=Release::TODO(v0.1 #15) - signing, notarization and publishing are not implemented yet."
+          exit 1

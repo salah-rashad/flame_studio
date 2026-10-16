@@ -1,1 +1,10 @@
 .DS_Store
+
+# IDEs
+.idea/
+*.iml
+
+# Dart / Flutter (pub workspace: one .dart_tool/ and pubspec.lock at the root)
+.dart_tool/
+build/
+coverage/

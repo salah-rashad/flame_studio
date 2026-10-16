@@ -1,4 +1,4 @@
-# Draft issue for flame-engine/flame (not filed yet)
+# Issue filed as flame-engine/flame#4117 (2026-10-16)
 
 **Title:** flame_tiled: tileset image in a subfolder of an external `.tsx` resolves to the wrong path
 

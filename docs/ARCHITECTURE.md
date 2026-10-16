@@ -384,7 +384,7 @@ references it, clears `tileset.source` so flame_tiled doesn't re-join, and calls
 the game uses stock `TiledComponent.load`, a map can look right in the Studio and fail in the
 game. The `tiledMap` Node kind (v0.2) should load through **one shared loader in
 `flame_studio_runtime`**, used with the disk bundle in the Studio and `rootBundle` in the game.
-Adopted (*Q76*). Worth reporting upstream; no existing issue found.
+Adopted (*Q76*). Reported as flame-engine/flame#4117.
 
 **3. `Images.clear` disposes while the old component still draws.** `Images` can't forget an
 entry without `Image.dispose()`. Clearing a changed file's key and then rebuilding leaves the
@@ -443,7 +443,7 @@ major: the shared tiled loader (finding 2) and the `AssetSource` are where it la
 
 ### Open items
 
-- Report the `.tsx` image path heuristic to flame-engine/flame (finding 2), and re-test
+- Follow flame-engine/flame#4117 (the `.tsx` image path heuristic, finding 2), and re-test
   `edge.tmx` on the tiled 0.12 / Flame 2.0 release.
 - Not in the sample: object layers, image layers, templates (`.tx`), infinite maps,
   collection-of-images tilesets. The loader rebases image layers and per-tile images, untested.

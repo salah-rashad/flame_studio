@@ -20,6 +20,9 @@ env:
   # 3.44.x caps build_runner at 2.15.1 (Q76), which matters once the contract
   # job runs the generator.
   FLUTTER_VERSION: "3.44.2"
+# Linux jobs pin ubuntu-24.04 rather than ubuntu-latest, which moves to
+# Ubuntu 26 from 2026-10-19 (the desktop build's apt packages, e.g.
+# libstdc++-12-dev, are named per release). Move deliberately.
 
 jobs:
   analyze-test:
@@ -27,13 +30,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest, windows-latest, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -70,14 +73,14 @@ jobs:
             platform: macos
           - os: windows-latest
             platform: windows
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             platform: linux
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install Linux desktop build dependencies
         if: matrix.platform == 'linux'
         run: |
@@ -108,7 +111,7 @@ jobs:
     #   4. Load every example/ scene with flame_test against the generated
     #      Registry.
     name: Contract test (TODO)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Placeholder
         run: |

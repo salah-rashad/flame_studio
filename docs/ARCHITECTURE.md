@@ -219,8 +219,8 @@ the pin to `meta: ^1.18.3` (read from the 3.47.x tags, not tested). Two conseque
   The spike's generator builds unchanged at both ends.
 - The plan's CI recommendation (*Q68*, §7.3: `--only-check`, build_runner ≥ 2.16) needs
   **Flutter ≥ 3.47**. Below that, CI can run `dart run build_runner build` and then
-  `git diff --exit-code lib/flame_studio.g.dart lib/flame_studio.manifest.json`. ◇ proposed,
-  not run in the spike
+  `git diff --exit-code lib/flame_studio.g.dart lib/flame_studio.manifest.json`. Decided as
+  *Q76*; the `git diff` variant wasn't run in the spike
 
 **2. Latency is a fixed cost, not a project-size cost.** Each save pays ~0.4–0.5 s before any
 builder runs: build_runner's 250 ms debounce (`commands/watch/watcher.dart`) plus FSEvents. A
@@ -278,7 +278,7 @@ second `watch`, a one-off `build` and `build_runner stop`:
 
 §9.2 currently covers only the first row. The rule, verified with the spike's `--studio`
 simulator: **after a takeover exit, re-probe; held → external, then restart on release; free →
-stopped.** ◇ proposed. Also, `--only-check` and any other build_runner command run locally take
+stopped.** Decided as *Q77* (§9.2). Also, `--only-check` and any other build_runner command run locally take
 the lock and stop the Studio's watcher.
 
 **6. Smaller findings for the generator.**

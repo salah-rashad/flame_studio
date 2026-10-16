@@ -440,7 +440,7 @@ keeps the image path in one place.
 
 The format is fixed now; the grid slicer that writes it ships in v0.1.1 (*Q65*).
 
-### 7.3 Manifest (generator → Studio) (*Q38, Q68*)
+### 7.3 Manifest (generator → Studio) (*Q38, Q68, Q76*)
 
 ```json
 {
@@ -477,14 +477,25 @@ The format is fixed now; the grid slicer that writes it ships in v0.1.1 (*Q65*).
 - Constant defaults are evaluated; non-constant defaults keep their source text for display.
 - Generator errors are written into `errors` too, so the Studio can show them inline even when
   the Dart build fails. ◇ proposed
-- **No timestamps or other non-deterministic content:** the file is committed and checked with
-  `--only-check` in CI, so it must be byte-identical for identical input.
+- **No timestamps or other non-deterministic content:** the file is committed and checked in CI
+  (below), so it must be byte-identical for identical input.
 - **Location (*Q68*):** `lib/flame_studio.manifest.json`, next to the Registry
   `lib/flame_studio.g.dart`. Both are `build_to: source` outputs of one `$lib$` aggregator that
   reads per-file results from the build cache (the pattern source_gen's own combining builder
   uses). **Both are committed**: a fresh clone compiles and opens in the Studio with no build
-  step, so a Missing behavior always means the code really changed. Getting Started recommends
-  `dart run build_runner build --only-check` in CI (build_runner ≥ 2.16).
+  step, so a Missing behavior always means the code really changed.
+- **CI check (*Q76*).** Getting Started recommends one of two checks, depending on the project's
+  Flutter version. Flutter ≤ 3.46 pins `meta` tightly enough that build_runner resolves to at
+  most 2.15.1, which has no `--only-check` (spike #2):
+
+  | Project's Flutter | CI step |
+  |---|---|
+  | ≥ 3.47 (build_runner ≥ 2.16) | `dart run build_runner build --only-check` |
+  | ≤ 3.46 | `dart run build_runner build`, then `git diff --exit-code lib/flame_studio.g.dart lib/flame_studio.manifest.json` |
+
+  The `git diff` variant wasn't run in spike #2; the contract job (§13) exercises it first.
+  Either command takes build_runner's lock, so running one locally stops the Studio's watcher
+  (§9.2).
 - The per-file builder uses build_runner's `triggers` / `run_only_if_triggered` so files without
   Flame Studio annotations cost nearly nothing. ◇ proposed
 
@@ -585,20 +596,30 @@ Order: per-project fvm config (`.fvmrc` / `.fvm/`) → `FLUTTER_ROOT` → `flutt
 manual override in Settings. The Studio shows the detected version in the project list and blocks
 Play/setup if none is found. The Studio bundles no SDK.
 
-### 9.2 Code generator (*Q48*)
+### 9.2 Code generator (*Q48, Q77*)
 
-- Setup requires **`build_runner ≥ 2.14`**, which has a process lock: when a second `watch`
-  starts, the running one finishes its build and exits.
+- Setup requires **`build_runner ≥ 2.14`**, which has a process lock held for the whole run of
+  **any** build_runner command. When another one starts (a second `watch`, a one-off `build`,
+  `--only-check`, or `build_runner stop`), the running watcher finishes its build, prints
+  `Exiting as requested by another build_runner process.` and exits with code 0.
 - Before starting its own watcher, the Studio **probes the lock**
   (`.dart_tool/build/lock/build_runner.lock`, non-blocking exclusive lock, released straight away;
   it never creates the `.requested` file). If it is held, the Studio watches the Manifest file and
   shows **"External build_runner"**.
 - Otherwise it runs `dart run build_runner watch` in the project, streams output to the Console,
-  and watches the Manifest file. If its watcher later exits because another process took over, it
-  switches to external mode instead of reporting an error.
+  and watches the Manifest file.
+- **Takeover (*Q77*).** If its watcher exits with that message, the Studio re-probes the lock
+  instead of reporting an error:
+
+  | Lock after the exit | What the user ran | Studio |
+  |---|---|---|
+  | Held | `build_runner watch`, or a one-off `build` / `--only-check` | Shows "External build_runner"; when the lock is released, starts its own watcher again |
+  | Free | `build_runner stop` | Shows "Generator stopped" with a *Start* button; doesn't restart |
+
+  The probe takes 1–4 ms and doesn't disturb a running watcher (spike #2).
 - Manifest changes → re-parse → Type catalog, inspector and Add lists update; Missing behavior /
   Missing component states re-evaluate.
-- Status bar shows: up to date / generating / error / external.
+- Status bar shows: up to date / generating / error / external / stopped.
 
 ### 9.3 Play and Hot-swap (*Q17, Q41, Q43, Q66, Q74, Q75*)
 
@@ -827,7 +848,7 @@ Studio stops issuing reloads while an IDE is attached) remains the escape hatch.
 | 13 | `example/` game | 2 |
 | 14 | Implement Claude Design visual design (theme, components) | 4 |
 | 15 | Signing, notarization, release pipeline | 3 |
-| 16 | README, Getting Started (incl. Attach and `--only-check`), demo video, `ARCHITECTURE.md` polish | 3 |
+| 16 | README, Getting Started (incl. Attach and the CI check, §7.3), demo video, `ARCHITECTURE.md` polish | 3 |
 | | **Total** | **~74.5** |
 
 **Moved to v0.1.1 (*Q65*):** grid slicer and the animated sprite Node kind (~6), rename with
@@ -894,7 +915,9 @@ Q-F (→ *Q56*) and Q-G (→ *Q50*), and Q-H, the developer preview scope (→ *
    physical phone; Dart-only reloads don't rebuild scenes; an IDE attached via a fixed DDS port
    can hot-reload alongside the Studio. Done in spike #1, with the workarounds in §9.3 (*Q74,
    Q75*); findings in [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach).
-2. `$lib$` aggregator output to `lib/`, watch latency, and the build_runner lock probe (§7.3, §9.2).
+2. ✅ `$lib$` aggregator output to `lib/`, watch latency, and the build_runner lock probe (§7.3,
+   §9.2). Done in spike #2 (~0.9–1.0 s per save on 300- and 1000-file projects; *Q76, Q77*);
+   findings in [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-2--generator-shape-and-latency).
 3. `flame_tiled` and image loading from an arbitrary on-disk folder inside the Studio (§10).
 
 ---

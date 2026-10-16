@@ -3,7 +3,7 @@
 Outcome of the design grilling session (2026-10-15/16). Seed for `ARCHITECTURE.md`.
 Question numbers (Q1…Q42) refer to the session transcript. Q43–Q73 come from the plan review
 (2026-10-16, §9 below); rows they changed carry an *Amended by* note. Q74–Q75 come from
-spike #1.
+spike #1, Q76–Q77 from spike #2.
 
 ## 1. Product
 
@@ -121,7 +121,7 @@ Grilling of `project-plan.md`. Vocabulary in [`../GLOSSARY.md`](../GLOSSARY.md);
 | Q45 | Scenes name user types by **Type ID = class name**, or an explicit `id:` in the annotation. The generator **fails the build on duplicate Type IDs**. `@RenamedFrom` is dropped. ([ADR 0002](adr/0002-type-ids-are-class-names.md)) |
 | Q46 | **Only Overrides are stored**; code defaults apply to every Node without one. Any value the user explicitly sets is an Override, even if it equals the default. Inspector marks Overrides and offers *Reset to default*. ([ADR 0003](adr/0003-scenes-store-only-overrides.md)) |
 | Q47 | Scene files persist **only ordered `childIds`**; the root is an ordinary Node; `parentId` is derived on load; the loader repairs or flags inconsistencies. |
-| Q48 | Setup requires **build_runner ≥ 2.14**. The Studio probes build_runner's lock before starting a watcher; if one is running (or takes over later) it uses it and shows "External build_runner". |
+| Q48 | Setup requires **build_runner ≥ 2.14**. The Studio probes build_runner's lock before starting a watcher; if one is running (or takes over later) it uses it and shows "External build_runner". *Amended by Q77: re-probe after a takeover exit.* |
 | Q49 | The Studio checks the project's resolved `flame_studio_runtime` version (`pubspec.lock`) against a built-in compatibility range: *Upgrade runtime* or *Update the Studio*. It never writes a `schemaVersion` the project's Runtime can't read. |
 | Q50 | Custom components are `"kind": "custom"` + `"type"`; they must extend `PositionComponent` in v1; they accept Behaviors only if they mix in `EntityMixin` (`acceptsBehaviors` in the Manifest). |
 | Q51 | Node names are not unique. `find` throws on ambiguity and points to `findAll` or a path lookup; the hierarchy warns about duplicate sibling names. |
@@ -141,7 +141,7 @@ Grilling of `project-plan.md`. Vocabulary in [`../GLOSSARY.md`](../GLOSSARY.md);
 | Q65 | v0.1 cuts to v0.1.1: grid slicer + animated sprite Node kind, rename with reference rewriting, multi-select "mixed" values. Play stays in v0.1. Add a **developer preview** (notarized, unpolished, Flame Discord) before v0.1. |
 | Q66 | Hot-swap uses **Flame's `onHotReload`** (Flame ≥ 1.36) after `app.restart`; flutter_tools already syncs and evicts changed assets. No custom service extension. |
 | Q67 | Hot-swap **rebuilds the whole scene, only if its content hash changed**. Node-level patching (with the scene diff shared between Runtime and reconciler) in v0.4. |
-| Q68 | Registry and Manifest are both written to **`lib/`** (`flame_studio.g.dart`, `flame_studio.manifest.json`) and **committed**; CI uses `build_runner build --only-check`. |
+| Q68 | Registry and Manifest are both written to **`lib/`** (`flame_studio.g.dart`, `flame_studio.manifest.json`) and **committed**; CI uses `build_runner build --only-check`. *Amended by Q76: `--only-check` only on Flutter ≥ 3.47; `git diff` check below.* |
 | Q69 | Spike #1 rewritten: Play → Hot-swap on simulator, emulator and physical phone; Dart-only reload doesn't rebuild; IDE attach + hot reload alongside the Studio (the deciding test for Q43). |
 | Q70 | **Web devices hidden** from Play in v0.1; best effort from v0.3 or later. |
 | Q71 | After a Hot-swap, game code re-runs lookups in a **`StudioScene` `onReloaded` callback**; debug builds warn on first use of a removed Node. *Accepted "for now"; revisit after the developer preview.* |
@@ -149,3 +149,5 @@ Grilling of `project-plan.md`. Vocabulary in [`../GLOSSARY.md`](../GLOSSARY.md);
 | Q73 | The **developer preview keeps full scope** (items 0–9, 11, 15 of `project-plan.md` §14, ~62 evenings, ~5 months) rather than being trimmed to land at ~3–4 months. |
 | Q74 | **Hot-swap while an IDE is attached** (spike #1 outcome, 2026-10-16): the Studio runs `flutter run` with the hidden `--project-root` pointing at a **symlink to the project with a different folder name** (`<app support>/run/<project-id>/<name>-studio`), so its DevFS doesn't share a name with the IDE's and isn't deleted when the IDE attaches. Before every reload it **re-points the engine's asset directory** at its own DevFS (`_flutter.setAssetBundlePath`); if that fails, it reloads, re-points, evicts the changed scene files and reloads once more. Both are private flutter_tools/engine interfaces, so they are re-checked on every Flutter stable release; the old fallback (the Studio stops reloading while an IDE is attached) stays as the escape hatch. ([ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md), [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach)) |
 | Q75 | Play always passes **`--disable-service-auth-codes`** with the fixed DDS port: with auth codes the VM service URL changes on every run, which breaks saved attach configurations. |
+| Q76 | **CI check of the committed Registry and Manifest depends on the Flutter version** (spike #2): Flutter ≤ 3.46 pins `meta` so tightly that build_runner resolves to at most 2.15.1, which has no `--only-check`. Getting Started recommends `dart run build_runner build --only-check` on Flutter ≥ 3.47 (build_runner ≥ 2.16), and below that `dart run build_runner build` followed by `git diff --exit-code lib/flame_studio.g.dart lib/flame_studio.manifest.json`. The contract CI job (Q59) uses whichever the repo's Flutter supports. ([`ARCHITECTURE.md`](ARCHITECTURE.md#spike-2--generator-shape-and-latency)) |
+| Q77 | **When the Studio's watcher exits because another build_runner took over, it re-probes the lock** (spike #2): held → show "External build_runner" and start its own watcher again once the lock is released (a user's `watch` or one-off `build`, including `--only-check`); free → the user ran `build_runner stop`, so show "Generator stopped" with a *Start* button and don't restart. ([`ARCHITECTURE.md`](ARCHITECTURE.md#spike-2--generator-shape-and-latency)) |

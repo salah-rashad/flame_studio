@@ -116,7 +116,7 @@ Fill in as you go. Record the Flutter version and device for each row.
 | (b) Dart-only reload doesn't rebuild | ✅ | ✅ | ✅ | |
 | (c) second client (`flutter attach`) reloads while driver connected | ✅ | ✅ | | |
 | (c) VS Code attach | | ✅ | | |
-| (c) VS Code breakpoint hits | | ? (not reported yet) | | |
+| (c) VS Code breakpoint hits | | ✅ (`SpikeGame.update`) | | |
 | (c) VS Code hot reload while driver connected | | ✅ | | |
 | (c) driver scene edits still apply after an IDE attaches/reloads | ❌ without / ✅ with `--repoint-assets` | ❌ without / ✅ with `--repoint-assets` (VS Code) | | |
 | (c) `--disable-service-auth-codes` needed for a stable URL? | Yes: with auth codes the URL changes every run (`/EMWbRKFTAe4=/ws`, `/rY9Oy8-nQ1I=/ws`) | | | |

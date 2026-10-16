@@ -115,10 +115,11 @@ Fill in as you go. Record the Flutter version and device for each row.
 | (a) scene edit rebuilds | ✅ ~58 ms | ✅ ~70 ms | ✅ ~250 ms | |
 | (b) Dart-only reload doesn't rebuild | ✅ | ✅ | ✅ | |
 | (c) second client (`flutter attach`) reloads while driver connected | ✅ | ✅ | | |
-| (c) driver scene edits still apply after an IDE attaches/reloads | ❌ / ✅ with `--repoint-assets` (one stale flash) | ❌ / ⚠️ with `--repoint-assets` before the fallback reload (VS Code, manual) — rerun | | |
-| (c) VS Code attach + breakpoint | | | | |
-| (c) VS Code reload while driver connected | | | | |
-| (c) needs `--disable-service-auth-codes`? | | | | |
+| (c) VS Code attach | | ✅ | | |
+| (c) VS Code breakpoint hits | | ? (not reported yet) | | |
+| (c) VS Code hot reload while driver connected | | ✅ | | |
+| (c) driver scene edits still apply after an IDE attaches/reloads | ❌ without / ✅ with `--repoint-assets` | ❌ without / ✅ with `--repoint-assets` (VS Code) | | |
+| (c) `--disable-service-auth-codes` needed for a stable URL? | Yes: with auth codes the URL changes every run (`/EMWbRKFTAe4=/ws`, `/rY9Oy8-nQ1I=/ws`) | | | |
 
 Flutter 3.44.2 / Flame 1.38.2, macOS 26.2. macOS desktop isn't a v0.1 Play target, but it's
 the quickest loop for iterating on the spike.
@@ -165,9 +166,11 @@ the quickest loop for iterating on the spike.
   `<its DevFS base>/build/flutter_assets`. If that fails because the folder was deleted (or
   doesn't exist yet), it reloads (which recreates the folder), re-points, evicts the scene
   (`ext.flutter.evict`) and reloads again. With it, the game matched the file on disk after
-  every step of `s ATTACH s t A s t A t s`. Remaining wart: on the first edit after an IDE
-  attaches, the game shows the original scene for one reload (~50 ms) and `onReloaded` fires
-  twice.
+  every step of `s ATTACH s t A s t A t s`, and on the iOS simulator with VS Code attached and
+  hot-reloading between driver edits. Remaining wart: on the first edit after an IDE attaches,
+  the first of the two reloads reads a stale copy (the original scene from the app bundle, or
+  the IDE's copy if the IDE has already reloaded), so the scene can flash for ~50 ms and
+  `onReloaded` can fire twice.
 
   Caveats for the Studio: `_flutter.setAssetBundlePath` is a private engine extension (the
   one flutter_tools uses), so it may change between Flutter releases. Running the game from a

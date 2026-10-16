@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "nodes": [
+    { "name": "ground", "kind": "rect", "x": 0, "y": 140, "w": 320, "h": 20, "color": "#4caf50" },
+    { "name": "player", "kind": "rect", "x": -120, "y": 80, "w": 40, "h": 60, "color": "#2196f3" },
+    { "name": "coin", "kind": "circle", "x": 60, "y": 40, "r": 16, "color": "#ffc107" },
+    { "name": "title", "kind": "text", "x": 0, "y": -120, "text": "Scene v1", "color": "#ffffff" }
+  ]
+}

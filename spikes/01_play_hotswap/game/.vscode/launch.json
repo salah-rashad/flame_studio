@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to Studio game (DDS 8181)",
+      "type": "dart",
+      "request": "attach",
+      "vmServiceUri": "http://127.0.0.1:8181/"
+    },
+    {
+      "name": "Attach to Studio game (pick URI)",
+      "type": "dart",
+      "request": "attach"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+name: studio_driver
+description: Spike #1 throwaway driver that plays the Studio's role.
+publish_to: 'none'
+
+environment:
+  sdk: ^3.12.0

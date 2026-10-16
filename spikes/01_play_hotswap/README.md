@@ -127,10 +127,11 @@ Fill in as you go. Record the Flutter version and device for each row.
 | (a) scene edit rebuilds | ✅ ~58 ms | ✅ ~70 ms | ✅ ~250 ms | ✅ ~156 ms (USB) |
 | (b) Dart-only reload doesn't rebuild | ✅ | ✅ | ✅ | ✅ ~217 ms |
 | (c) second client (`flutter attach`) reloads while driver connected | ✅ | ✅ | | |
-| (c) VS Code attach | | ✅ | | |
+| (c) VS Code attach | | ✅ | | ✅ |
 | (c) VS Code breakpoint hits | | ✅ (`SpikeGame.update`) | | |
-| (c) VS Code hot reload while driver connected | | ✅ | | |
-| (c) driver scene edits still apply after an IDE attaches/reloads | ❌ without / ✅ with `--repoint-assets` (✅ cleaner with `--project-root` too) | ❌ without / ✅ with `--repoint-assets` (VS Code) | | ❌ with `--repoint-assets` alone (VS Code): driver hot restart breaks; retest with `--project-root` |
+| (c) VS Code hot reload while driver connected | | ✅ | | ✅ |
+| (c) driver hot restart while an IDE is attached | ✅ (`flutter attach`, `--project-root`) | | | ❌ without / ✅ with `--project-root` (VS Code shows a stale "paused" afterwards, see notes) |
+| (c) driver scene edits still apply after an IDE attaches/reloads | ❌ without / ✅ with `--repoint-assets` (✅ cleaner with `--project-root` too) | ❌ without / ✅ with `--repoint-assets` (VS Code) | | ❌ with `--repoint-assets` alone (driver hot restart breaks) / ✅ with `--repoint-assets --project-root` (VS Code) |
 | (c) `--disable-service-auth-codes` needed for a stable URL? | Yes: with auth codes the URL changes every run (`/EMWbRKFTAe4=/ws`, `/rY9Oy8-nQ1I=/ws`) | | | |
 
 Flutter 3.44.2 / Flame 1.38.2, macOS 26.2. macOS desktop isn't a v0.1 Play target, but it's
@@ -201,7 +202,10 @@ the quickest loop for iterating on the spike.
   its own DevFS name, so the attaching IDE creates `game…` without destroying anything. On
   macOS with `flutter attach`, `--project-root` plus `--repoint-assets` was correct at every
   step of `s ATTACH s t A s t R s d A s t`: hot restart worked, and no fallback reload was
-  needed after attaching. Not yet verified on a physical device. For the Studio, the symlink
+  needed after attaching. Verified on the Android phone (CPH2737) with VS Code: every re-point
+  after attaching succeeded, every `s` rebuilt, `t` and VS Code reloads stayed unchanged
+  (apart from one `t` after a manual scene edit, which correctly rebuilt), and both driver hot
+  restarts returned `code=0`. For the Studio, the symlink
   would live in its own support folder, e.g. `<app support>/run/<project>-studio`. `--project-root`
   is hidden and undocumented, so this is a second private-API dependency.
 
@@ -211,6 +215,19 @@ the quickest loop for iterating on the spike.
   runs from the user's project folder, so that isn't an option. **Decision needed for §9.3 /
   ADR 0001:** adopt the re-point plus fallback reload (the Studio needs a VM-service
   connection anyway), or fall back to "the Studio stops reloading while an IDE is attached".
+- **VS Code shows "paused" after any hot restart while both are connected** (driver `R` or
+  VS Code's own restart), with no breakpoints set and a nonsense top frame (`List.add`,
+  `int.&`, `rotl32` called from `List.add`). The game keeps running and `s`/`t` still work.
+  Mechanism, reproduced on macOS with a stand-in client: a debug adapter turns on
+  `pause_isolates_on_start` and asks DDS for `requirePermissionToResume(onPauseStart)`. Hot
+  restart replaces the isolate (`IsolateExit` → `IsolateStart` → `PauseStart`), and the new
+  isolate waits until that client resumes it. A stand-in client that never resumed left the
+  game stuck at startup; VS Code does resume, but its UI keeps the "paused" state and fetches
+  the stack of the running isolate, hence the random frames. Without an IDE-style client, the
+  driver's restart emits no pause events at all. For the Studio: after its own hot restart
+  with an IDE attached, the game depends on the IDE resuming the new isolate. Pressing
+  Continue in VS Code clears the stale state. Worth re-checking against the Dart-Code issue
+  tracker before relying on it.
 - `flutter run --machine` emits `device.added` / `device.removed` for paired but unreachable
   devices (here two wireless iPhones with `"isConnected": false`) while it runs. The Studio's
   device dropdown should ignore devices that aren't connected.

@@ -3,7 +3,7 @@
 Outcome of the design grilling session (2026-10-15/16). Seed for `ARCHITECTURE.md`.
 Question numbers (Q1…Q42) refer to the session transcript. Q43–Q73 come from the plan review
 (2026-10-16, §9 below); rows they changed carry an *Amended by* note. Q74–Q75 come from
-spike #1, Q76–Q77 from spike #2.
+spike #1, Q76–Q77 from spike #2, Q78–Q80 from spike #3.
 
 ## 1. Product
 
@@ -24,7 +24,7 @@ spike #1, Q76–Q77 from spike #2.
 | Q38 | User types are discovered by **`flame_studio_generator`** (source_gen), which writes both the **runtime registry** (factories + setters, shipped in games) and a **types manifest (JSON)** that the studio reads (exact output path to be settled in the v0.0 spike — see `project-plan.md` §7.3; *amended by Q68: both in `lib/`, committed*). One introspection codebase, always in sync with the user's SDK. No analyzer embedded in the studio. |
 | Q12 | `source_gen` generator, not `reflectable`. Built-in Flame components use **hand-written descriptors**. Everything sits behind a `StudioTypeRegistry` interface (*renamed by Q52: the Studio side is the **Type catalog**; **Registry** means only the generated runtime code*). v1 field types: `int`, `double`, `bool`, `String`, enums, `Vector2`, `Color`, asset references, entity references. |
 | Q39 | Studio uses the **user's installed Flutter/Dart SDK** (PATH / `FLUTTER_ROOT` / fvm), overridable in settings. No bundled SDK. |
-| Q18 | `flame_studio_runtime` supports the **latest stable Flame minor** until studio 1.0, then current + previous. Flutter stable only. The studio bundles its own Flame for rendering built-ins; the scene format must never depend on a Flame version. |
+| Q18 | `flame_studio_runtime` supports the **latest stable Flame minor** until studio 1.0, then current + previous. Flutter stable only. The studio bundles its own Flame for rendering built-ins; the scene format must never depend on a Flame version. *Amended by Q80: Flame 2.0.* |
 
 ## 3. Scripting model
 
@@ -45,7 +45,7 @@ spike #1, Q76–Q77 from spike #2.
 | Q27 | Assets referenced by **project-relative path**; renames done in the studio rewrite all references; missing-asset warnings. Animations live in their own **`.anim.json`** files. |
 | Q8 | Sprites: **grid slicer** + **Aseprite import** (+ TexturePacker). No drawing tools. |
 | Q9 | Collision: **Flame's built-in hitboxes** first; Forge2D later as a plugin. |
-| Q10 | **Tiled maps as scene nodes** (reference `.tmx`, rendered in viewport); object-layer → entity conversion later. |
+| Q10 | **Tiled maps as scene nodes** (reference `.tmx`, rendered in viewport); object-layer → entity conversion later. *Amended by Q78: loaded through the Runtime's own Tiled loader.* |
 
 ## 5. Editor internals
 
@@ -67,7 +67,7 @@ spike #1, Q76–Q77 from spike #2.
 | Q30 | Game code: **non-invasive** `StudioScene.load('scenes/x.scene.json')` → add to any `World`. Lookup by **name** and **tag**; typed accessors later. Debug-only reload hook for hot-swap. *Amended by Q51, Q58, Q66, Q71.* |
 | Q17 | **Play = `flutter run --machine` on the chosen device.** On save, the studio triggers a hot reload (which syncs the changed scene file) and the runtime reloads the scene in debug builds. *Amended by Q66: via Flame's `onHotReload`, no custom service extension.* |
 | Q41 | **Device dropdown** in the toolbar (from `flutter devices`), remembered per project. |
-| Q31 | Editor loads assets **from disk** via an `AssetSource` abstraction; games load from the **bundle**. Studio keeps `pubspec.yaml` `assets:` in sync (append only, show diff first time). |
+| Q31 | Editor loads assets **from disk** via an `AssetSource` abstraction; games load from the **bundle**. Studio keeps `pubspec.yaml` `assets:` in sync (append only, show diff first time). *Confirmed by spike #3; amended by Q79: what the Studio's `AssetSource` is.* |
 
 ## 7. Platforms, repo, releases
 
@@ -151,3 +151,6 @@ Grilling of `project-plan.md`. Vocabulary in [`../GLOSSARY.md`](../GLOSSARY.md);
 | Q75 | Play always passes **`--disable-service-auth-codes`** with the fixed DDS port: with auth codes the VM service URL changes on every run, which breaks saved attach configurations. |
 | Q76 | **CI check of the committed Registry and Manifest depends on the Flutter version** (spike #2): Flutter ≤ 3.46 pins `meta` so tightly that build_runner resolves to at most 2.15.1, which has no `--only-check`. Getting Started recommends `dart run build_runner build --only-check` on Flutter ≥ 3.47 (build_runner ≥ 2.16), and below that `dart run build_runner build` followed by `git diff --exit-code lib/flame_studio.g.dart lib/flame_studio.manifest.json`. The contract CI job (Q59) uses whichever the repo's Flutter supports. ([`ARCHITECTURE.md`](ARCHITECTURE.md#spike-2--generator-shape-and-latency)) |
 | Q77 | **When the Studio's watcher exits because another build_runner took over, it re-probes the lock** (spike #2): held → show "External build_runner" and start its own watcher again once the lock is released (a user's `watch` or one-off `build`, including `--only-check`); free → the user ran `build_runner stop`, so show "Generator stopped" with a *Start* button and don't restart. ([`ARCHITECTURE.md`](ARCHITECTURE.md#spike-2--generator-shape-and-latency)) |
+| Q78 | **One Tiled loader, in `flame_studio_runtime`** (spike #3 outcome, 2026-10-16): `tiledMap` Nodes load through the Runtime's loader, with the disk bundle in the Studio and `rootBundle` in the game, so a map that renders in the Studio also loads in the game. It parses the `.tmx` itself, resolves every tileset, tile and image-layer path against the file that references it (as Tiled does), and hands the parsed map to `RenderableTiledMap.fromTiledMap`. Stock `TiledComponent.load` guesses `.tsx`-relative image paths by segment count and fails on valid maps (e.g. `sets/a.tsx` → `img/a.png`); reported as flame-engine/flame#4117; the loader can go back to stock once it's fixed. ([`ARCHITECTURE.md`](ARCHITECTURE.md#spike-3--disk-rendering)) |
+| Q79 | **The Studio's `AssetSource`** is a disk `AssetBundle` (keys are project-relative paths, the same strings the game declares in `pubspec.yaml`) plus a **Studio-owned image cache**: a changed image is decoded first, and the old one is released only after every Node drawing it has been swapped (Flame's `Images.clear` disposes at once, which blanks the viewport mid-swap). Each Node's build **records the files it reads**, and a file event rebuilds exactly those Nodes. Before rebuilding a map, the Studio drops the affected entries of flame_tiled's process-wide `TiledAtlas` cache. The project folder is watched recursively (real paths, symlinks resolved; ~30 ms debounce). |
+| Q80 | **Flame 2.0:** the Runtime keeps supporting the latest stable Flame minor (Q18); when Flame 2.0 ships, the Runtime and the Studio's bundled Flame move to it together in one release, and the 1.x line gets fixes only. Flame's main branch already removes asset path prefixes (flame-engine/flame#4015) and moves flame_tiled to tiled 0.12 (#4073); the Q78 loader and the Q79 `AssetSource` are the code to port. |

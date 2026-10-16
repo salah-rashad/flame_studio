@@ -5,7 +5,7 @@ How Flame Studio is built and why. This document starts from the v0.0 de-risking
 intended design; this file records what was verified, what had to change, and what depends on
 behavior we don't control.
 
-Status: **v0.0 in progress.** Spikes #1 and #2 done; spike #3 (disk rendering) to come.
+Status: **v0.0 done.** All three spikes ran; their findings are below.
 
 ---
 
@@ -317,6 +317,136 @@ the lock and stop the Studio's watcher.
 - Could the Studio warm the analyzer right after starting its watcher, to move the 2.4 s
   first-build cost off the user's first save? ◇ proposed
 
+---
+
 ## Spike #3 — Disk rendering
 
-*Not started.* See `project-plan.md` §14 v0.0 #3 and §15.3.
+**Question:** can the Studio, a Flutter macOS app with its own bundled Flame, render sprites,
+animations and Tiled maps loaded from the user's project folder on disk rather than from its
+own asset bundle (*Q31, Q10*), and pick up edits to those files without restarting?
+
+**Answer:** yes. A ~40-line `AssetBundle` that reads files under the project root is all Flame
+and flame_tiled need; every loader takes a bundle and an `Images` cache as parameters. Edits
+reach the screen in **~75–200 ms**, reloading only what used the file. Three things need care:
+**flame_tiled resolves tileset images with a heuristic** that breaks for some valid Tiled
+layouts (for the game too), **`Images.clear` disposes images that may still be on screen**, and
+flame_tiled keeps a **process-wide atlas cache** that must be cleared before rebuilding a map.
+
+Code and step-by-step instructions: [`spikes/03_disk_render/`](../spikes/03_disk_render/README.md).
+An unsandboxed Flutter macOS app standing in for the Studio's viewport, a generator for a tiny
+hand-made project (PNGs, `.tmx`, `.tsx`), an edit script and a latency summarizer.
+
+Tested with Flutter 3.44.2, Flame 1.38.2, flame_tiled 3.1.2 (tiled 0.11.1), macOS 26.2 on an
+Apple M4, 2026-10-16.
+
+### Results
+
+| Check | Result |
+|---|---|
+| Sprite, frame animation and Tiled map (external `.tsx` in another folder, embedded tileset with `../` image) rendered in a `GameWidget` from a folder chosen at runtime | ✅ |
+| `.tsx` in a subfolder, image in a subfolder of that (`sets/edge.tsx` → `img/edge.png`) | ✅ with our loader · ❌ `TiledComponent.load` (finding 2) |
+| Edit in place / temp + rename / delete / re-create a file → only what read it reloads | ✅ write → frame median 76–176 ms, max 199 ms |
+| Unrelated file changes | ✅ ignored |
+| Missing file → inline error; re-created → recovers | ✅ |
+| Release build, unsandboxed | ✅ same, write → frame 64–95 ms |
+| Sandboxed build | ❌ `Operation not permitted` (expected, §12) |
+| One shared `Images` cache, `Images.clear` on change | ⚠️ a race: blank viewport until the swap (finding 3) |
+| Rebuild a map without `TiledAtlas.clearCache()` | ❌ stale pixels, lost dependencies (finding 4) |
+
+Initial load of the sample (4 slots, 9 files): ~135 ms debug, ~115 ms release. Reload time is
+FSEvents delivery (10–115 ms, bimodal around 12 and 112 ms), a 30 ms debounce, 2–25 ms of
+building and two frames.
+
+### Findings
+
+**1. Pointing Flame at disk is a small `AssetBundle` (*Q31*).** `DiskAssetBundle` overrides
+`load`, `loadString` and `loadStructuredData` and reads the file on every call. `Images(bundle:,
+prefix: '')`, `TiledComponent.load(bundle:, images:, prefix:)`,
+`RenderableTiledMap.fromTiledMap(images:)` and `FlameTsxProvider.parse(key, bundle, prefix)` all
+take it; no globals (`Flame.bundle`, `Flame.images`) change, so each open project can have its
+own. Keys are paths relative to the project root, the same strings the game declares in
+`pubspec.yaml`, so one scene reference loads from disk in the Studio and from `rootBundle` in
+the game. The planned `AssetSource` is therefore little more than "which `AssetBundle`, plus
+who owns the image cache". Doesn't carry over: `Images.loadAllImages` / `loadAllFromPattern`
+need an `AssetManifest`, which a folder doesn't have; the Studio lists files itself.
+
+**2. flame_tiled's tileset image paths are a heuristic, wrong for some valid maps.** `.tsx`
+files resolve relative to the map, like Tiled. Tileset images are loaded relative to the
+*map's* folder, and `TiledAtlas.fromTiledMap` prefixes the `.tsx` folder only when the image
+path and the `.tsx` path have a different number of segments. So `../tilesets/terrain.tsx` +
+`terrain.png` works, but `sets/edge.tsx` + `img/edge.png` loads `assets/maps/img/edge.png`
+instead of `assets/maps/sets/img/edge.png`. This isn't a disk problem: a game calling
+`TiledComponent.load` on its bundle fails the same way. The spike's loader (~60 lines, public
+API only) parses the map with `TiledMap.fromString` and its own `TsxProvider`, rewrites every
+tileset, per-tile and image-layer source to a root-relative path resolved against the file that
+references it, clears `tileset.source` so flame_tiled doesn't re-join, and calls
+`RenderableTiledMap.fromTiledMap`. Consequence: if the Studio renders maps with that loader and
+the game uses stock `TiledComponent.load`, a map can look right in the Studio and fail in the
+game. The `tiledMap` Node kind (v0.2) should load through **one shared loader in
+`flame_studio_runtime`**, used with the disk bundle in the Studio and `rootBundle` in the game.
+Adopted (*Q78*). Reported as flame-engine/flame#4117.
+
+**3. `Images.clear` disposes while the old component still draws.** `Images` can't forget an
+entry without `Image.dispose()`. Clearing a changed file's key and then rebuilding leaves the
+old component drawing a disposed image until the swap: `Canvas.drawImageRect` fails
+`assert(!image.debugDisposed)` and the frame stops at that component, so everything drawn
+after it disappears. At normal speed the rebuild fits in one frame and nothing showed; with
+reads slowed to 300 ms the viewport was blank for the whole window (18 failed asserts). The
+spike's fix: build each reload into a **fresh `Images`**, swap synchronously
+(`old.removeFromParent(); world.add(new)`), and dispose the old cache after `await old.removed`.
+That gives up sharing decoded images between Nodes. The Studio's own cache should keep old
+images alive until nothing draws them (versioned entries, or `Image.clone()` handles that
+holders dispose). Adopted (*Q79*). Also, a failed `Images.load` stays cached (from the source) and
+logs an extra unhandled async error.
+
+**4. flame_tiled's atlas cache is static and keyed by file names.** `TiledAtlas.atlasMap` is a
+process-wide map keyed by the tileset image source strings, regardless of bundle or `Images`.
+Rebuilding a map without `TiledAtlas.clearCache()` keeps the old pixels, and since the atlas
+hit skips `Images.load`, the map's image files drop out of dependency tracking and later edits
+to them are ignored. From the code, maps or projects whose tilesets use the same image source
+strings would also share an entry. The spike clears it before every map build; the Studio
+should drop only the affected entries.
+
+**5. Reloading only what changed.** Each Node build runs in a `Zone` holding a set; the bundle
+and an `Images` subclass add the absolute path behind every load (cache hits included). A file
+event rebuilds the Nodes whose set contains it. Keeping the set of a *failed* build means a
+re-created missing file triggers the rebuild. Watching uses `Directory.watch(recursive: true)`.
+FSEvents reports real paths (`/private/tmp/…` for `/tmp/…`), so the root must go through
+`resolveSymbolicLinksSync()` first. A temp + rename save produces events for both files; a
+30 ms debounce turns them into one reload.
+
+**6. The Studio must stay unsandboxed (§12).** Sandboxed, `File.existsSync()` still says true
+but every read fails with `Operation not permitted`; it would need security-scoped bookmarks
+per project folder.
+
+**7. Versions (*Q18*).** Disk rendering reads files, not user code, so it doesn't tie the
+Studio to the user's Flame version. The Studio does bundle a matched pair: flame_tiled 3.1.2
+requires `flame ^1.38.0` and Flutter ≥ 3.41, and pins `tiled ^0.11` → `xml ^6`. What has to
+match is *behavior*: the Studio must resolve and render a map the way the game's Runtime will.
+Flame's main branch (unreleased, 2.0 train) already changes exactly these APIs:
+flame-engine/flame#4015 removes `prefix` from `Images`, `AssetsCache` and flame_tiled (full
+bundle paths as keys; tileset images resolve against a new `imagesDirectory`), and
+flame-engine/flame#4073 moves to tiled 0.12 (`TsxProvider` → `ParserProvider`, xml 7). Both
+break the spike's loader. §12's "latest stable Flame minor" policy needs a line for the 2.0
+major: the shared tiled loader (finding 2) and the `AssetSource` are where it lands. Adopted
+(*Q80*): Runtime and Studio move to Flame 2.0 together; 1.x gets fixes only.
+
+### What this depends on
+
+| Dependency | Kind | If it changes |
+|---|---|---|
+| Flame loaders take an `AssetBundle` / `Images` parameter | Public Flame and flame_tiled API | Fall back to `Flame.bundle = disk` (global, one project at a time) |
+| `RenderableTiledMap.fromTiledMap` and mutable `Tileset.source` / `.image` | Public API (flame_tiled, tiled) | Our loader stops working; changes with tiled 0.12 (finding 7) |
+| `TiledAtlas.clearCache()` / `atlasMap` | Public static, `atlasMap` `@visibleForTesting` | Stale map images after edits |
+| `Images.clear` disposes immediately | Flame behavior | If it stops disposing, a shared cache becomes safe |
+| FSEvents via `Directory.watch` | dart:io on macOS | Windows/Linux (v0.3) use other backends; re-measure |
+
+### Open items
+
+- Follow flame-engine/flame#4117 (the `.tsx` image path heuristic, finding 2), and re-test
+  `edge.tmx` on the tiled 0.12 / Flame 2.0 release.
+- Not in the sample: object layers, image layers, templates (`.tx`), infinite maps,
+  collection-of-images tilesets. The loader rebases image layers and per-tile images, untested.
+- The **Browse…** folder panel (`file_selector`) wasn't exercised; the folder came from an
+  environment variable read at runtime.
+- Windows and Linux file watching (v0.3).

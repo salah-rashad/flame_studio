@@ -110,10 +110,10 @@ Press `r` in that terminal for an IDE-style reload, then `s` in the driver.
 
 Fill in as you go. Record the Flutter version and device for each row.
 
-| Check | macOS desktop | iOS simulator (iPhone 17) | Android emulator (Pixel 9 Pro XL) | Physical phone |
+| Check | macOS desktop | iOS simulator (iPhone 17) | Android emulator (Pixel 9 Pro XL) | Physical phone (Android CPH2737) |
 |---|---|---|---|---|
-| (a) scene edit rebuilds | ✅ ~58 ms | ✅ ~70 ms | ✅ ~250 ms | |
-| (b) Dart-only reload doesn't rebuild | ✅ | ✅ | ✅ | |
+| (a) scene edit rebuilds | ✅ ~58 ms | ✅ ~70 ms | ✅ ~250 ms | ✅ ~156 ms (USB) |
+| (b) Dart-only reload doesn't rebuild | ✅ | ✅ | ✅ | ✅ ~217 ms |
 | (c) second client (`flutter attach`) reloads while driver connected | ✅ | ✅ | | |
 | (c) VS Code attach | | ✅ | | |
 | (c) VS Code breakpoint hits | | ✅ (`SpikeGame.update`) | | |
@@ -178,6 +178,9 @@ the quickest loop for iterating on the spike.
   runs from the user's project folder, so that isn't an option. **Decision needed for §9.3 /
   ADR 0001:** adopt the re-point plus fallback reload (the Studio needs a VM-service
   connection anyway), or fall back to "the Studio stops reloading while an IDE is attached".
+- `flutter run --machine` emits `device.added` / `device.removed` for paired but unreachable
+  devices (here two wireless iPhones with `"isConnected": false`) while it runs. The Studio's
+  device dropdown should ignore devices that aren't connected.
 - Testing pitfall: if an edit writes the same bytes the file already has, the hash doesn't
   change and nothing rebuilds. That's correct behavior, but it looks like a failed Hot-swap.
   The driver now makes every edit unique.

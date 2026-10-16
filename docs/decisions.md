@@ -2,7 +2,8 @@
 
 Outcome of the design grilling session (2026-10-15/16). Seed for `ARCHITECTURE.md`.
 Question numbers (Q1…Q42) refer to the session transcript. Q43–Q73 come from the plan review
-(2026-10-16, §9 below); rows they changed carry an *Amended by* note.
+(2026-10-16, §9 below); rows they changed carry an *Amended by* note. Q74–Q75 come from
+spike #1.
 
 ## 1. Product
 
@@ -115,7 +116,7 @@ Grilling of `project-plan.md`. Vocabulary in [`../GLOSSARY.md`](../GLOSSARY.md);
 
 | # | Decision |
 |---|---|
-| Q43 | **The Studio runs the game; the IDE attaches** to it for breakpoints and code hot reload, as in Unity. ([ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md)) |
+| Q43 | **The Studio runs the game; the IDE attaches** to it for breakpoints and code hot reload, as in Unity. ([ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md)) *Confirmed by spike #1, with the workarounds in Q74.* |
 | Q44 | Annotations move to a **pure-Dart `flame_studio_annotations`** package with no dependencies. The Runtime re-exports it; the generator depends only on it (`TypeChecker.fromUrl`), never on the Runtime. |
 | Q45 | Scenes name user types by **Type ID = class name**, or an explicit `id:` in the annotation. The generator **fails the build on duplicate Type IDs**. `@RenamedFrom` is dropped. ([ADR 0002](adr/0002-type-ids-are-class-names.md)) |
 | Q46 | **Only Overrides are stored**; code defaults apply to every Node without one. Any value the user explicitly sets is an Override, even if it equals the default. Inspector marks Overrides and offers *Reset to default*. ([ADR 0003](adr/0003-scenes-store-only-overrides.md)) |
@@ -132,7 +133,7 @@ Grilling of `project-plan.md`. Vocabulary in [`../GLOSSARY.md`](../GLOSSARY.md);
 | Q57 | The Manifest records every annotated type's **supertypes**; built-in Node kinds declare theirs by hand; reference fields accept subtypes and may target built-in types. |
 | Q58 | Runtime **throws on an unknown Type ID** (naming scene, Node, Type ID); `onUnknownType: skip` opt-out. |
 | Q59 | **CI contract test**: generator on `example/` → Manifest golden → load every `example/` scene with `flame_test` against the generated Registry. |
-| Q60 | **Attach**: *Attach debugger* button copies the VM service URL (+ VS Code / Android Studio guides); a **fixed DDS port per project**, auto-picked on first Play and remembered in the Studio's settings (new port + notice if busy); opt-in *Add VS Code attach config* writes `launch.json` after a diff. |
+| Q60 | **Attach**: *Attach debugger* button copies the VM service URL (+ VS Code / Android Studio guides); a **fixed DDS port per project**, auto-picked on first Play and remembered in the Studio's settings (new port + notice if busy); opt-in *Add VS Code attach config* writes `launch.json` after a diff. *Amended by Q75: always with `--disable-service-auth-codes`.* |
 | Q61 | The Studio **hot-reloads on Dart changes** in `lib/` after build_runner is idle; setting, on by default. |
 | Q62 | Device dropdown lists running devices plus emulators/simulators and boots one on selection; desktop devices only if the project has that target. |
 | Q63 | One Studio window per project, one running game per project. Quitting/closing stops the game (with confirmation); other exits are detected and shown as "Game stopped". |
@@ -146,3 +147,5 @@ Grilling of `project-plan.md`. Vocabulary in [`../GLOSSARY.md`](../GLOSSARY.md);
 | Q71 | After a Hot-swap, game code re-runs lookups in a **`StudioScene` `onReloaded` callback**; debug builds warn on first use of a removed Node. *Accepted "for now"; revisit after the developer preview.* |
 | Q72 | The Hot-swap hash covers the scene, its `.anim.json` files and (v0.2) its prefabs, not images. Image changes show a *Restart game* toast (hot restart). |
 | Q73 | The **developer preview keeps full scope** (items 0–9, 11, 15 of `project-plan.md` §14, ~62 evenings, ~5 months) rather than being trimmed to land at ~3–4 months. |
+| Q74 | **Hot-swap while an IDE is attached** (spike #1 outcome, 2026-10-16): the Studio runs `flutter run` with the hidden `--project-root` pointing at a **symlink to the project with a different folder name** (`<app support>/run/<project-id>/<name>-studio`), so its DevFS doesn't share a name with the IDE's and isn't deleted when the IDE attaches. Before every reload it **re-points the engine's asset directory** at its own DevFS (`_flutter.setAssetBundlePath`); if that fails, it reloads, re-points, evicts the changed scene files and reloads once more. Both are private flutter_tools/engine interfaces, so they are re-checked on every Flutter stable release; the old fallback (the Studio stops reloading while an IDE is attached) stays as the escape hatch. ([ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md), [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach)) |
+| Q75 | Play always passes **`--disable-service-auth-codes`** with the fixed DDS port: with auth codes the VM service URL changes on every run, which breaks saved attach configurations. |

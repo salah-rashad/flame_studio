@@ -210,11 +210,10 @@ the quickest loop for iterating on the spike.
   is hidden and undocumented, so this is a second private-API dependency.
 
   Caveats for the Studio: `_flutter.setAssetBundlePath` is a private engine extension (the
-  one flutter_tools uses), so it may change between Flutter releases. Running the game from a
-  folder whose name differs from the IDE's would avoid the DevFS name clash, but the Studio
-  runs from the user's project folder, so that isn't an option. **Decision needed for §9.3 /
-  ADR 0001:** adopt the re-point plus fallback reload (the Studio needs a VM-service
-  connection anyway), or fall back to "the Studio stops reloading while an IDE is attached".
+  one flutter_tools uses), so it may change between Flutter releases. The DevFS name clash is
+  handled separately with `--project-root` (above). **Decided (Q74):** the Studio adopts
+  `--project-root` plus the re-point, keeping "stop reloading while an IDE is attached" as the
+  fallback. See `docs/ARCHITECTURE.md`.
 - **VS Code shows "paused" after any hot restart while both are connected** (driver `R` or
   VS Code's own restart), with no breakpoints set and a nonsense top frame (`List.add`,
   `int.&`, `rotl32` called from `List.add`). The game keeps running and `s`/`t` still work.

@@ -600,7 +600,7 @@ Play/setup if none is found. The Studio bundles no SDK.
   Missing component states re-evaluate.
 - Status bar shows: up to date / generating / error / external.
 
-### 9.3 Play and Hot-swap (*Q17, Q41, Q43, Q66*)
+### 9.3 Play and Hot-swap (*Q17, Q41, Q43, Q66, Q74, Q75*)
 
 ```mermaid
 sequenceDiagram
@@ -611,11 +611,12 @@ sequenceDiagram
   participant I as IDE (optional)
 
   U->>S: Pick device, press Play
-  S->>F: spawn flutter run --machine -d <device> --dds-port <project port>
-  F-->>S: app.started, app.debugPort (VM service URL)
+  S->>F: spawn flutter run --machine -d <device> --dds-port <project port><br/>--disable-service-auth-codes --project-root <run link>
+  F-->>S: app.started, app.debugPort (VM service URL, DevFS base URI)
   I-->>G: Attach (optional, via the VM service URL)
   U->>S: Edit scene, Save
   S->>S: Write scene file atomically
+  S->>G: _flutter.setAssetBundlePath (point engine at the Studio's DevFS)
   S->>F: app.restart {fullRestart: false}
   F->>G: sync changed assets to DevFS, evict them from rootBundle
   F->>G: reassemble → Flame onHotReload()
@@ -627,6 +628,8 @@ sequenceDiagram
   them from `rootBundle` *before* reassemble; Flame ≥ 1.36 then calls `onHotReload()` on mounted
   components. No custom service extension is needed (*Q66*). A reload sent straight over the VM
   service would skip the asset sync, so the Studio always reloads through the daemon.
+  Verified in spike #1 on the iOS simulator, an Android emulator and a physical Android phone
+  (scene reload 60–250 ms); a Dart-only reload leaves the scene alone.
 - **Code changes (*Q61*):** the Studio watches `lib/` and hot-reloads automatically, waiting until
   `build_runner` reports idle so it never reloads a half-written `.g.dart`. Toggle in settings, on
   by default. If an attached IDE also reloads, the duplicate reload is harmless (the content hash
@@ -639,14 +642,16 @@ sequenceDiagram
     guides for VS Code ("Flutter: Attach to Process") and Android Studio.
   - Each project gets a **fixed DDS port**, picked from free ports on first Play and remembered in
     the Studio's own settings (not the user's project). If it is busy later, the Studio picks a new
-    one and says any saved attach configuration needs updating. A stable URL may also need
-    `--disable-service-auth-codes`. **⚠ verify** (spike #1)
+    one and says any saved attach configuration needs updating. Play always passes
+    `--disable-service-auth-codes`; without it the URL changes on every run (*Q75*).
   - An opt-in **"Add VS Code attach config"** writes `.vscode/launch.json` only after showing the
     diff; it is the one change to the user's project beyond setup, and only on explicit approval.
 - **Devices (*Q62, Q70*):** the dropdown lists running devices plus available emulators and
   simulators (`flutter devices --machine`, `flutter emulators`); choosing one that isn't booted
   launches it first. Desktop devices appear only if the project has that target (no prompt to add
-  one). **Web devices are hidden** in v0.1. Last choice remembered per project.
+  one). **Web devices are hidden** in v0.1. Devices reported with `isConnected: false` (paired
+  but unreachable phones, which `flutter run --machine` also announces mid-run) are ignored.
+  Last choice remembered per project.
 - **Lifetime (*Q63*):** one Studio window per project, at most one running game per project.
   Quitting the Studio or closing the project stops the game (with a confirmation). If the game
   exits any other way (IDE stop, crash, window closed), the Studio notices from `flutter run`'s
@@ -654,13 +659,41 @@ sequenceDiagram
 - **Stop** = `app.stop`, then kill the process if it doesn't exit.
 - "Play" uses the real `main.dart`; Hot-swap only applies to scenes the game has loaded through
   `StudioScene`.
-- **⚠ verify** (spike #1): the Studio's `flutter run` and the IDE's attach session can both be
-  connected and both hot-reload the same app. Fallback if not: while an IDE is attached, the
-  Studio stops issuing reloads itself and asks the user to reload from the IDE.
+- **With an IDE attached (*Q74*).** Spike #1 confirmed the Studio's `flutter run` and an
+  attached IDE (VS Code, `flutter attach`) can both hot-reload the same game, and IDE
+  breakpoints work. It also found that each flutter_tools client keeps its **own DevFS**, which
+  breaks Hot-swap in two ways unless the Studio works around it:
+  1. **Name clash.** The DevFS is named after the project folder. The attaching IDE finds that
+     name taken and deletes the Studio's DevFS. On physical devices (files written through the
+     VM service, by name) the Studio's DevFS never comes back: asset re-points fail and the
+     Studio's hot restart fails (`Could not prepare isolate`). **Fix:** the Studio runs with the
+     hidden `--project-root` pointing at a symlink to the project with a different folder name,
+     `<app support>/run/<project-id>/<name>-studio`, so the two DevFS names differ.
+  2. **Asset shadowing.** Each client points the engine at its own DevFS asset folder once
+     (`_flutter.setAssetBundlePath`). After the IDE's first reload, the game reads scenes from the
+     IDE's copy, which only changes when the IDE reloads, so Studio saves are ignored. **Fix:**
+     before every reload, the Studio calls `_flutter.setAssetBundlePath` itself with
+     `<DevFS base>/build/flutter_assets`. If that fails (folder not created yet), it reloads,
+     re-points, evicts the saved scene files (`ext.flutter.evict`) and reloads once more.
+
+  With both, every save rebuilt the scene and every no-op reload left it alone, on macOS,
+  the iOS simulator and a physical Android phone, with the IDE reloading and hot-restarting in
+  between. Remaining caveats:
+  - Both are **private interfaces** (a hidden flutter_tools option and an engine
+    `_`-extension). Re-check them on every Flutter stable release (manual end-to-end test in
+    §13). If either breaks, use the fallback: while an IDE is attached, the Studio stops issuing
+    reloads and asks the user to reload from the IDE.
+  - After any hot restart, VS Code may show a stale **"paused"** state with nonsense frames. The
+    new isolate starts paused for the IDE (`pause_isolates_on_start` plus DDS resume
+    permission); VS Code resumes it, but its UI doesn't clear. The game runs normally. The Attach
+    guide should mention it.
+  - On Windows (v0.3), the run link needs a directory junction or Developer Mode symlinks. ◇
+    proposed
 
 ### 9.4 Console
 
-Merged, filterable log of generator output, game output (`app.log`, `daemon.logMessage`) and
+Merged, filterable log of generator output, game output (`app.log`, `daemon.logMessage`, and raw
+stdout lines, which is how desktop targets report the game's `print` output) and
 Studio events, with clickable `file:line` links that open the user's external editor
 (configurable: VS Code, IntelliJ/Android Studio, custom command).
 
@@ -768,9 +801,11 @@ include that.
 | | Write findings into `ARCHITECTURE.md` | | 0.5 |
 | | **Total** | | **~4** |
 
-Spike 1(c) is the deciding test for [ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md). If
-two flutter_tools clients can't coexist, the fallback is that the Studio stops issuing reloads
-while an IDE is attached (§9.3).
+Spike 1(c) is the deciding test for [ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md).
+**Spike #1 is done:** all three checks pass with two workarounds (*Q74*), and the fallback (the
+Studio stops issuing reloads while an IDE is attached) remains the escape hatch. Findings in
+[`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach); code in
+`spikes/01_play_hotswap/`.
 
 ### v0.1 — First public release (macOS) (*Q34, Q65*)
 
@@ -831,7 +866,7 @@ since it is pending).
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Studio's `flutter run` and an attached IDE can't both hot-reload the same app | Medium | High (Attach workflow) | Spike #1(c) first; fallback: Studio stops reloading while an IDE is attached |
+| Hot-swap with an attached IDE depends on private flutter_tools/engine interfaces (`--project-root`, `_flutter.setAssetBundlePath`) | Medium | High (Attach workflow) | Spike #1 settled the mechanism (*Q74*); re-check on each Flutter stable release; fallback: Studio stops reloading while an IDE is attached |
 | Hot-swap rebuild loses runtime state and leaves stale references in game code | High (by design in v0.1) | Medium | Content-hash check; `onReloaded` + debug warning (*Q71*); node-level patching in v0.4 |
 | Scope/time overrun (solo, evenings) | **High** | Medium | Cuts to v0.1.1; developer preview; strict non-goals; estimates in §14 |
 | `build_runner` too slow on large projects | Medium | Medium | Spike #2; `triggers` so unannotated files are skipped; show "generating" state |
@@ -855,9 +890,10 @@ Q-F (→ *Q56*) and Q-G (→ *Q50*), and Q-H, the developer preview scope (→ *
 
 ### 15.3 Items to verify in v0.0
 
-1. Play → Hot-swap through `app.restart` and `onHotReload` on simulator, emulator and a physical
-   phone; Dart-only reloads don't rebuild scenes; an IDE attached via a fixed DDS port (and
-   whether `--disable-service-auth-codes` is needed) can hot-reload alongside the Studio (§9.3).
+1. ✅ Play → Hot-swap through `app.restart` and `onHotReload` on simulator, emulator and a
+   physical phone; Dart-only reloads don't rebuild scenes; an IDE attached via a fixed DDS port
+   can hot-reload alongside the Studio. Done in spike #1, with the workarounds in §9.3 (*Q74,
+   Q75*); findings in [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach).
 2. `$lib$` aggregator output to `lib/`, watch latency, and the build_runner lock probe (§7.3, §9.2).
 3. `flame_tiled` and image loading from an arbitrary on-disk folder inside the Studio (§10).
 

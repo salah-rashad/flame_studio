@@ -1,0 +1,4 @@
+# Generated synthetic projects (bench/bin/gen_project.dart)
+sample*/
+.dart_tool/
+build/

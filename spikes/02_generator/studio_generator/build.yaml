@@ -1,0 +1,26 @@
+builders:
+  # Per-library: annotated classes -> lib/**.studio.json in the build cache.
+  studio_scan:
+    import: "package:studio_generator/builder.dart"
+    builder_factories: ["studioScan"]
+    build_extensions: {".dart": [".studio.json"]}
+    auto_apply: dependents
+    build_to: cache
+    runs_before: ["studio_generator:studio_aggregate"]
+    defaults:
+      options:
+        run_only_if_triggered: true
+
+  # $lib$ aggregator: Registry + Manifest into the package's lib/ (Q68).
+  studio_aggregate:
+    import: "package:studio_generator/builder.dart"
+    builder_factories: ["studioAggregate"]
+    build_extensions: {"$lib$": ["flame_studio.g.dart", "flame_studio.manifest.json"]}
+    required_inputs: [".studio.json"]
+    auto_apply: dependents
+    build_to: source
+
+triggers:
+  studio_generator:studio_scan:
+    - annotation StudioBehavior
+    - annotation StudioComponent

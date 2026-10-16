@@ -1,0 +1,7 @@
+name: studio_annotations
+description: "Spike #2 throwaway: stand-in for flame_studio_annotations."
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: ^3.12.0

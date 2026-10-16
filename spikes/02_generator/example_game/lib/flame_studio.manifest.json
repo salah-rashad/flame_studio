@@ -1,0 +1,138 @@
+{
+  "manifestVersion": 1,
+  "types": [
+    {
+      "id": "Patrol",
+      "role": "behavior",
+      "label": "Patrol",
+      "category": "Movement",
+      "parentType": "PositionedEntity",
+      "supertypes": [
+        "Behavior",
+        "Component",
+        "ParentIsA"
+      ],
+      "source": "lib/behaviors/patrol.dart",
+      "doc": "Walks between two points.",
+      "fields": [
+        {
+          "name": "speed",
+          "type": "double",
+          "default": 50,
+          "min": 0,
+          "max": 400,
+          "tooltip": "Pixels per second"
+        },
+        {
+          "name": "direction",
+          "type": "vector2",
+          "default": null,
+          "defaultSource": "Vector2(1, 0)"
+        },
+        {
+          "name": "mode",
+          "type": "enum",
+          "default": "pingPong",
+          "values": [
+            "pingPong",
+            "loop"
+          ]
+        },
+        {
+          "name": "target",
+          "type": "entityRef",
+          "default": null,
+          "refType": "Player"
+        },
+        {
+          "name": "hitEffect",
+          "type": "asset",
+          "default": null,
+          "assetType": "SpriteAnimation"
+        }
+      ]
+    },
+    {
+      "id": "Player",
+      "role": "component",
+      "label": "Player",
+      "category": "Characters",
+      "acceptsBehaviors": true,
+      "supertypes": [
+        "PositionedEntity",
+        "PositionComponent",
+        "Component",
+        "AnchorProvider",
+        "AngleProvider",
+        "ReadOnlyAngleProvider",
+        "PositionProvider",
+        "ReadOnlyPositionProvider",
+        "ScaleProvider",
+        "ReadOnlyScaleProvider",
+        "SizeProvider",
+        "ReadOnlySizeProvider",
+        "CoordinateTransform",
+        "EntityMixin"
+      ],
+      "source": "lib/components/player.dart",
+      "fields": [
+        {
+          "name": "lives",
+          "type": "int",
+          "default": 3,
+          "min": 0
+        },
+        {
+          "name": "invincible",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "name": "nickname",
+          "type": "string",
+          "default": "Hero",
+          "tooltip": "Shown above the head"
+        },
+        {
+          "name": "tint",
+          "type": "color",
+          "default": null,
+          "defaultSource": "const Color(0xFFFFFFFF)"
+        }
+      ]
+    },
+    {
+      "id": "pickup.coin",
+      "role": "component",
+      "label": "Coin",
+      "acceptsBehaviors": false,
+      "preview": "assets/images/coin.png",
+      "supertypes": [
+        "PositionComponent",
+        "Component",
+        "AnchorProvider",
+        "AngleProvider",
+        "ReadOnlyAngleProvider",
+        "PositionProvider",
+        "ReadOnlyPositionProvider",
+        "ScaleProvider",
+        "ReadOnlyScaleProvider",
+        "SizeProvider",
+        "ReadOnlySizeProvider",
+        "CoordinateTransform"
+      ],
+      "source": "lib/components/coin.dart",
+      "doc": "A plain PositionComponent: placeable, but takes no Behaviors.",
+      "fields": [
+        {
+          "name": "value",
+          "type": "int",
+          "default": 1,
+          "min": 1,
+          "max": 100
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

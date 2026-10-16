@@ -9,7 +9,7 @@
 
 > **For reviewers.** Everything in sections 1–13 was decided in two structured design sessions;
 > the decision number (e.g. *Q17*) points to the entry in `decisions.md`. Q1–Q42 come from the
-> original design session, Q43–Q73 from the plan review. Items marked **⚠ verify** are assumptions
+> original design session, Q43–Q73 from the plan review, Q74–Q82 from the spikes and later reviews. Items marked **⚠ verify** are assumptions
 > the v0.0 spike must confirm. Items marked **◇ proposed** are details not explicitly decided yet:
 > review these hardest. Section 15 lists what is still open. Terms in **bold capitals** (Node,
 > Behavior, Override, …) are defined in `GLOSSARY.md`.
@@ -862,7 +862,62 @@ Studio stops issuing reloads while an IDE is attached) remains the escape hatch.
 [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach); code in
 `spikes/01_play_hotswap/`.
 
-### v0.1 — First public release (macOS) (*Q34, Q65*)
+### Early preview — first external feedback (*Q82*)
+
+The goal is to prove, in a developer's own project, that the Studio does a real task more easily
+than editing Dart by hand, as early as possible. **Breadth and polish are cut; document integrity,
+the generator/Runtime contract and data preservation are not.** The final v0.1 scope is unchanged
+(*Q82* amends *Q65* and supersedes *Q73*); the early preview is a subset of it, ~38 of the ~74.5
+evenings.
+
+**The task testers do:** open their own Flame project, place an entity with a sprite and a hitbox,
+attach a custom Behavior and tweak its fields, press Play and see the change in the running game.
+
+| # | Work item (v0.1 numbering) | In the early preview | Deferred to v0.1 | Est. |
+|---|---|---|---|---|
+| 0 | Repo setup | As in v0.1 | | 3 |
+| 1 | App shell | Project list, open project, basic SDK detection, Runtime compatibility check | "Add Flame Studio" flow and pubspec diff (a README recipe replaces it), SDK management and settings polish | 2 |
+| 2 | Document model | Transactions, undo/redo with coalescing, atomic save/load, recovery file, `schemaVersion` gate (never write an unreadable version, *Q49*) | Migrations framework, built when the first format change after the preview needs it | 4.5 |
+| 3 | Hierarchy | Add, delete, rename, reparent by drag | Duplicate, filter, duplicate-name warning | 2.5 |
+| 4 | Viewport | Preview world, reconciler, pan/zoom, selection, move gizmo | Grid, snapping, rotate/scale gizmos (numeric editing in the inspector covers them) | 6.5 |
+| 5 | Inspector | Transform; editors for `int`, `double`, `bool`, `String`, enum, `Vector2` and an asset-path dropdown; Override markers + *Reset to default*. Other Field types (`Color`, entity reference, `Sprite`, `SpriteAnimation`) show **read-only and round-trip untouched** | Remaining Field type editors, multi-select "mixed" values (v0.1.1) | 3.5 |
+| 6 | Built-in Node kinds | Entity, sprite, rectangle and circle hitboxes, placeholders | The remaining hitbox kind | 2 |
+| 7 | Generator | Introspection, Type IDs + collisions, supertypes, Registry + Manifest emitters, error reporting, goldens, at the field types above | Support for the remaining Field types in the inspector (the generator still records them) | 4.5 |
+| 8 | Runtime | Full: loader, two-pass references, assets, lookup API, unknown-type handling, Hot-swap | | 4 |
+| 9 | Behaviors in the inspector | Add/remove, compatibility filtering, Missing behavior state (so nothing is lost) | Reorder, Missing behavior polish | 2 |
+| 11 | Play | Run on the macOS desktop target by default (⚠ verify Hot-swap there first, ~0.5), daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, *Attach debugger* copying the current URI, image-restart toast | Device list + emulator boot, Attach info file, `launch.json`, unauthenticated mode | 4 |
+| | **Total** | | | **~38** |
+
+Not in the early preview: the asset browser and pubspec sync (10), the CI contract test (12),
+the `example/` game (13), the visual design (14), signing and notarization (15; testers build from
+source) and the Getting Started docs (16; a README recipe covers setup). Setup friction is itself
+under test, so watch where testers get stuck.
+
+**Build order:** 0 → 2 → 7 → 8 → **vertical slice** (a hand-written Scene JSON through generator,
+Runtime, Play and Hot-swap, with no editor UI; the first slice of item 11) → 6 → 4 → 3 → 5 → 9 →
+rest of 11 → 1 → *early preview*. The slice removes the integration risk the three spikes could
+not, and the author becomes the first user.
+
+**At 3 evenings a week:** ~13 weeks before overrun, ~4 months with a 1.4× overrun (against ~5
+months and ~7 months for the previous developer preview).
+
+**Before building, at no cost:** ask the Flame maintainers about the name (*Q36*), the longest
+lead-time item; post the spike #1 loop as a short GIF on the Flame Discord as a demand check
+(it measures interest, not usability).
+
+**Testers and exit criteria.** 5–8 hand-picked developers using their own games, a few watched on
+a call, not a public Discord post. Record: time from install to the first running scene, where
+setup failed, and whether they would use it over editing Dart. Decide the response in advance:
+
+| Observation | Response |
+|---|---|
+| Several testers fail at setup (pubspec, Flutter/`build_runner` versions, Q76) | Fix setup before any new feature; reconsider the in-app "Add Flame Studio" flow |
+| Testers hit stale references or lost state after Hot-swap (Q-I, *Q71*) | Pull node-level patching forward from v0.4 |
+| Testers don't reach for the viewport and edit the inspector or JSON | Re-examine the viewport investment (item 4) before polishing it |
+| Testers need Field types or Node kinds that were deferred | Reorder v0.1 by what they asked for |
+| Testers complete the task and say it beat editing Dart | Continue to v0.1 as planned |
+
+### v0.1 — First public release (macOS) (*Q34, Q65, Q82*)
 
 | # | Work item | Est. (evenings) |
 |---|---|---|
@@ -891,14 +946,13 @@ reference rewriting (~1.5), multi-select "mixed" values (~2).
 **Reality check:** ~74.5 evenings at 3/week ≈ **25 weeks (~6 months)** before overrun, ~8 months
 with a 1.3× overrun, against the original ~4-month target.
 
-**Developer preview (*Q65*):** a notarized, unpolished build shared on the Flame Discord as soon as
-the core loop works, so real users try Play + Attach + Hot-swap before v0.1 polish. Contents:
-items 0–9, 11 and 15 (everything except asset browser, contract test, example game, visual
-design and docs), at full scope. At current estimates that is **~62 evenings (~5 months)**;
-accepted over trimming it to land earlier (*Q73*).
+**Early preview (*Q82*):** the v0.1 table above is the final scope. A subset of it (~38 evenings)
+ships first as the early preview described in the section above; the previous full-scope
+developer preview (*Q65*, *Q73*) is replaced by it. Feedback from the early preview is folded
+into the remaining ~36 evenings, so the order of the deferred items is open until then.
 
-Suggested build order: 0 → 2 → 7 → 8 → 6 → 4 → 3 → 5 → 9 → 11 → 1 → 15 → *developer preview* →
-12 → 10 → 13 → 14 → 16 (core data and the generator/Runtime contract first; UI design last
+Build order after the early preview: 10 → the deferred parts of items 1, 3, 4, 5, 6, 9 and 11 →
+15 → 12 → 13 → 14 → 16 (core data and the generator/Runtime contract first; UI design last
 since it is pending).
 
 ### Roadmap after v0.1
@@ -923,7 +977,7 @@ since it is pending).
 |---|---|---|---|
 | Hot-swap with an attached IDE depends on private flutter_tools/engine interfaces (`--project-root`, `_flutter.setAssetBundlePath`) | Medium | High (Attach workflow) | Spike #1 settled the mechanism (*Q74*); re-check on each Flutter stable release; fallback: Studio stops reloading while an IDE is attached |
 | Hot-swap rebuild loses runtime state and leaves stale references in game code | High (by design in v0.1) | Medium | Content-hash check; `onReloaded` + debug warning (*Q71*); node-level patching in v0.4 |
-| Scope/time overrun (solo, evenings) | **High** | Medium | Cuts to v0.1.1; developer preview; strict non-goals; estimates in §14 |
+| Scope/time overrun (solo, evenings) | **High** | Medium | Cuts to v0.1.1; early preview (~38 evenings, *Q82*); strict non-goals; estimates in §14 |
 | `build_runner` too slow on large projects | Medium | Medium | Spike #2; `triggers` so unannotated files are skipped; show "generating" state |
 | Flame / `flame_behaviors` breaking changes | Medium | Medium | Latest-minor-only policy; CI against Flame stable; Runtime kept small |
 | Studio and project Runtime versions drift | Medium | Medium | `pubspec.lock` compatibility check; never write an unreadable `schemaVersion` (*Q49*) |
@@ -932,16 +986,16 @@ since it is pending).
 | Name conflict / perceived as official | Low | Medium | Ask Flame maintainers before publishing (*Q36*) |
 | macOS signing/notarization friction | Medium | Low | One-time CI setup; Developer ID account budgeted |
 | Learning Riverpod while building | Medium | Low | Budgeted spike in item 0; keep provider graph small (§8.5) |
-| Community uptake | Unknown | High (for an OSS goal) | Early Discord contact, developer preview, demo video, works with existing projects |
+| Community uptake | Unknown | High (for an OSS goal) | Early Discord contact, early preview with hand-picked testers (*Q82*), demo video, works with existing projects |
 
 ### 15.2 Open questions
 
 The plan review settled Q-A (→ *Q65*), Q-B (→ *Q54*), Q-C (→ *Q45*), Q-D (→ *Q68*), Q-E (→ *Q55*),
-Q-F (→ *Q56*) and Q-G (→ *Q50*), and Q-H, the developer preview scope (→ *Q73*). Still open:
+Q-F (→ *Q56*) and Q-G (→ *Q50*), and Q-H, the preview scope (→ *Q73*, since superseded by *Q82*). Still open:
 
 - **Q-I — Stale references after Hot-swap.** *Q71* (`onReloaded` + debug warning) was accepted
-  "for now". Revisit after the developer preview, possibly by pulling node-level patching forward
-  from v0.4.
+  "for now". Revisit after the early preview, where testers are asked about it directly (§14),
+  possibly by pulling node-level patching forward from v0.4.
 
 ### 15.3 Items to verify in v0.0
 

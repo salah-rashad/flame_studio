@@ -40,7 +40,8 @@ Tested with Flutter 3.44.2, Flame 1.38.2, macOS 26.2, 2026-10-16.
 
 Times are the daemon's hot reload duration for a scene save. iOS physical devices weren't
 available; they use the same DevFS path as Android phones (see finding 3), so they're expected to
-behave the same. Re-test before the developer preview.
+behave the same. Re-test before the early preview, including Hot-swap on the macOS desktop
+target (*Q82*).
 
 ### Findings
 

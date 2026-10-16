@@ -4,6 +4,8 @@ description: >-
   types Manifest for your game's annotated components and behaviors.
 version: 0.0.1
 publish_to: none # Until the package names are cleared with the Flame maintainers (Q36).
+issue_tracker: https://github.com/salah-rashad/flame_studio/issues
+repository: https://github.com/salah-rashad/flame_studio/tree/main/packages/flame_studio_generator
 
 environment:
   sdk: ^3.12.0

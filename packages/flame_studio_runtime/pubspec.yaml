@@ -4,6 +4,8 @@ description: >-
   re-exports flame_studio_annotations.
 version: 0.0.1
 publish_to: none # Until the package names are cleared with the Flame maintainers (Q36).
+issue_tracker: https://github.com/salah-rashad/flame_studio/issues
+repository: https://github.com/salah-rashad/flame_studio/tree/main/packages/flame_studio_runtime
 
 environment:
   sdk: ^3.12.0

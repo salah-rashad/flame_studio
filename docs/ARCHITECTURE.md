@@ -384,7 +384,7 @@ references it, clears `tileset.source` so flame_tiled doesn't re-join, and calls
 the game uses stock `TiledComponent.load`, a map can look right in the Studio and fail in the
 game. The `tiledMap` Node kind (v0.2) should load through **one shared loader in
 `flame_studio_runtime`**, used with the disk bundle in the Studio and `rootBundle` in the game.
-◇ proposed. Worth reporting upstream; no existing issue found.
+Adopted (*Q76*). Worth reporting upstream; no existing issue found.
 
 **3. `Images.clear` disposes while the old component still draws.** `Images` can't forget an
 entry without `Image.dispose()`. Clearing a changed file's key and then rebuilding leaves the
@@ -396,7 +396,7 @@ spike's fix: build each reload into a **fresh `Images`**, swap synchronously
 (`old.removeFromParent(); world.add(new)`), and dispose the old cache after `await old.removed`.
 That gives up sharing decoded images between Nodes. The Studio's own cache should keep old
 images alive until nothing draws them (versioned entries, or `Image.clone()` handles that
-holders dispose). ◇ proposed. Also, a failed `Images.load` stays cached (from the source) and
+holders dispose). Adopted (*Q77*). Also, a failed `Images.load` stays cached (from the source) and
 logs an extra unhandled async error.
 
 **4. flame_tiled's atlas cache is static and keyed by file names.** `TiledAtlas.atlasMap` is a
@@ -428,7 +428,8 @@ flame-engine/flame#4015 removes `prefix` from `Images`, `AssetsCache` and flame_
 bundle paths as keys; tileset images resolve against a new `imagesDirectory`), and
 flame-engine/flame#4073 moves to tiled 0.12 (`TsxProvider` → `ParserProvider`, xml 7). Both
 break the spike's loader. §12's "latest stable Flame minor" policy needs a line for the 2.0
-major: the shared tiled loader (finding 2) and the `AssetSource` are where it lands. ◇ proposed
+major: the shared tiled loader (finding 2) and the `AssetSource` are where it lands. Adopted
+(*Q78*): Runtime and Studio move to Flame 2.0 together; 1.x gets fixes only.
 
 ### What this depends on
 

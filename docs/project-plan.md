@@ -5,7 +5,7 @@
 | **Status** | Reviewed draft (v2) |
 | **Date** | 2026-10-16 |
 | **Author** | Salah Ahmed |
-| **Companion docs** | [`decisions.md`](decisions.md) (decision log, Q1–Q73) · [`../GLOSSARY.md`](../GLOSSARY.md) (project vocabulary) · [`adr/`](adr/) (architecture decision records) · [`claude-design-prompts.md`](claude-design-prompts.md) (UI design prompts) |
+| **Companion docs** | [`decisions.md`](decisions.md) (decision log, Q1–Q78) · [`../GLOSSARY.md`](../GLOSSARY.md) (project vocabulary) · [`adr/`](adr/) (architecture decision records) · [`claude-design-prompts.md`](claude-design-prompts.md) (UI design prompts) |
 
 > **For reviewers.** Everything in sections 1–13 was decided in two structured design sessions;
 > the decision number (e.g. *Q17*) points to the entry in `decisions.md`. Q1–Q42 come from the
@@ -702,7 +702,10 @@ Studio events, with clickable `file:line` links that open the user's external ed
 ## 10. Asset pipeline
 
 - **Editor loads from disk** through an `AssetSource` interface (disk implementation in the Studio,
-  bundle implementation in games), so newly imported files appear instantly (*Q31*).
+  bundle implementation in games), so newly imported files appear instantly (*Q31*). Verified in
+  spike #3: the disk side is an `AssetBundle` over the project folder plus a Studio-owned image
+  cache that frees an old image only after it's off screen; each Node records the files it read,
+  and a file change rebuilds just those Nodes, ~75–200 ms from save to screen (*Q77*).
 - **Scenes live in `assets/scenes/` by default** (*Q53*). The Studio finds scenes by looking for
   `*.scene.json` under the declared asset folders; there is no config file.
 - **`pubspec.yaml` sync (*Q31, Q53*):** Flutter asset folder entries **don't include subfolders**,
@@ -715,8 +718,9 @@ Studio events, with clickable `file:line` links that open the user's external ed
 - **Grid slicer** (v0.1.1) writes `.anim.json`. **Aseprite import** (v0.2) reads Aseprite's JSON
   export (frames + tags → animations). TexturePacker atlases later (*Q8*).
 - **Tiled maps** (v0.2): a `tiledMap` Node kind referencing a `.tmx`, rendered in the viewport via
-  `flame_tiled` from disk; entities placed on top (*Q10*). **⚠ verify** loading `.tmx` + tilesets
-  from an arbitrary folder (spike #3).
+  `flame_tiled` from disk; entities placed on top (*Q10*). Maps load through the Runtime's own
+  loader, which resolves tileset and image paths as Tiled does, in both the Studio and the game
+  (*Q76*); verified in spike #3.
 
 ---
 
@@ -761,7 +765,8 @@ Studio events, with clickable `file:line` links that open the user's external ed
 - **Version policy (*Q18*):** the Runtime supports the latest stable Flame minor (then current +
   previous after Studio 1.0), with a floor of **Flame 1.36** for `onHotReload` (*Q66*); Flutter
   stable only; **`build_runner ≥ 2.14`** (*Q48*). The scene format never depends on a Flame
-  version.
+  version. When Flame 2.0 ships, the Runtime and the Studio's bundled Flame move to it
+  together in one release, and the 1.x line gets fixes only (*Q78*).
 
 ---
 
@@ -895,7 +900,9 @@ Q-F (→ *Q56*) and Q-G (→ *Q50*), and Q-H, the developer preview scope (→ *
    can hot-reload alongside the Studio. Done in spike #1, with the workarounds in §9.3 (*Q74,
    Q75*); findings in [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach).
 2. `$lib$` aggregator output to `lib/`, watch latency, and the build_runner lock probe (§7.3, §9.2).
-3. `flame_tiled` and image loading from an arbitrary on-disk folder inside the Studio (§10).
+3. ✅ `flame_tiled` and image loading from an arbitrary on-disk folder inside the Studio (§10).
+   Done in spike #3 (*Q76, Q77*); findings in
+   [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-3--disk-rendering).
 
 ---
 

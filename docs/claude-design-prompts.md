@@ -142,7 +142,7 @@ Content
   Rectangle Hitbox, Circle Hitbox, Polygon Hitbox, Tiled Map, custom components from the project),
   search/filter field.
 - Tree rows: chevron, type icon, name, optional tag pills, trailing badges (warning icon for
-  missing script / asset, prefab icon), visibility toggle on hover.
+  missing behavior / asset, prefab icon), visibility toggle on hover.
 - Scene root row at the top.
 
 Interactions & states to show
@@ -153,7 +153,7 @@ Interactions & states to show
    (into its own child) indication.
 5. Right-click context menu: Rename, Duplicate, Delete, Add Child ▸, Copy / Paste, Select in
    Viewport, with shortcuts.
-6. A node with a "Missing script" warning badge and tooltip.
+6. A node with a "Missing behavior" warning badge and tooltip.
 7. Filter active with matches highlighted and non-matching parents dimmed.
 8. Empty scene state ("Add your first node").
 ```
@@ -212,7 +212,7 @@ States to show
 1. An entity with transform, sprite and two behaviors with a mix of field types (double with
    range slider, enum, Vector2, Color, asset reference, entity reference).
 2. Multi-selection of 3 nodes: shared fields editable, differing values as "mixed".
-3. "Missing script: Patrol" card: explanation, the preserved field values shown read-only,
+3. "Missing behavior: Patrol" card: explanation, the preserved field values shown read-only,
    actions "Remove" and "Keep".
 4. A field whose referenced asset is missing (error state with "Locate…").
 5. The Add Behavior search popup with results and an empty-result state.
@@ -307,18 +307,26 @@ Using the Flame Studio design system, design the Play flow in the top toolbar.
 
 Content
 - Device dropdown: devices grouped (Simulators/Emulators, Physical devices, Desktop) with
-  platform icons and connection state; "Refresh devices"; disabled devices with a reason
-  ("Platform not enabled in this project").
-- Play button states: Ready, Building (progress + elapsed time + Cancel), Running (becomes Stop,
-  plus a Hot-reload button and a "Restart" in an overflow), Error.
-- A small transient toast after saving a scene while running: "Scene reloaded on <device>".
+  platform icons and connection state; simulators/emulators that aren't running are listed too
+  and boot when chosen ("Booting…"); "Refresh devices". Desktop devices appear only if the
+  project has that platform; web is not offered.
+- Play button states: Ready, Booting device, Building (progress + elapsed time + Cancel), Running
+  (becomes Stop, plus a Hot-reload button and a "Restart" in an overflow), Error.
+- "Attach debugger" button while running: copies the debugger URL, with a popover showing it,
+  short "VS Code" / "Android Studio" instructions, and an optional "Add VS Code attach config…"
+  link. A small "IDE attached" indicator when a debugger is connected.
+- Small transient toasts while running: "Scene reloaded on <device>"; "Image changed — Restart
+  game" (with a Restart action).
+- Status-bar generator indicator: up to date / generating / error / "External build_runner".
 
 States to show
-1. Dropdown open with several devices, one unavailable.
+1. Dropdown open with several devices: one running, one emulator not yet booted.
 2. First build in progress (can take minutes): progress state with "Show log" link.
-3. Running, with a recent hot-swap toast.
-4. Build failed: error state, "Show in Console" action.
-5. No devices found: empty state in the dropdown with help link.
+3. Running, with a recent hot-swap toast and the Attach debugger popover open.
+4. Running, with the "Image changed — Restart game" toast.
+5. Build failed: error state, "Show in Console" action.
+6. Game stopped from outside the Studio (crash or IDE): "Game stopped" state, Play available again.
+7. No devices found: empty state in the dropdown with help link.
 ```
 
 ---
@@ -330,8 +338,9 @@ Using the Flame Studio design system, design the setup flow shown when a user op
 project that doesn't use Flame Studio yet. It's a modal dialog, 2–3 steps.
 
 Content
-1. Explanation step: what will be added (two dev/runtime dependencies, a build.yaml, a scenes/
-   folder) and the promise "Nothing else in your project is changed."
+1. Explanation step: what will be added (the runtime and generator dependencies, build_runner,
+   a build.yaml, an assets/scenes/ folder and its pubspec.yaml asset entry) and the promise
+   "Nothing else in your project is changed."
 2. Review step: a file-change list with a readable diff for pubspec.yaml and the new files.
    Checkbox "Run flutter pub get and start the code generator".
 3. Progress + result: steps with status dots (Updating pubspec, pub get, generator first run),
@@ -361,7 +370,7 @@ B. A sheet of all global warning/error/empty patterns used across the app, for c
      v3")
    - External change detected on the open scene file (Reload / Keep mine)
    - Generated types out of date / generator not running
-   - Missing script, missing asset, broken entity reference (inline variants)
+   - Missing behavior, missing asset, broken entity reference (inline variants)
    - Empty states for: no scene open, no behaviors in project ("Create a class extending Behavior
      and annotate it with @StudioBehavior"), no assets
 ```

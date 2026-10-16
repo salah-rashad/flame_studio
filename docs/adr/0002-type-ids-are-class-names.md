@@ -1,0 +1,3 @@
+# Scenes name user types by class name, not by library path
+
+A Scene refers to a Behavior or Custom component by its Type ID, which is the class name unless the class sets an explicit `id:` in its annotation. The Generator fails the build when two annotated classes share a Type ID. Fully qualified IDs (`package:my_game/x.dart#Patrol`) were rejected because moving a file, a routine refactor, would turn the class into a Missing behavior in every Scene. With class names, collisions are caught at build time, not hidden. An explicit `id:` also keeps a Type ID stable through a class rename, which covers most of what `@RenamedFrom` was planned for.

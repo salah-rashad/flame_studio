@@ -1,0 +1,3 @@
+# Scenes store only Overrides; code defaults apply to existing scenes
+
+A Scene saves an Editable field's value only when the developer explicitly set it (an Override), even if that value equals the current default. Every other field takes its default from code at load time, so changing `speed = 50` to `speed = 80` in code changes every Node that has no Override. This is the opposite of Unity, which saves every value and applies new code defaults only to new instances. We chose it because the audience is code-first and expects the code to win. The Inspector marks overridden fields and offers *Reset to default*, which removes the Override.

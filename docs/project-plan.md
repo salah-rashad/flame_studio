@@ -178,6 +178,7 @@ flowchart LR
 | **`flame_studio_annotations`** | User project (via the runtime) and generator | Pure-Dart annotations, no dependencies (*Q44*). |
 | **`flame_studio_generator`** | User project, dev dependency | `source_gen` builder: emits the Registry and the Manifest (*Q38*). |
 | **`flame_studio_runtime`** | Shipped inside the user's game | Scene loader, migrations, lookup API, debug-only Hot-swap through Flame's `onHotReload` (*Q30, Q66*). Re-exports the annotations. |
+| **`flame_studio_ui`** | Studio, as a library | The design system in Flutter: tokens, theme and presentational widgets. Knows nothing about scenes or app state (*Q83*). |
 
 ### 4.3 Why this shape (short rationale for reviewers)
 
@@ -217,15 +218,18 @@ flame_studio/                      ← repo root (this folder)
 │  │  ├─ lib/src/scene/            ← model, JSON (de)serialization, migrations
 │  │  ├─ lib/src/loader/           ← StudioScene.load, AssetSource, Registry interface
 │  │  └─ lib/src/debug/            ← Hot-swap (onHotReload, content hash), debug only
-│  └─ flame_studio_generator/      ← pub.dev; dev dependency
-│     ├─ lib/builder.dart
-│     └─ lib/src/{introspect,registry_emitter,manifest_emitter}.dart
+│  ├─ flame_studio_generator/      ← pub.dev; dev dependency
+│  │  ├─ lib/builder.dart
+│  │  └─ lib/src/{introspect,registry_emitter,manifest_emitter}.dart
+│  └─ flame_studio_ui/             ← not published; the Studio's design system (Q83)
+│     ├─ design/tokens.json        ← copy of the Claude Design tokens; a test checks the Dart side
+│     └─ lib/src/                  ← tokens, FsTheme, widgets (buttons, fields, rows, menus…)
 ├─ apps/
 │  └─ flame_studio/                ← the desktop app (released as binaries, not on pub)
 │     ├─ lib/app/                  ← shell, project list, settings
 │     ├─ lib/document/             ← document model, transactions, history
 │     ├─ lib/viewport/             ← preview world, reconciler, gizmos
-│     ├─ lib/panels/               ← hierarchy, inspector, assets, console
+│     ├─ lib/panels/               ← hierarchy, inspector, assets, console (built from flame_studio_ui)
 │     ├─ lib/project/              ← SDK detection, setup flow, pubspec sync, version checks
 │     └─ lib/process/              ← build_runner + flutter daemon clients, attach support
 └─ example/                        ← sample Flame game built with the Studio
@@ -244,8 +248,11 @@ Runtime share it (*Q67*).
   `onHotReload`, *Q66*), `flame_behaviors` and Flutter. Keep it small: it ships in every game.
 - `flame_studio_generator` depends on the annotations, `source_gen`, `build` and `analyzer`, and
   matches annotations with `TypeChecker.fromUrl`. It **never** depends on the runtime.
-- The app depends on the runtime (format, built-in rendering), `flame`, `flame_tiled`, Riverpod,
-  freezed. It **never** depends on the generator.
+- `flame_studio_ui` depends on **Flutter only** (plus an icon set and bundled fonts), never on
+  `flame`, the runtime or the app. Its widgets take plain values and callbacks; nothing in it knows
+  about scenes, the document or Riverpod (*Q83*). Only the app depends on it.
+- The app depends on the runtime (format, built-in rendering), `flame_studio_ui`, `flame`,
+  `flame_tiled`, Riverpod, freezed. It **never** depends on the generator.
 
 ---
 
@@ -579,11 +586,12 @@ doc.transact('Move 3 nodes', (d) => d.moveNodes(ids, delta), coalesceKey: gestur
 | `processProvider` | generator / game process state, attach info and log stream |
 | `nodeProvider(id)` | derived: one Node, rebuilds only that tree row / inspector |
 
-### 8.6 UI layout (*Q20*)
+### 8.6 UI layout (*Q20, Q83*)
 
 Fixed resizable panels: Hierarchy (left), Viewport (centre), Inspector (right), Assets/Console
 (bottom tabs), toolbar and status bar. Visual design comes from Claude Design using
-`claude-design-prompts.md`, then re-implemented in Flutter. The author's `flutter_context_menu`
+`claude-design-prompts.md`, then re-implemented in Flutter in `flame_studio_ui` (*Q83*): tokens
+and theme now, widgets as the panels need them; the panels themselves stay in the app. The author's `flutter_context_menu`
 package provides context menus.
 
 ---
@@ -921,7 +929,7 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 
 | # | Work item | Est. (evenings) |
 |---|---|---|
-| 0 | Repo setup: workspace (3 packages + app), CI skeleton, lint rules, Riverpod learning spike | 3 |
+| 0 | Repo setup: workspace (3 packages + app; `flame_studio_ui` added by *Q83*), CI skeleton, lint rules, Riverpod learning spike | 3 |
 | 1 | App shell: project list, SDK detection, settings, "Add Flame Studio" flow + pubspec diff, Runtime compatibility check | 6 |
 | 2 | Document model, transactions, history, coalescing, save/load (atomic), recovery file, migrations framework | 5 |
 | 3 | Hierarchy panel (add, delete, rename, reparent drag, duplicate, filter, duplicate-name warning) | 4 |
@@ -935,7 +943,7 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 | 11 | Play: device list + emulator boot, daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, Attach (current URI, info file, launch.json, unauthenticated mode), lifecycle, image-restart toast | 9 |
 | 12 | CI contract test | 1 |
 | 13 | `example/` game | 2 |
-| 14 | Implement Claude Design visual design (theme, components) | 4 |
+| 14 | Implement Claude Design visual design (theme, components) in `flame_studio_ui` (*Q83*) | 4 |
 | 15 | Signing, notarization, release pipeline | 3 |
 | 16 | README, Getting Started (incl. Attach and the CI check, §7.3), demo video, `ARCHITECTURE.md` polish | 3 |
 | | **Total** | **~74.5** |

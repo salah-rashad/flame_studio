@@ -14,6 +14,7 @@ workspace:
   - packages/flame_studio_annotations
   - packages/flame_studio_runtime
   - packages/flame_studio_generator
+  - packages/flame_studio_ui
   - apps/flame_studio
 
 dev_dependencies:

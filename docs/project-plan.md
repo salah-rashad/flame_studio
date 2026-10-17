@@ -5,11 +5,11 @@
 | **Status** | Reviewed draft (v2) |
 | **Date** | 2026-10-16 |
 | **Author** | Salah Ahmed |
-| **Companion docs** | [`decisions.md`](decisions.md) (decision log, Q1–Q80) · [`../GLOSSARY.md`](../GLOSSARY.md) (project vocabulary) · [`adr/`](adr/) (architecture decision records) · [`claude-design-prompts.md`](claude-design-prompts.md) (UI design prompts) · [`ui-components-plan.md`](ui-components-plan.md) (design-system widgets) |
+| **Companion docs** | [`decisions.md`](decisions.md) (decision log, Q1–Q85) · [`../GLOSSARY.md`](../GLOSSARY.md) (project vocabulary) · [`adr/`](adr/) (architecture decision records) · [`claude-design-prompts.md`](claude-design-prompts.md) (UI design prompts) · [`ui-components-plan.md`](ui-components-plan.md) (design-system widgets) |
 
 > **For reviewers.** Everything in sections 1–13 was decided in two structured design sessions;
 > the decision number (e.g. *Q17*) points to the entry in `decisions.md`. Q1–Q42 come from the
-> original design session, Q43–Q73 from the plan review, Q74–Q82 from the spikes and later reviews. Items marked **⚠ verify** are assumptions
+> original design session, Q43–Q73 from the plan review, Q74–Q85 from the spikes and later reviews. Items marked **⚠ verify** are assumptions
 > the v0.0 spike must confirm. Items marked **◇ proposed** are details not explicitly decided yet:
 > review these hardest. Section 15 lists what is still open. Terms in **bold capitals** (Node,
 > Behavior, Override, …) are defined in `GLOSSARY.md`.
@@ -547,7 +547,7 @@ doc.transact('Move 3 nodes', (d) => d.moveNodes(ids, delta), coalesceKey: gestur
   field) merge into one history entry.
 - The **dirty flag** = current snapshot ≠ last saved snapshot.
 - **Recovery file only** (*Q55*): the Studio periodically writes a recovery copy outside the
-  scene file; after a crash, the next launch offers *Restore*. It never writes the real scene file
+  scene file, at an interval set in Settings (*Q85*); after a crash, the next launch offers *Restore*. It never writes the real scene file
   without the user saving, because the running game would hot-swap half-finished edits. Undo
   history is not persisted across sessions.
 - Scene files are written **atomically** (temp file + rename) so a hot reload never syncs a
@@ -564,6 +564,10 @@ doc.transact('Move 3 nodes', (d) => d.moveNodes(ids, delta), coalesceKey: gestur
   map from v0.2) render for real using the Studio's Flame; Custom components render as
   **placeholders** (box + Type ID, or the `preview:` image) (*Q6*).
 - Gizmos, grid, selection outlines and hover labels are an overlay layer above the preview world.
+- **Reference rectangle (*Q85*):** an optional, labelled rectangle for a target resolution
+  (e.g. 1280×720) helps place content. The Studio can't read the game's camera (it never runs
+  user code), so the size is a per-project setting kept in the Studio's settings, never in the
+  project.
 
 ### 8.4 Inspector
 
@@ -775,6 +779,9 @@ before display (§9.3, *Q81*).
   (including `assets/scenes/prefabs/`), it appends that folder. It never reorders or reformats;
   the first time it shows a diff. Editing YAML while preserving formatting needs a careful
   approach (e.g. `yaml_edit`). ◇ proposed
+- **Undeclared folders (*Q85*):** the asset browser marks a folder that holds assets but isn't
+  declared in `pubspec.yaml` with "Not in pubspec.yaml", because the game can't load from it.
+  The Studio doesn't fix it on its own; importing or saving into the folder declares it as above.
 - **References by path**, with renames/moves done in the Studio rewriting all references across
   scenes and animations, and a confirmation listing what changes (*Q27*). Ships in v0.1.1 (*Q65*).
 - **Grid slicer** (v0.1.1) writes `.anim.json`. **Aseprite import** (v0.2) reads Aseprite's JSON

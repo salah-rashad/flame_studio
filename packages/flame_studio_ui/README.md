@@ -58,22 +58,42 @@ Built from [`docs/ui-components-plan.md`](../../docs/ui-components-plan.md)
 (Q84). Each has a page in the [gallery](example) (`cd example && flutter run
 -d macos`) laid out like its `preview.html`, and widget tests per state.
 
+All 29 components of the design system, the EditorShell and the 60 icons are
+built.
+
 | Group | Widget | Notes |
 |---|---|---|
 | Foundations | `FsInteractive`, `FsStateColor` | interaction states; focus ring for keyboard focus only |
 | | `FsFocusRing`, `FsDebugStates` | ring outside / inset; forced states for the gallery and tests |
 | | `FsFieldBox`, `FsPanelFocus`, `FsValueSource`, `FsScrubHandle` | field chrome; panel-focus propagation |
+| | `FsAnchoredOverlay`, `FsShortcutLabel` | floating-layer positioner (flip and shift); ⌘⇧ glyphs on macOS, "Ctrl+Shift" elsewhere |
+| | `FsPlatformHooks` | native callbacks the app supplies: `sampleScreenColor` (eyedropper), `pointerLock` (scrub cursor) |
 | Icons | `FsIcons` (60), `FsPlayGlyph` | `test/icons_test.dart` pins the names that differ from Lucide |
-| Inspector | `FsPropertyRow` | fixed 40% label column (resizing comes with `FsPropertyList`) |
-| | `FsNumberProperty` | scrub, modifiers, edit, commit; no expressions or range slider yet |
-| | `FsVector2Property` | per-axis scrub and mixed; no aspect lock yet |
-| Structure | `FsTreeRow` | all states, drop zones, inline rename, auto-expand |
+| Actions | `FsButton`, `FsIconButton`, `FsToggleButton` | primary, secondary, ghost, danger; disabled controls keep a tooltip |
+| | `FsSplitButton`, `FsSegmentedControl`, `FsToolbar` | split main/caret targets; roving focus in the toolbar and segments |
+| Inputs | `FsTextField`, `FsSearchField`, `FsNumberField`, `FsDropdown` | on `EditableText` inside `FsFieldBox`, not Material fields |
+| | `FsCheckbox`, `FsSwitch` | the checkbox has a mixed state |
+| Inspector | `FsPropertyList`, `FsPropertyRow` | shared, resizable label column; default from code / overridden + reset |
+| | `FsNumberProperty` | label scrub with modifiers, expressions (`32*2`, `+=8`), range slider |
+| | `FsBoolProperty`, `FsVector2Property` | per-axis scrub and mixed; aspect lock |
+| | `FsColorProperty`, `FsColorPicker` | hex + alpha; the eyedropper shows only with `sampleScreenColor` |
+| | `FsAssetSlot`, `FsEntitySlot` | on a shared `FsSlot`; drop targets, `FsDragInFlight` for the quiet accept state |
+| Structure | `FsPanel`, `FsSectionHeader`, `FsCollapsible` | panel focus edge; collapsible sections |
+| | `FsTabs` | document and dock styles; dirty dot, close |
+| | `FsTreeRow` | all states, drop zones, inline rename, auto-expand |
+| Floating | `FsContextMenu` (`showFsContextMenu`, `FsContextMenuRegion`, `FsMenuButton`) | on `RawMenuAnchor`; submenus, checked and destructive items |
+| | `FsTooltip`, `FsTooltipGroup` | on `RawTooltip`; 0ms hand-off between adjacent controls |
+| | `FsDialog` (`showFsDialog`), `FsToastHost`, `FsToast` | toasts: at most 3 visible, the rest queue |
+| Status | `FsBanner`, `FsBadge`, `FsDeviceChip`, `FsEmptyState` | |
+| | `FsProgressBar`, `FsSpinner`, `FsStatusDot`, `FsDelayedProgress` | slower, not stopped, under reduce-motion |
+| Shell | `FsEditorShell` | slots and resizable seams; sizes reported to the app, which persists them |
 
 ## Not done yet
 
-- **The other components** of the plan (§8.3): Button, IconButton, Tooltip,
-  TextField, Panel, SectionHeader, ContextMenu first. Until `FsTooltip`
-  exists, the rows use a Material `Tooltip` dressed in the tooltip tokens.
-- **Goldens** (one per gallery grid, macOS CI only).
+- **Goldens** (one per gallery grid, macOS CI only), then the final
+  side-by-side pass against each `preview.html` (`ui-components-plan.md` §8.3).
+- **Native hooks.** The eyedropper (`NSColorSampler`) and hiding and wrapping
+  the cursor while scrubbing need code in the app's macOS runner; until then
+  the widgets hide or simplify those features (Q84).
 - **Light theme.** Tokens exist for dark only; a light theme adds a second
   `FsColors` and `FsShadows` constant.

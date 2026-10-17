@@ -46,6 +46,7 @@ export 'src/inspector/slot.dart' show FsDragInFlight, FsDropAcceptance;
 export 'src/inspector/vector2_property.dart';
 export 'src/metrics.dart';
 export 'src/shadows.dart';
+export 'src/shell/editor_shell.dart';
 export 'src/status/badge.dart';
 export 'src/status/banner.dart';
 export 'src/status/empty_state.dart';

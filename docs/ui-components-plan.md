@@ -746,7 +746,8 @@ FsEditorShell({
   bool bottomCollapsed = false, ValueChanged<bool>? onBottomCollapsedChanged,
   required Widget statusBar,
   required FsShellSizes sizes,     // left, right, bottom
-  required ValueChanged<FsShellSizes> onSizesChanged, // the app persists them per project
+  required ValueChanged<FsShellSizes> onSizesChanged, // during a drag
+  ValueChanged<FsShellSizes>? onSizesChangeEnd,       // the app persists them per project
   FsShellLimits limits = FsShellLimits.standard,
 })
 ```
@@ -758,9 +759,17 @@ FsEditorShell({
   handler). Hover and dragging show `border-strong` and `accent-text` (Prompt 2 asks for both
   states). Dragging clamps to the limits.
 - **Sizes are reported, not stored:** `onSizesChanged` fires during the drag (the parent rebuilds
-  with the new `sizes`) and the app saves them on drag end, per project. Defaults 260 / 320 / 220;
-  at the 1280×800 minimum the shell shrinks the docks to 240 / 288 / 180 itself (layout, not
-  persisted).
+  with the new `sizes`) and `onSizesChangeEnd` on drag end, when the app saves them per project.
+  Defaults 260 / 320 / 220.
+- **Fitting the window:** the centre keeps at least 750 × 520 (`FsShellLimits.minCenterWidth`,
+  `minCenterHeight`); when the docks don't fit with it, they shrink in proportion, never below
+  their minimum (layout, not persisted). At the 1280×800 minimum the defaults come out at about
+  237 / 291 / 187. A drag starts from the size on screen. (Built this way rather than a fixed
+  240 / 288 / 180 below 1280×800: a cap on the stored size would swallow a drag that grows a
+  capped dock, and a rule based on room has no jump when the window shrinks.)
+- **Collapsed bottom dock:** shows its top 28px (the dock's tab strip) and keeps the dock laid out
+  at its expanded height underneath, so its state survives. With `onBottomCollapsedChanged`,
+  dragging the seam below half the minimum height collapses the dock and dragging it up expands it.
 - The title bar draws nothing native. Hiding the macOS title bar and placing the traffic lights
   (`NSWindow` full-size content view) is app runner configuration, not package code.
 - The gallery shows the full EditorShell preview with placeholder panels built from the package's

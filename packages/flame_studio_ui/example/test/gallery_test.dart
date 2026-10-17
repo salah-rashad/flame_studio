@@ -46,6 +46,7 @@ void main() {
         'Progress',
         'Banner',
         'EmptyState',
+        'EditorShell',
       ]) {
         // The sidebar is longer than the window: scroll the entry in.
         await tester.scrollUntilVisible(

@@ -27,6 +27,7 @@ export 'src/foundation/value_source.dart';
 export 'src/icons.dart';
 export 'src/inputs/checkbox.dart' hide FsCheckMarkPainter;
 export 'src/inputs/dropdown.dart';
+export 'src/inputs/search_field.dart';
 export 'src/inputs/text_field.dart';
 export 'src/inspector/bool_property.dart';
 export 'src/inspector/number_property.dart';

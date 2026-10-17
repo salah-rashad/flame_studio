@@ -12,6 +12,7 @@ import 'pages/icons_page.dart';
 import 'pages/number_property_page.dart';
 import 'pages/overlay_page.dart';
 import 'pages/property_row_page.dart';
+import 'pages/search_field_page.dart';
 import 'pages/shortcut_label_page.dart';
 import 'pages/text_field_page.dart';
 import 'pages/toggle_button_page.dart';
@@ -47,6 +48,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Actions', 'ToggleButton', ToggleButtonPage.new),
   GalleryEntry('Inputs', 'TextField', TextFieldPage.new),
   GalleryEntry('Inputs', 'Dropdown', DropdownPage.new),
+  GalleryEntry('Inputs', 'SearchField', SearchFieldPage.new),
   GalleryEntry('Inspector', 'PropertyRow', PropertyRowPage.new),
   GalleryEntry('Inspector', 'NumberProperty', NumberPropertyPage.new),
   GalleryEntry('Inspector', 'Vector2Property', Vector2PropertyPage.new),

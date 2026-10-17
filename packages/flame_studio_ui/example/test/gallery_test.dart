@@ -21,6 +21,7 @@ void main() {
         'ToggleButton',
         'TextField',
         'Dropdown',
+        'SearchField',
         'PropertyRow',
         'NumberProperty',
         'Vector2Property',

@@ -46,9 +46,9 @@ class _PropertyRowPageState extends State<PropertyRowPage> {
       note:
           'A 24px inspector row: label 40% (min 72px), editor, reset slot. '
           'Inside an FsPropertyList the rows share one label column: drag '
-          'the boundary between label and editor in any row. The Color, '
-          'asset and entity editors join the "every field kind" list as '
-          'they are built.',
+          'the boundary between label and editor in any row. The asset and '
+          'entity editors join the "every field kind" list as they are '
+          'built.',
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,6 +116,12 @@ class _PropertyRowPageState extends State<PropertyRowPage> {
                         label: 'position',
                         x: 412.5,
                         y: 288,
+                        onChanged: noop,
+                        onCommit: noop,
+                      ),
+                      const FsColorProperty(
+                        label: 'tint',
+                        value: Color.fromRGBO(255, 215, 168, 1),
                         onChanged: noop,
                         onCommit: noop,
                       ),

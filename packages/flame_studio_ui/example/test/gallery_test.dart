@@ -27,6 +27,7 @@ void main() {
         'NumberProperty',
         'Vector2Property',
         'BoolProperty',
+        'ColorProperty',
         'ColorPicker',
         'TreeRow',
         'ContextMenu',

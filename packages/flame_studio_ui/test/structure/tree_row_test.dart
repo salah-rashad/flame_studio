@@ -291,7 +291,11 @@ void main() {
 
   group('drag and drop', () {
     late List<String> log;
-    setUp(() => log = []);
+    late List<String> drags;
+    setUp(() {
+      log = [];
+      drags = [];
+    });
 
     Widget tree({
       bool canHaveChildren = true,
@@ -299,7 +303,13 @@ void main() {
       VoidCallback? onAutoExpand,
     }) => Column(
       children: [
-        const FsTreeRow<String>(depth: 0, name: 'Camera', dragData: 'camera'),
+        FsTreeRow<String>(
+          depth: 0,
+          name: 'Camera',
+          dragData: 'camera',
+          onDragStarted: () => drags.add('started'),
+          onDragEnded: () => drags.add('ended'),
+        ),
         const SizedBox(height: 40),
         FsTreeRow<String>(
           key: const Key('target'),
@@ -379,6 +389,15 @@ void main() {
         },
       );
     }
+
+    testWidgets('a drag reports its start and end', (tester) async {
+      await pumpFs(tester, tree());
+      final g = await dragTo(tester, 0.5);
+      expect(drags, ['started']);
+      await g.up();
+      await tester.pump();
+      expect(drags, ['started', 'ended']);
+    });
 
     testWidgets('leaf rows: 50/50 above/below', (tester) async {
       await pumpFs(tester, tree(canHaveChildren: false));

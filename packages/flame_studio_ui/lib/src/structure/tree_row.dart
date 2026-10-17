@@ -129,6 +129,8 @@ class FsTreeRow<T extends Object> extends StatefulWidget {
     this.canAccept,
     this.onAccept,
     this.onAutoExpand,
+    this.onDragStarted,
+    this.onDragEnded,
   });
 
   /// Nesting level; 0 for top-level rows.
@@ -202,6 +204,13 @@ class FsTreeRow<T extends Object> extends StatefulWidget {
 
   /// The drag rested 600ms inside this collapsed row.
   final VoidCallback? onAutoExpand;
+
+  /// A drag of [dragData] started (the app can set an `FsDragInFlight`, so
+  /// every compatible slot lights up while it runs).
+  final VoidCallback? onDragStarted;
+
+  /// The drag of [dragData] ended, dropped or cancelled.
+  final VoidCallback? onDragEnded;
 
   /// How long a drag rests "inside" before [onAutoExpand].
   static const Duration autoExpandDelay = Duration(milliseconds: 600);
@@ -391,6 +400,10 @@ class _FsTreeRowState<T extends Object> extends State<FsTreeRow<T>> {
         data: data,
         maxSimultaneousDrags: 1,
         dragAnchorStrategy: pointerDragAnchorStrategy,
+        onDragStarted: widget.onDragStarted,
+        onDragEnd: widget.onDragEnded == null
+            ? null
+            : (_) => widget.onDragEnded!(),
         // The drag layer sits above any Material, so give the feedback a
         // text style: without one, Text falls back to the debug double
         // underline.

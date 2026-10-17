@@ -11,11 +11,19 @@
    again: that would replace the system the Flutter package was built from. To change the system,
    write a short delta prompt ("change token X", "add state Y to component Z"), then copy the new
    `tokens.json` into the package (its `tokens_test.dart` shows what drifted).
-2. For each view, open the design-system project in Claude Design, paste the **shared preamble**
-   below, then **one** view prompt (1–11). Ask for every listed state as a separate frame.
-3. Each view prompt ends by asking for a **"New patterns"** list: anything the view needed that
-   the component set doesn't have. Those go into `ui-components-plan.md` before the panel is built.
-4. The output is a *reference design*, re-implemented by hand in Flutter: the app's panels compose
+2. **Design views in their own documents, never in the design-system document.** That document
+   is the source of the package's `tokens.json`; designing views there invites changes to tokens
+   and components that the Flutter side never hears about.
+3. **One document per view**, each a new design that uses the Flame Studio design system: paste
+   the **shared preamble** below, then that view's prompt, and ask for every listed state as a
+   separate frame. Prompts 2 and 9 may share a document, since both design the toolbar and the
+   Play cluster. Run Prompt 2 first (every other view sits inside its shell), then follow the
+   build order: 3, 4, 5 and 8 for the early preview, then the rest.
+4. Each view prompt ends by asking for a **"New patterns"** list: anything the view needed that
+   the component set doesn't have. Add those to the design system with a delta prompt (step 1)
+   and to `ui-components-plan.md` before the panel is built, rather than letting them live only
+   in a view document.
+5. The output is a *reference design*, re-implemented by hand in Flutter: the app's panels compose
    `flame_studio_ui` widgets. Wording in the prompts uses the project vocabulary
    ([`GLOSSARY.md`](../GLOSSARY.md)) so the designs show the words the app will use.
 
@@ -110,7 +118,7 @@ Deliver
 Paste this before every view prompt (1–11).
 
 ```
-You are extending the existing Flame Studio design system in this project. Do not restyle it.
+This design uses the Flame Studio design system. Do not change or restyle the system itself.
 
 Use only its tokens (colours, type styles, spacing, radii, sizes, shadows), its Lucide icons and
 its components: Button, IconButton, ToggleButton, SplitButton, SegmentedControl, Toolbar,
@@ -606,5 +614,7 @@ C. A sheet of the global warning / error / empty patterns used across the app:
   (*Q81*), Attach guide details, IDE-attached fallback (*Q74*), quit-while-running (*Q63*),
   setup success snippet and committed generated files (*Q30, Q68*), Upgrade runtime flow, About
   window (§12, *Q36*), Play settings (*Q61, Q81*).
+- "How to use" and the preamble: views go in their own documents, one per view, not in the
+  design-system document.
 - Three additions proposed here and accepted as *Q85*: the recovery copy interval setting, the
   per-project viewport reference rectangle, and the "Not in pubspec.yaml" folder warning.

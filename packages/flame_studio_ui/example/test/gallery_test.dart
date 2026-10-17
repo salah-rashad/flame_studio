@@ -45,6 +45,7 @@ void main() {
         'Badge · DeviceChip',
         'Progress',
         'Banner',
+        'EmptyState',
       ]) {
         // The sidebar is longer than the window: scroll the entry in.
         await tester.scrollUntilVisible(

@@ -20,6 +20,7 @@ void main() {
         'IconButton',
         'ToggleButton',
         'SegmentedControl',
+        'SplitButton',
         'TextField',
         'Dropdown',
         'SearchField',
@@ -40,6 +41,12 @@ void main() {
         'Tooltip',
         'Badge · DeviceChip',
       ]) {
+        // The sidebar is longer than the window: scroll the entry in.
+        await tester.scrollUntilVisible(
+          find.text(name).first,
+          40,
+          scrollable: find.byType(Scrollable).first,
+        );
         await tester.tap(find.text(name).first);
         await tester.pump();
         await tester.pump();

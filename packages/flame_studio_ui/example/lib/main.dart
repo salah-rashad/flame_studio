@@ -22,6 +22,7 @@ import 'pages/search_field_page.dart';
 import 'pages/section_header_page.dart';
 import 'pages/segmented_control_page.dart';
 import 'pages/shortcut_label_page.dart';
+import 'pages/split_button_page.dart';
 import 'pages/tabs_page.dart';
 import 'pages/text_field_page.dart';
 import 'pages/toggle_button_page.dart';
@@ -56,6 +57,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Actions', 'IconButton', IconButtonPage.new),
   GalleryEntry('Actions', 'ToggleButton', ToggleButtonPage.new),
   GalleryEntry('Actions', 'SegmentedControl', SegmentedControlPage.new),
+  GalleryEntry('Actions', 'SplitButton', SplitButtonPage.new),
   GalleryEntry('Inputs', 'TextField', TextFieldPage.new),
   GalleryEntry('Inputs', 'Dropdown', DropdownPage.new),
   GalleryEntry('Inputs', 'SearchField', SearchFieldPage.new),

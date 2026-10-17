@@ -483,8 +483,8 @@ class _BesideLayout extends SingleChildLayoutDelegate {
         anchor: anchor,
         size: childSize,
         bounds: size,
-        gap: FsSpacing.s1 + 1,
-        dy: FsSpacing.s1 + 1,
+        gap: 1,
+        dy: -2,
       );
 
   @override

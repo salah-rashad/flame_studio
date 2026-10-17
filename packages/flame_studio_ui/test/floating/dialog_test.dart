@@ -1,5 +1,6 @@
 import 'package:flame_studio_ui/flame_studio_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,6 +19,7 @@ const _save = FsDialog<String>(
 Future<List<String?>> _pumpTrigger(
   WidgetTester tester, [
   FsDialog<String> dialog = _save,
+  bool barrierDismissible = false,
 ]) async {
   final answers = <String?>[];
   await pumpFs(
@@ -25,8 +27,13 @@ Future<List<String?>> _pumpTrigger(
     Builder(
       builder: (context) => FsButton(
         label: 'Open',
-        onPressed: () async =>
-            answers.add(await showFsDialog(context, dialog: dialog)),
+        onPressed: () async => answers.add(
+          await showFsDialog(
+            context,
+            dialog: dialog,
+            barrierDismissible: barrierDismissible,
+          ),
+        ),
       ),
     ),
     width: 200,
@@ -289,6 +296,70 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(FsDialog<String>), findsOneWidget);
     expect(answers, isEmpty);
+  });
+
+  testWidgets('barrierDismissible: the scrim answers like Esc', (tester) async {
+    final answers = await _pumpTrigger(tester, _save, true);
+    await _open(tester);
+    // A click on the dialog itself doesn't count.
+    await tester.tapAt(
+      tester.getTopLeft(find.byType(FsDialog<String>)) + const Offset(30, 60),
+    );
+    await tester.pumpAndSettle();
+    expect(answers, isEmpty);
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
+    expect(answers, ['cancel']);
+    expect(find.byType(FsDialog<String>), findsNothing);
+
+    final bare = await _pumpTrigger(
+      tester,
+      const FsDialog(
+        title: 'Done',
+        primary: FsDialogAction(label: 'OK', value: 'ok'),
+      ),
+      true,
+    );
+    await _open(tester);
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
+    expect(bare, [null]);
+  });
+
+  testWidgets('text in the route gets the theme style, no debug underline', (
+    tester,
+  ) async {
+    await _pumpTrigger(tester);
+    await _open(tester);
+    for (final text in [
+      'Save changes to level_1.scene?',
+      'You have 3 unsaved changes.',
+      'Save',
+      'Cancel',
+    ]) {
+      final style = DefaultTextStyle.of(tester.element(find.text(text))).style;
+      expect(
+        style.decoration ?? TextDecoration.none,
+        TextDecoration.none,
+        reason: text,
+      );
+      expect(style.fontFamily, FsText.body.fontFamily, reason: text);
+      // What the Text widget actually paints.
+      final painted = tester
+          .renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.text(text),
+              matching: find.byType(RichText),
+            ),
+          )
+          .text
+          .style!;
+      expect(
+        painted.decoration ?? TextDecoration.none,
+        TextDecoration.none,
+        reason: text,
+      );
+    }
   });
 
   testWidgets('forced parts reach one button each', (tester) async {

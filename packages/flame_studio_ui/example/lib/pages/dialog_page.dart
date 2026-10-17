@@ -60,8 +60,15 @@ class _DialogPageState extends State<DialogPage> {
   String _answer = '—';
   bool _alwaysSave = false;
 
-  Future<void> _ask(FsDialog<String> dialog) async {
-    final answer = await showFsDialog(context, dialog: dialog);
+  Future<void> _ask(
+    FsDialog<String> dialog, {
+    bool barrierDismissible = false,
+  }) async {
+    final answer = await showFsDialog(
+      context,
+      dialog: dialog,
+      barrierDismissible: barrierDismissible,
+    );
     if (mounted) setState(() => _answer = answer ?? 'null (Esc / ×)');
   }
 
@@ -131,7 +138,10 @@ class _DialogPageState extends State<DialogPage> {
                 ),
               ),
             ),
-            FsButton(label: 'New scene…', onPressed: () => _ask(form)),
+            FsButton(
+              label: 'New scene… (scrim closes)',
+              onPressed: () => _ask(form, barrierDismissible: true),
+            ),
             const SizedBox(width: FsSpacing.s2),
             Text(
               'Answer: $_answer',

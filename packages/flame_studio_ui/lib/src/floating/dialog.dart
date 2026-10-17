@@ -203,50 +203,57 @@ class FsDialog<T> extends StatelessWidget {
       ),
     );
 
-    return Semantics(
-      scopesRoute: true,
-      namesRoute: true,
-      explicitChildNodes: true,
-      label: title,
-      // Enter and Esc arrive as the app's ActivateIntent and DismissIntent;
-      // a focused button or an open menu inside answers them first.
-      child: Focus(
-        canRequestFocus: false,
-        skipTraversal: true,
-        onKeyEvent: (node, event) => _onKey(context, event),
-        child: Actions(
-          actions: {
-            ActivateIntent: CallbackAction<ActivateIntent>(
-              onInvoke: (_) => _answer(context, primary),
-            ),
-            DismissIntent: CallbackAction<DismissIntent>(
-              onInvoke: (_) => _answer(context, secondary),
-            ),
-          },
-          // Tab wraps inside the dialog instead of leaving the route.
-          child: _TrapFocus(
-            child: Container(
-              width: switch (width) {
-                FsDialogWidth.regular => 440,
-                FsDialogWidth.form => 560,
-              },
-              decoration: BoxDecoration(
-                color: c.surfaceOverlay,
-                border: Border.all(color: c.borderOverlay),
-                borderRadius: FsRadii.lg,
-                boxShadow: FsShadows.of(context).dialog,
+    // A route from showGeneralDialog has no Material, so text below would
+    // fall back to the debug style (double yellow underlines): the
+    // transparent Material gives it the theme's body style.
+    return Material(
+      type: MaterialType.transparency,
+      textStyle: FsText.body.copyWith(color: c.textPrimary),
+      child: Semantics(
+        scopesRoute: true,
+        namesRoute: true,
+        explicitChildNodes: true,
+        label: title,
+        // Enter and Esc arrive as the app's ActivateIntent and DismissIntent;
+        // a focused button or an open menu inside answers them first.
+        child: Focus(
+          canRequestFocus: false,
+          skipTraversal: true,
+          onKeyEvent: (node, event) => _onKey(context, event),
+          child: Actions(
+            actions: {
+              ActivateIntent: CallbackAction<ActivateIntent>(
+                onInvoke: (_) => _answer(context, primary),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  header,
-                  if (hasBody)
-                    bodyPart
-                  else
-                    const SizedBox(height: FsSpacing.s4),
-                  footer,
-                ],
+              DismissIntent: CallbackAction<DismissIntent>(
+                onInvoke: (_) => _answer(context, secondary),
+              ),
+            },
+            // Tab wraps inside the dialog instead of leaving the route.
+            child: _TrapFocus(
+              child: Container(
+                width: switch (width) {
+                  FsDialogWidth.regular => 440,
+                  FsDialogWidth.form => 560,
+                },
+                decoration: BoxDecoration(
+                  color: c.surfaceOverlay,
+                  border: Border.all(color: c.borderOverlay),
+                  borderRadius: FsRadii.lg,
+                  boxShadow: FsShadows.of(context).dialog,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    header,
+                    if (hasBody)
+                      bodyPart
+                    else
+                      const SizedBox(height: FsSpacing.s4),
+                    footer,
+                  ],
+                ),
               ),
             ),
           ),
@@ -274,17 +281,40 @@ class FsDialog<T> extends StatelessWidget {
 /// returns the value of the button that closed it (null for Esc or the
 /// close × without a secondary action).
 ///
-/// The scrim doesn't close the dialog: it asks for a decision.
+/// With [barrierDismissible], a click on the scrim answers like Esc (the
+/// secondary value); by default the scrim does nothing, since the dialog
+/// asks for a decision.
 Future<T?> showFsDialog<T>(
   BuildContext context, {
   required FsDialog<T> dialog,
+  bool barrierDismissible = false,
 }) {
   return showGeneralDialog<T>(
     context: context,
     barrierColor: FsColors.of(context).scrim,
     transitionDuration: FsMotion.slow,
-    pageBuilder: (context, animation, secondaryAnimation) =>
-        Center(child: dialog),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final centred = Center(child: dialog);
+      if (!barrierDismissible) return centred;
+      // Not the route's own dismissible barrier: that pops with null,
+      // where the scrim should answer the secondary value like Esc.
+      void answer() => dialog._answer(context, dialog.secondary);
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Semantics(
+            label: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+            onTap: answer,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              excludeFromSemantics: true,
+              onTap: answer,
+            ),
+          ),
+          centred,
+        ],
+      );
+    },
     transitionBuilder: (context, animation, secondaryAnimation, child) =>
         FadeTransition(
           opacity: CurvedAnimation(

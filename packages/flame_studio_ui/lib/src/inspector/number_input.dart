@@ -5,8 +5,12 @@ import '../colors.dart';
 import '../foundation/debug_states.dart';
 import '../foundation/editable.dart';
 import '../foundation/field_box.dart';
+import '../foundation/interactive.dart';
 import '../foundation/number_editing.dart';
+import '../foundation/scrub.dart';
 import '../foundation/value_source.dart';
+import '../icons.dart';
+import '../metrics.dart';
 import '../typography.dart';
 import 'property_row.dart';
 
@@ -20,9 +24,12 @@ import 'property_row.dart';
 /// text) until it is fixed or Esc.
 ///
 /// Scrubbing belongs to the owner: it passes the scrubbed [value] and
-/// [scrubbing], and the field shows them.
+/// [scrubbing], and the field shows them. With [fieldScrub] the value
+/// itself is the scrub handle while the field isn't focused (a click
+/// without a drag starts editing), as in the standalone `FsNumberField`.
 ///
-/// Internal; `FsNumberProperty` and `FsVector2Property` use it.
+/// Internal; `FsNumberProperty`, `FsVector2Property` and `FsNumberField`
+/// use it.
 class FsNumberInput extends StatefulWidget {
   /// Creates the field.
   const FsNumberInput({
@@ -45,6 +52,9 @@ class FsNumberInput extends StatefulWidget {
     required this.onCommit,
     this.onErrorChanged,
     this.debugPart,
+    this.size = FsFieldSize.dense,
+    this.stepper = false,
+    this.fieldScrub,
   });
 
   /// The value; null with [mixed].
@@ -104,6 +114,15 @@ class FsNumberInput extends StatefulWidget {
 
   /// The `FsDebugStates` part this field reads (`field`, `x`, `y`).
   final String? debugPart;
+
+  /// 20 (inside rows) or 24.
+  final FsFieldSize size;
+
+  /// Up and down chevrons at the end that step the value.
+  final bool stepper;
+
+  /// Makes the value a scrub handle while the field isn't focused.
+  final FsScrubHandle? fieldScrub;
 
   @override
   State<FsNumberInput> createState() => _FsNumberInputState();
@@ -283,49 +302,141 @@ class _FsNumberInputState extends State<FsNumberInput> {
       ink = c.textPrimary;
     }
 
+    final interactive = _interactive;
+    final scrubHandle = interactive && !focused ? widget.fieldScrub : null;
+    // The value takes clicks itself only while editing when the field
+    // scrubs; otherwise a click lands on the scrub region and starts
+    // editing.
+    final valueTakesPointer =
+        interactive && (widget.fieldScrub == null || focused);
+    final unit = widget.unit;
+    final Widget? trailing = widget.stepper
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (unit != null) ...[Text(unit), const SizedBox(width: 2)],
+              _Stepper(size: widget.size, onStep: interactive ? _step : null),
+            ],
+          )
+        : (unit == null ? null : Text(unit));
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: FsFieldBox(
-        size: FsFieldSize.dense,
+        size: widget.size,
         states: states,
         readOnly: widget.readOnly,
         accentEdge: scrubbing,
         padding: widget.leading == null
-            ? null
+            ? (widget.stepper
+                  ? EdgeInsetsDirectional.only(
+                      start: widget.size == FsFieldSize.dense
+                          ? 6
+                          : FsSpacing.s2,
+                      end: 0,
+                    )
+                  : null)
             : const EdgeInsetsDirectional.only(end: 6),
         leading: widget.leading,
-        trailing: widget.unit == null ? null : Text(widget.unit!),
-        child: IgnorePointer(
-          ignoring: !_interactive,
-          child: FsEditableText(
-            controller: _controller,
-            focusNode: widget.focusNode,
-            readOnly: !_interactive,
-            style: FsText.mono.copyWith(color: ink),
-            shortcuts: {
-              const SingleActivator(LogicalKeyboardKey.enter): _submit,
-              const SingleActivator(LogicalKeyboardKey.numpadEnter): _submit,
-              const SingleActivator(LogicalKeyboardKey.escape): _revert,
-              for (final shift in [false, true])
-                for (final alt in [false, true]) ...{
-                  SingleActivator(
-                    LogicalKeyboardKey.arrowUp,
-                    shift: shift,
-                    alt: alt,
-                  ): () =>
-                      _step(1),
-                  SingleActivator(
-                    LogicalKeyboardKey.arrowDown,
-                    shift: shift,
-                    alt: alt,
-                  ): () =>
-                      _step(-1),
-                },
-            },
+        trailing: trailing,
+        child: FsScrubRegion(
+          handle: scrubHandle,
+          onTap: widget.fieldScrub != null && interactive && !focused
+              ? widget.focusNode.requestFocus
+              : null,
+          // The whole height of the field, so a click above or below the
+          // text still edits or scrubs.
+          child: SizedBox(
+            height: double.infinity,
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: IgnorePointer(
+                ignoring: !valueTakesPointer,
+                child: FsEditableText(
+                  controller: _controller,
+                  focusNode: widget.focusNode,
+                  readOnly: !interactive,
+                  style: FsText.mono.copyWith(color: ink),
+                  shortcuts: {
+                    const SingleActivator(LogicalKeyboardKey.enter): _submit,
+                    const SingleActivator(LogicalKeyboardKey.numpadEnter):
+                        _submit,
+                    const SingleActivator(LogicalKeyboardKey.escape): _revert,
+                    for (final shift in [false, true])
+                      for (final alt in [false, true]) ...{
+                        SingleActivator(
+                          LogicalKeyboardKey.arrowUp,
+                          shift: shift,
+                          alt: alt,
+                        ): () =>
+                            _step(1),
+                        SingleActivator(
+                          LogicalKeyboardKey.arrowDown,
+                          shift: shift,
+                          alt: alt,
+                        ): () =>
+                            _step(-1),
+                      },
+                  },
+                ),
+              ),
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The stacked ▲▼ chevrons at the end of a number field; each half steps
+/// the value (Shift ×10, Alt ×0.1).
+class _Stepper extends StatelessWidget {
+  const _Stepper({required this.size, required this.onStep});
+
+  final FsFieldSize size;
+  final ValueChanged<int>? onStep;
+
+  @override
+  Widget build(BuildContext context) {
+    // Two halves filling the box inside its border.
+    final half =
+        (size == FsFieldSize.dense ? FsSizes.controlSm : FsSizes.control) / 2 -
+        1;
+    Widget arrow(int direction) {
+      final onStep = this.onStep;
+      return FsInteractive(
+        onPressed: onStep == null ? null : () => onStep(direction),
+        focusable: false,
+        builder: (context, states) {
+          final c = FsColors.of(context);
+          final Color ink;
+          if (states.contains(WidgetState.disabled)) {
+            ink = c.textDisabled;
+          } else if (states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.pressed)) {
+            ink = c.textPrimary;
+          } else {
+            ink = c.textSecondary;
+          }
+          return SizedBox(
+            width: FsSizes.icon,
+            height: half,
+            child: OverflowBox(
+              maxHeight: 12,
+              child: RotatedBox(
+                quarterTurns: direction > 0 ? 2 : 0,
+                child: Icon(FsIcons.chevronDown, size: 12, color: ink),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [arrow(1), arrow(-1)],
     );
   }
 }

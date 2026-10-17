@@ -43,12 +43,24 @@ class FsScrubHandle {
 /// movement comes from the lock, so it doesn't stop at the screen edge.
 /// Without one the ↔ cursor stays visible and a second drag continues from
 /// the new value.
+///
+/// The region keeps the same subtree whether or not [handle] is set, so
+/// turning scrubbing on or off never rebuilds [child] (an editor inside
+/// keeps its state).
 class FsScrubRegion extends StatefulWidget {
-  /// Wraps [child]; does nothing extra when [handle] is null.
-  const FsScrubRegion({super.key, required this.handle, required this.child});
+  /// Wraps [child]; does nothing extra when [handle] and [onTap] are null.
+  const FsScrubRegion({
+    super.key,
+    required this.handle,
+    this.onTap,
+    required this.child,
+  });
 
   /// What to call; null disables scrubbing.
   final FsScrubHandle? handle;
+
+  /// A click without a drag (a number field starts editing).
+  final VoidCallback? onTap;
 
   /// The label or axis letter.
   final Widget child;
@@ -98,6 +110,7 @@ class _FsScrubRegionState extends State<FsScrubRegion> {
   }
 
   void _end() {
+    if (!_scrubbing) return; // a cancelled press that never started
     _release();
     widget.handle?.onEnd();
   }
@@ -118,15 +131,20 @@ class _FsScrubRegionState extends State<FsScrubRegion> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.handle == null) return widget.child;
+    final scrubs = widget.handle != null;
+    final active = scrubs || widget.onTap != null;
     return MouseRegion(
-      cursor: SystemMouseCursors.resizeLeftRight,
+      cursor: scrubs ? SystemMouseCursors.resizeLeftRight : MouseCursor.defer,
       child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+        behavior: active
+            ? HitTestBehavior.opaque
+            : HitTestBehavior.deferToChild,
         dragStartBehavior: DragStartBehavior.down,
-        onHorizontalDragStart: (_) => _start(),
-        onHorizontalDragUpdate: _update,
-        onHorizontalDragEnd: (_) => _end(),
+        onTap: widget.onTap,
+        onHorizontalDragStart: scrubs ? (_) => _start() : null,
+        onHorizontalDragUpdate: scrubs ? _update : null,
+        onHorizontalDragEnd: scrubs ? (_) => _end() : null,
+        onHorizontalDragCancel: scrubs ? _end : null,
         child: widget.child,
       ),
     );

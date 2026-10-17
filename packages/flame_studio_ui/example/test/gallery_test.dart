@@ -22,6 +22,7 @@ void main() {
         'TextField',
         'Dropdown',
         'SearchField',
+        'NumberField',
         'PropertyRow',
         'NumberProperty',
         'Vector2Property',

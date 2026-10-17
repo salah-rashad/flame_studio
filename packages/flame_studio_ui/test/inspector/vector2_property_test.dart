@@ -156,4 +156,96 @@ void main() {
     expect(fieldBorder(tester, _fieldOf(_y)), c.accentText);
     expect(fieldBorder(tester, _fieldOf(_x)), c.borderControl);
   });
+
+  group('aspect lock', () {
+    testWidgets('no button unless aspectLocked is set', (tester) async {
+      await pumpFs(tester, const _Harness());
+      expect(find.byType(FsToggleButton), findsNothing);
+      await pumpFs(tester, const _Locked(locked: false));
+      expect(find.byType(FsToggleButton), findsOneWidget);
+      expect(tester.getSize(find.byType(FsToggleButton)).height, 20);
+      expect(find.byIcon(FsIcons.link), findsOneWidget);
+    });
+
+    testWidgets('the button toggles the lock', (tester) async {
+      await pumpFs(tester, const _Locked(locked: false));
+      await tester.tap(find.byType(FsToggleButton));
+      await tester.pump();
+      expect(
+        tester.widget<FsToggleButton>(find.byType(FsToggleButton)).value,
+        isTrue,
+      );
+    });
+
+    testWidgets('editing X scales Y', (tester) async {
+      await pumpFs(tester, const _Locked());
+      await tester.tap(find.byType(EditableText).first);
+      await tester.pump();
+      await tester.enterText(find.byType(EditableText).first, '3');
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(commits, [(3.0, 6.0)]);
+      expect(fieldText(tester, 1), '6.0');
+    });
+
+    testWidgets('scrubbing Y scales X; one commit', (tester) async {
+      await pumpFs(tester, const _Locked());
+      await mouseDrag(tester, _y, 8, steps: 2); // 4 steps of 1
+      expect(changes.last, (3.0, 6.0));
+      expect(commits, [(3.0, 6.0)]);
+    });
+
+    testWidgets('scrubbing the label scales both', (tester) async {
+      await pumpFs(tester, const _Locked());
+      await mouseDrag(tester, _label, 4); // X +2
+      expect(commits, [(3.0, 6.0)]);
+    });
+
+    testWidgets('unlocked, the axes change on their own', (tester) async {
+      await pumpFs(tester, const _Locked(locked: false));
+      await mouseDrag(tester, _y, 8, steps: 2);
+      expect(commits, [(1.0, 6.0)]);
+    });
+
+    testWidgets('an axis at zero has no ratio to keep', (tester) async {
+      await pumpFs(tester, const _Locked(x: 0));
+      await mouseDrag(tester, _y, 8, steps: 2);
+      expect(commits, [(0.0, 6.0)]);
+    });
+  });
+}
+
+/// A `scale`-like row with the aspect lock, following its callbacks.
+class _Locked extends StatefulWidget {
+  const _Locked({this.locked = true, this.x = 1});
+
+  final bool locked;
+  final double x;
+
+  @override
+  State<_Locked> createState() => _LockedState();
+}
+
+class _LockedState extends State<_Locked> {
+  late double? x = widget.x;
+  double? y = 2;
+  late bool locked = widget.locked;
+
+  @override
+  Widget build(BuildContext context) => FsVector2Property(
+    label: 'position',
+    x: x,
+    y: y,
+    aspectLocked: locked,
+    aspectLockTooltip: 'Lock aspect ratio',
+    onAspectLockChanged: (v) => setState(() => locked = v),
+    onChanged: (nx, ny) {
+      changes.add((nx, ny));
+      setState(() {
+        x = nx;
+        y = ny;
+      });
+    },
+    onCommit: (nx, ny) => commits.add((nx, ny)),
+  );
 }

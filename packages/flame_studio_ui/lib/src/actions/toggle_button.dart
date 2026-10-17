@@ -6,6 +6,7 @@ import '../foundation/focus_ring.dart';
 import '../foundation/interactive.dart';
 import '../metrics.dart';
 import '../typography.dart';
+import 'icon_button.dart';
 
 /// A button that stays on: view toggles (grid, hitboxes, snap) and
 /// filters.
@@ -35,6 +36,8 @@ class FsToggleButton extends StatelessWidget {
     this.disabledReason,
     this.focusable = true,
     this.focusNode,
+    this.size = FsIconButtonSize.regular,
+    this.iconSize,
   }) : assert(icon != null || label != null, 'Give an icon, a label or both');
 
   /// The glyph: 16px alone, 14px next to a label.
@@ -63,6 +66,13 @@ class FsToggleButton extends StatelessWidget {
 
   /// The focus node.
   final FocusNode? focusNode;
+
+  /// The icon form's size: 24, or 20 inside property rows (the Vector2
+  /// aspect lock). The text form is always 24px high.
+  final FsIconButtonSize size;
+
+  /// The icon form's glyph size; 16 by default.
+  final double? iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -116,12 +126,15 @@ class FsToggleButton extends StatelessWidget {
                   ),
                 ],
               )
-            : Icon(icon, size: FsSizes.icon, color: ink);
+            : Icon(icon, size: iconSize ?? FsSizes.icon, color: ink);
+        final extent = size == FsIconButtonSize.regular
+            ? FsSizes.control
+            : FsSizes.controlSm;
         return FsFocusRing.outside(
           visible: states.contains(WidgetState.focused),
           child: Container(
-            width: textForm ? null : FsSizes.control,
-            height: FsSizes.control,
+            width: textForm ? null : extent,
+            height: textForm ? FsSizes.control : extent,
             padding: textForm
                 ? const EdgeInsets.symmetric(horizontal: FsSpacing.s2)
                 : null,

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../actions/icon_button.dart';
+import '../actions/toggle_button.dart';
 import '../colors.dart';
 import '../foundation/debug_states.dart';
 import '../foundation/number_editing.dart';
 import '../foundation/scrub.dart';
 import '../foundation/value_source.dart';
+import '../icons.dart';
 import '../metrics.dart';
 import '../typography.dart';
 import 'number_input.dart';
@@ -20,9 +23,13 @@ import 'property_row.dart';
 ///   Scrubbing and editing behave as in `FsNumberProperty`.
 /// - Each axis can be mixed ("—" in that field only). The callbacks get
 ///   null for an axis that is mixed and wasn't changed.
-/// - Tab order X → Y → next row.
-///
-/// Not yet: the aspect lock.
+/// - **Aspect lock** ([aspectLocked] not null, for `scale` and `size`): a
+///   20px link toggle after the fields. While locked, editing, stepping or
+///   scrubbing one axis scales the other by the same factor, inside the
+///   widget, so [onChanged] and [onCommit] already get the locked pair.
+///   Scrubbing the label scales both. An axis that is mixed or zero has no
+///   ratio to keep; then the axes change on their own.
+/// - Tab order X → Y (→ the lock) → next row.
 ///
 /// Parts for `FsDebugStates`: `row`, `label`, `x` and `y`.
 class FsVector2Property extends StatefulWidget {
@@ -43,6 +50,9 @@ class FsVector2Property extends StatefulWidget {
     required this.onCommit,
     this.invalidMessage,
     this.enabled = true,
+    this.aspectLocked,
+    this.onAspectLockChanged,
+    this.aspectLockTooltip,
   });
 
   /// The field's Dart name.
@@ -87,6 +97,15 @@ class FsVector2Property extends StatefulWidget {
   /// False disables the row.
   final bool enabled;
 
+  /// Whether X and Y keep their ratio; null shows no lock button.
+  final bool? aspectLocked;
+
+  /// The lock button was toggled; null disables the button.
+  final ValueChanged<bool>? onAspectLockChanged;
+
+  /// The lock button's tooltip ("Lock aspect ratio").
+  final String? aspectLockTooltip;
+
   @override
   State<FsVector2Property> createState() => _FsVector2PropertyState();
 }
@@ -96,15 +115,21 @@ enum _Axis { x, y }
 class _FsVector2PropertyState extends State<FsVector2Property> {
   final _focusX = FocusNode(debugLabel: 'x');
   final _focusY = FocusNode(debugLabel: 'y');
-  FsScrub? _scrubX;
-  FsScrub? _scrubY;
+  FsScrub? _scrub;
+  _Axis? _scrubbed; // null: the label scrubs both axes (unlocked)
   (double?, double?) _scrubStart = (null, null);
+  (double?, double?)? _live;
   bool _labelScrub = false;
   String? _errorX;
   String? _errorY;
+  FsScrub? _scrubX;
+  FsScrub? _scrubY;
 
   double? get _x => widget.mixedX ? null : widget.x;
   double? get _y => widget.mixedY ? null : widget.y;
+
+  /// The lock applies: on, and both axes known.
+  bool get _locked => widget.aspectLocked == true && _x != null && _y != null;
 
   @override
   void dispose() {
@@ -113,43 +138,81 @@ class _FsVector2PropertyState extends State<FsVector2Property> {
     super.dispose();
   }
 
-  FsScrub? _scrubFrom(double? value) =>
-      value == null ? null : FsScrub(start: value, step: widget.step);
+  /// The pair after [axis] became [value], keeping the ratio of [from]
+  /// while locked.
+  (double?, double?) _pair(_Axis axis, double value, (double?, double?) from) {
+    final (fx, fy) = from;
+    if (!_locked || fx == null || fy == null) {
+      return axis == _Axis.x ? (value, fy) : (fx, value);
+    }
+    final source = axis == _Axis.x ? fx : fy;
+    if (source == 0) return axis == _Axis.x ? (value, fy) : (fx, value);
+    final other = (axis == _Axis.x ? fy : fx) * value / source;
+    final rounded = FsNumberEditing.roundTo(other, FsNumberEditing.maxDecimals);
+    return axis == _Axis.x ? (value, rounded) : (rounded, value);
+  }
 
   void _start(Set<_Axis> axes, {bool label = false}) {
     _focusX.unfocus();
     _focusY.unfocus();
+    final start = (_x, _y);
     setState(() {
       _labelScrub = label;
-      if (axes.contains(_Axis.x)) _scrubX = _scrubFrom(_x);
-      if (axes.contains(_Axis.y)) _scrubY = _scrubFrom(_y);
-      _scrubStart = (_x, _y);
+      _scrubStart = start;
+      _live = start;
+      if (_locked) {
+        // One axis drives; the other follows its ratio. The label drives X
+        // unless X is 0 (no ratio to scale).
+        final driver = axes.length == 1
+            ? axes.single
+            : (_x != 0 ? _Axis.x : _Axis.y);
+        _scrubbed = driver;
+        _scrubX = driver == _Axis.x ? _scrubFrom(_x) : null;
+        _scrubY = driver == _Axis.y ? _scrubFrom(_y) : null;
+      } else {
+        _scrubbed = null;
+        _scrubX = axes.contains(_Axis.x) ? _scrubFrom(_x) : null;
+        _scrubY = axes.contains(_Axis.y) ? _scrubFrom(_y) : null;
+      }
+      _scrub = _scrubX ?? _scrubY;
     });
   }
 
+  FsScrub? _scrubFrom(double? value) =>
+      value == null ? null : FsScrub(start: value, step: widget.step);
+
   void _update(double dx, double multiplier) {
-    if (_scrubX == null && _scrubY == null) return;
-    final before = (_scrubX?.value, _scrubY?.value);
+    if (_scrub == null) return;
+    final before = _live;
     _scrubX?.update(dx, multiplier: multiplier);
     _scrubY?.update(dx, multiplier: multiplier);
-    if ((_scrubX?.value, _scrubY?.value) == before) return;
-    setState(() {});
-    widget.onChanged(_scrubX?.value ?? _x, _scrubY?.value ?? _y);
+    final driver = _scrubbed;
+    final next = driver == null
+        ? (_scrubX?.value ?? _x, _scrubY?.value ?? _y)
+        : _pair(
+            driver,
+            (driver == _Axis.x ? _scrubX : _scrubY)!.value,
+            _scrubStart,
+          );
+    if (next == before) return;
+    setState(() => _live = next);
+    widget.onChanged(next.$1, next.$2);
   }
 
   void _end() {
-    final (sx, sy) = (_scrubX, _scrubY);
-    if (sx == null && sy == null) return;
+    if (_scrub == null) return;
+    final live = _live;
     setState(() {
+      _scrub = null;
       _scrubX = null;
       _scrubY = null;
+      _scrubbed = null;
+      _live = null;
       _labelScrub = false;
     });
-    final (startX, startY) = _scrubStart;
-    final changed =
-        (sx != null && sx.value != startX) ||
-        (sy != null && sy.value != startY);
-    if (changed) widget.onCommit(sx?.value ?? _x, sy?.value ?? _y);
+    if (live != null && live != _scrubStart) {
+      widget.onCommit(live.$1, live.$2);
+    }
   }
 
   FsScrubHandle? _handle(Set<_Axis> axes, {bool label = false}) {
@@ -165,17 +228,25 @@ class _FsVector2PropertyState extends State<FsVector2Property> {
 
   Widget _field(_Axis axis) {
     final isX = axis == _Axis.x;
-    final scrub = isX ? _scrubX : _scrubY;
-    final value = isX ? _x : _y;
+    final live = _live;
+    final scrubbing = _scrub != null;
+    final value = live == null ? (isX ? _x : _y) : (isX ? live.$1 : live.$2);
     final mixed = isX ? widget.mixedX : widget.mixedY;
-    void set(double v, void Function(double? x, double? y) callback) =>
-        isX ? callback(v, _y) : callback(_x, v);
+    // While locked, a scrub moves both fields, so both show the accent.
+    final moving =
+        scrubbing &&
+        (_scrubbed == null ? (isX ? _scrubX : _scrubY) != null : true);
+    void set(double v, void Function(double? x, double? y) callback) {
+      final (x, y) = _pair(axis, v, (_x, _y));
+      callback(x, y);
+    }
+
     return FsNumberInput(
-      value: scrub?.value ?? value,
-      mixed: mixed && scrub == null,
+      value: value,
+      mixed: mixed && !moving,
       focusNode: isX ? _focusX : _focusY,
       step: widget.step,
-      scrubbing: scrub != null,
+      scrubbing: moving,
       enabled: widget.enabled,
       invalidMessage: widget.invalidMessage,
       leading: _AxisCell(
@@ -198,6 +269,8 @@ class _FsVector2PropertyState extends State<FsVector2Property> {
 
   @override
   Widget build(BuildContext context) {
+    final locked = widget.aspectLocked;
+    final onLock = widget.onAspectLockChanged;
     return FsPropertyRow(
       label: widget.label,
       source: widget.source,
@@ -214,6 +287,17 @@ class _FsVector2PropertyState extends State<FsVector2Property> {
             Expanded(child: _field(_Axis.x)),
             const SizedBox(width: FsSpacing.s1),
             Expanded(child: _field(_Axis.y)),
+            if (locked != null) ...[
+              const SizedBox(width: FsSpacing.s1),
+              FsToggleButton(
+                icon: FsIcons.link,
+                value: locked,
+                tooltip: widget.aspectLockTooltip ?? '',
+                size: FsIconButtonSize.small,
+                iconSize: 12,
+                onChanged: widget.enabled ? onLock : null,
+              ),
+            ],
           ],
         ),
       ),

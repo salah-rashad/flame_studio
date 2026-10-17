@@ -9,6 +9,7 @@ import 'pages/color_picker_page.dart';
 import 'pages/color_property_page.dart';
 import 'pages/context_menu_page.dart';
 import 'pages/dropdown_page.dart';
+import 'pages/entity_slot_page.dart';
 import 'pages/foundations_page.dart';
 import 'pages/icon_button_page.dart';
 import 'pages/icons_page.dart';
@@ -61,6 +62,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Inspector', 'ColorProperty', ColorPropertyPage.new),
   GalleryEntry('Inspector', 'ColorPicker', ColorPickerPage.new),
   GalleryEntry('Inspector', 'AssetSlot', AssetSlotPage.new),
+  GalleryEntry('Inspector', 'EntitySlot', EntitySlotPage.new),
   GalleryEntry('Structure', 'TreeRow', TreeRowPage.new),
   GalleryEntry('Floating', 'ContextMenu', ContextMenuPage.new),
   GalleryEntry('Floating', 'Tooltip', TooltipPage.new),

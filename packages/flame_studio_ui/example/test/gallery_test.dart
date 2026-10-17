@@ -30,6 +30,7 @@ void main() {
         'ColorProperty',
         'ColorPicker',
         'AssetSlot',
+        'EntitySlot',
         'TreeRow',
         'ContextMenu',
         'Tooltip',

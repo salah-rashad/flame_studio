@@ -34,6 +34,7 @@ export 'src/inspector/asset_slot.dart';
 export 'src/inspector/bool_property.dart';
 export 'src/inspector/color_picker.dart' show FsColorPicker;
 export 'src/inspector/color_property.dart';
+export 'src/inspector/entity_slot.dart';
 export 'src/inspector/number_property.dart';
 export 'src/inspector/property_row.dart' show FsPropertyList, FsPropertyRow;
 export 'src/inspector/slot.dart' show FsDragInFlight, FsDropAcceptance;

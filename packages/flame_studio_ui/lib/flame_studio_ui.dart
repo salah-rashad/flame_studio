@@ -8,6 +8,14 @@
 library;
 
 export 'src/colors.dart';
+export 'src/foundation/debug_states.dart';
+export 'src/foundation/field_box.dart';
+export 'src/foundation/focus_ring.dart' show FsFocusRing;
+export 'src/foundation/interactive.dart';
+export 'src/foundation/number_editing.dart' show FsNumberKind;
+export 'src/foundation/panel_focus.dart';
+export 'src/foundation/scrub.dart' show FsScrubHandle;
+export 'src/foundation/value_source.dart';
 export 'src/icons.dart';
 export 'src/metrics.dart';
 export 'src/shadows.dart';

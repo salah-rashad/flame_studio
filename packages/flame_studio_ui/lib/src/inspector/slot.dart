@@ -84,7 +84,8 @@ class FsSlotAction {
 /// - Keyboard: Enter/Space [onActivate]; ⌫ or Delete [onClear]; Esc
 ///   [onEscape] while [picking].
 ///
-/// Internal. Part for `FsDebugStates`: `drop` (exact):
+/// Internal. Parts for `FsDebugStates`: `action` (exact) for the 16px
+/// buttons, and `drop` (exact):
 /// [WidgetState.selected] draws the drop target, [WidgetState.error] the
 /// wrong type.
 class FsSlot<D extends Object> extends StatefulWidget {
@@ -498,7 +499,13 @@ class _SlotBox extends StatelessWidget {
             ),
             if (missing && showsName && missingLabel != null) ...[
               const SizedBox(width: FsSpacing.s1),
-              FsBadge(kind: FsBadgeKind.missing, label: missingLabel),
+              // No icon: the slot's thumbnail already shows the alert
+              // circle (preview.html draws the word alone).
+              FsBadge(
+                kind: FsBadgeKind.missing,
+                label: missingLabel,
+                showIcon: false,
+              ),
             ],
             for (final action in slot.actions) ...[
               const SizedBox(width: FsSpacing.s1),
@@ -555,38 +562,43 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = FsColors.of(context);
-    final Widget button = FsInteractive(
-      onPressed: enabled ? action.onPressed : null,
-      focusable: false,
-      semanticsLabel: action.tooltip,
-      selected: action.latched,
-      builder: (context, states) {
-        final disabled = states.contains(WidgetState.disabled);
-        final hot =
-            states.contains(WidgetState.hovered) ||
-            states.contains(WidgetState.pressed);
-        final Color fill;
-        final Color ink;
-        if (disabled) {
-          fill = Colors.transparent;
-          ink = c.textDisabled;
-        } else if (action.latched) {
-          fill = c.accentSubtle;
-          ink = c.accentText;
-        } else if (hot) {
-          fill = c.surfacePressed;
-          ink = c.textPrimary;
-        } else {
-          fill = Colors.transparent;
-          ink = c.textSecondary;
-        }
-        return Container(
-          width: FsSizes.icon,
-          height: FsSizes.icon,
-          decoration: BoxDecoration(color: fill, borderRadius: FsRadii.xs),
-          child: Icon(action.icon, size: 12, color: ink),
-        );
-      },
+    // Shielded: states forced on the whole slot (the gallery's Hover row)
+    // don't light its buttons; part `action` (exact) forces them.
+    final Widget button = FsDebugStates(
+      states: FsDebugStates.of(context, part: 'action', exact: true),
+      child: FsInteractive(
+        onPressed: enabled ? action.onPressed : null,
+        focusable: false,
+        semanticsLabel: action.tooltip,
+        selected: action.latched,
+        builder: (context, states) {
+          final disabled = states.contains(WidgetState.disabled);
+          final hot =
+              states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.pressed);
+          final Color fill;
+          final Color ink;
+          if (disabled) {
+            fill = Colors.transparent;
+            ink = c.textDisabled;
+          } else if (action.latched) {
+            fill = c.accentSubtle;
+            ink = c.accentText;
+          } else if (hot) {
+            fill = c.surfacePressed;
+            ink = c.textPrimary;
+          } else {
+            fill = Colors.transparent;
+            ink = c.textSecondary;
+          }
+          return Container(
+            width: FsSizes.icon,
+            height: FsSizes.icon,
+            decoration: BoxDecoration(color: fill, borderRadius: FsRadii.xs),
+            child: Icon(action.icon, size: 12, color: ink),
+          );
+        },
+      ),
     );
     return action.tooltip.isEmpty
         ? button

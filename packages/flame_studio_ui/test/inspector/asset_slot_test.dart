@@ -142,9 +142,23 @@ void main() {
     await pumpFs(tester, _slot(fileName: 'hurt.wav', missing: true));
     expect(_look(tester), (c.errorSubtle, c.errorBorder));
     expect(textColor(tester, 'hurt.wav'), c.error);
-    // One for the thumbnail, one in the badge.
-    expect(find.byIcon(FsIcons.alertCircle), findsNWidgets(2));
+    // The thumbnail's; the badge is the word alone, as in preview.html.
+    expect(find.byIcon(FsIcons.alertCircle), findsOneWidget);
     expect(find.text('Missing'), findsOneWidget);
+  });
+
+  testWidgets('forced slot states leave its buttons alone', (tester) async {
+    await pumpFs(
+      tester,
+      FsDebugStates(states: const {WidgetState.hovered}, child: _slot()),
+    );
+    final clear = find.ancestor(
+      of: find.byIcon(FsIcons.x),
+      matching: find.byType(Container),
+    );
+    final box =
+        tester.widget<Container>(clear.first).decoration! as BoxDecoration;
+    expect(box.color, Colors.transparent);
   });
 
   testWidgets('mixed: the label, no clear', (tester) async {

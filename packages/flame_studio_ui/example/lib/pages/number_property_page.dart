@@ -1,4 +1,5 @@
 import 'package:flame_studio_ui/flame_studio_ui.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../grid.dart';
@@ -15,6 +16,8 @@ class _NumberPropertyPageState extends State<NumberPropertyPage> {
   double _speed = 180;
   FsValueSource _speedSource = FsValueSource.codeDefault;
   double _opacity = 0.85;
+  double _jumpForce = 520;
+  late final _lock = _SimulatedLock(_note);
   final _log = <String>[];
 
   void _note(String text) => setState(() {
@@ -165,6 +168,19 @@ class _NumberPropertyPageState extends State<NumberPropertyPage> {
                     onChanged: (v) => setState(() => _opacity = v),
                     onCommit: (v) => _note('opacity → $v'),
                   ),
+                  // The FsPlatformHooks path, with a lock that only
+                  // forwards pointer movement (no native code here).
+                  FsPlatformHooks(
+                    pointerLock: _lock,
+                    child: FsNumberProperty(
+                      label: 'jumpForce',
+                      value: _jumpForce,
+                      unit: 'px/s',
+                      tooltip: 'Scrubs through a simulated FsPointerLock',
+                      onChanged: (v) => setState(() => _jumpForce = v),
+                      onCommit: (v) => _note('jumpForce → $v'),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -174,7 +190,7 @@ class _NumberPropertyPageState extends State<NumberPropertyPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SectionLabel('onCommit log (one per gesture or edit)'),
+                  const SectionLabel('onCommit and pointer-lock log'),
                   for (final line in _log)
                     Text(
                       line,
@@ -187,5 +203,34 @@ class _NumberPropertyPageState extends State<NumberPropertyPage> {
         ),
       ],
     );
+  }
+}
+
+/// Stands in for the macOS runner's lock: it reports the pointer's
+/// movement through the lock callback (the cursor stays visible, since
+/// hiding it needs native code) and logs lock and unlock.
+class _SimulatedLock implements FsPointerLock {
+  _SimulatedLock(this.note);
+
+  final void Function(String) note;
+  void Function(Offset delta)? _onMove;
+
+  void _route(PointerEvent event) {
+    if (event is PointerMoveEvent) _onMove?.call(event.delta);
+  }
+
+  @override
+  Future<bool> lock(void Function(Offset delta) onMove) async {
+    note('pointer lock taken');
+    _onMove = onMove;
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_route);
+    return true;
+  }
+
+  @override
+  Future<void> unlock() async {
+    note('pointer lock released');
+    _onMove = null;
+    GestureBinding.instance.pointerRouter.removeGlobalRoute(_route);
   }
 }

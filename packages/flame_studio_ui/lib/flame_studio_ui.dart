@@ -15,6 +15,7 @@ export 'src/foundation/focus_ring.dart' show FsFocusRing;
 export 'src/foundation/interactive.dart';
 export 'src/foundation/number_editing.dart' show FsNumberKind;
 export 'src/foundation/panel_focus.dart';
+export 'src/foundation/platform_hooks.dart';
 export 'src/foundation/scrub.dart' show FsScrubHandle;
 export 'src/foundation/shortcut_label.dart';
 export 'src/foundation/value_source.dart';

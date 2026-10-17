@@ -11,9 +11,10 @@ import 'property_row.dart';
 /// - **Scrub:** press on the label and drag: 1 step per 2px, Shift ×10,
 ///   Alt ×0.1. The label and the field border turn `accent-text` and the
 ///   cursor is ↔. [onChanged] fires while dragging, [onCommit] once when
-///   the drag ends (one undo entry per gesture). The cursor stays visible
-///   and doesn't wrap at the screen edges (plan §7.1); a second drag
-///   continues from the new value.
+///   the drag ends (one undo entry per gesture). With an `FsPointerLock`
+///   from `FsPlatformHooks` the cursor hides and the scrub doesn't stop at
+///   the screen edge; without one it stays visible (plan §7.1) and a second
+///   drag continues from the new value.
 /// - **Edit:** click or Tab in edits with the value selected; Enter, Tab or
 ///   clicking elsewhere commits; Esc reverts; ↑/↓ step (Shift ×10).
 /// - **Invalid text** (not a number, outside [min]…[max], or rejected by

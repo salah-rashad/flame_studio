@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'number_editing.dart';
+import 'platform_hooks.dart';
 
 /// Makes a property row's label (or a Vector2 axis letter) a scrub handle:
 /// press and drag horizontally to change the value.
@@ -35,10 +38,12 @@ class FsScrubHandle {
 
 /// The ↔ cursor and horizontal-drag detection of a scrub handle.
 ///
-/// Internal. Cursor hiding and wrapping at the screen edges need native code
-/// (plan §7.1) and come with `FsPointerLock`; until then the cursor stays
-/// visible and a second drag continues from the new value.
-class FsScrubRegion extends StatelessWidget {
+/// Internal. When the app provides an [FsPointerLock] through
+/// [FsPlatformHooks], a scrub takes the lock: the cursor hides and the
+/// movement comes from the lock, so it doesn't stop at the screen edge.
+/// Without one the ↔ cursor stays visible and a second drag continues from
+/// the new value.
+class FsScrubRegion extends StatefulWidget {
   /// Wraps [child]; does nothing extra when [handle] is null.
   const FsScrubRegion({super.key, required this.handle, required this.child});
 
@@ -49,27 +54,80 @@ class FsScrubRegion extends StatelessWidget {
   final Widget child;
 
   @override
+  State<FsScrubRegion> createState() => _FsScrubRegionState();
+}
+
+class _FsScrubRegionState extends State<FsScrubRegion> {
+  FsPointerLock? _lock;
+  bool _locked = false;
+  bool _scrubbing = false;
+
+  static double get _multiplier {
+    final keys = HardwareKeyboard.instance;
+    return FsNumberEditing.modifierMultiplier(
+      shift: keys.isShiftPressed,
+      alt: keys.isAltPressed,
+    );
+  }
+
+  void _start() {
+    _scrubbing = true;
+    widget.handle?.onStart();
+    final lock = FsPlatformHooks.maybeOf(context)?.pointerLock;
+    if (lock == null) return;
+    _lock = lock;
+    unawaited(
+      lock.lock(_onLockedMove).then((granted) {
+        if (!_scrubbing || !mounted) {
+          // The scrub ended before the lock arrived.
+          if (granted) unawaited(lock.unlock());
+          return;
+        }
+        _locked = granted;
+      }),
+    );
+  }
+
+  void _onLockedMove(Offset delta) {
+    if (_scrubbing && _locked) widget.handle?.onUpdate(delta.dx, _multiplier);
+  }
+
+  void _update(DragUpdateDetails details) {
+    // While locked the pointer stands still; the lock reports the movement.
+    if (!_locked) widget.handle?.onUpdate(details.delta.dx, _multiplier);
+  }
+
+  void _end() {
+    _release();
+    widget.handle?.onEnd();
+  }
+
+  void _release() {
+    _scrubbing = false;
+    final lock = _lock;
+    if (lock != null && _locked) unawaited(lock.unlock());
+    _lock = null;
+    _locked = false;
+  }
+
+  @override
+  void dispose() {
+    _release();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final handle = this.handle;
-    if (handle == null) return child;
+    if (widget.handle == null) return widget.child;
     return MouseRegion(
       cursor: SystemMouseCursors.resizeLeftRight,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         dragStartBehavior: DragStartBehavior.down,
-        onHorizontalDragStart: (_) => handle.onStart(),
-        onHorizontalDragUpdate: (details) {
-          final keys = HardwareKeyboard.instance;
-          handle.onUpdate(
-            details.delta.dx,
-            FsNumberEditing.modifierMultiplier(
-              shift: keys.isShiftPressed,
-              alt: keys.isAltPressed,
-            ),
-          );
-        },
-        onHorizontalDragEnd: (_) => handle.onEnd(),
-        child: child,
+        onHorizontalDragStart: (_) => _start(),
+        onHorizontalDragUpdate: _update,
+        onHorizontalDragEnd: (_) => _end(),
+        child: widget.child,
       ),
     );
   }

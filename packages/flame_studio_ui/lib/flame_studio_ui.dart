@@ -17,6 +17,7 @@ export 'src/foundation/panel_focus.dart';
 export 'src/foundation/scrub.dart' show FsScrubHandle;
 export 'src/foundation/value_source.dart';
 export 'src/icons.dart';
+export 'src/inspector/number_property.dart';
 export 'src/inspector/property_row.dart' show FsPropertyRow;
 export 'src/metrics.dart';
 export 'src/shadows.dart';

@@ -15,6 +15,7 @@ void main() {
         'Icons',
         'Field box · Interactive',
         'PropertyRow',
+        'NumberProperty',
       ]) {
         await tester.tap(find.text(name).first);
         await tester.pump();

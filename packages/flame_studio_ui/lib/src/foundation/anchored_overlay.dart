@@ -73,6 +73,31 @@ abstract final class FsOverlayPlacement {
     return Offset(x, y);
   }
 
+  /// The top-left corner of a layer of [size] beside [anchor]: to its
+  /// right, [dy] above its top (a submenu next to its parent item), or to
+  /// its left when it doesn't fit on the right; shifted to stay [margin]
+  /// inside [bounds].
+  static Offset placeBeside({
+    required Rect anchor,
+    required Size size,
+    required Size bounds,
+    double gap = 0,
+    double dy = 0,
+    double margin = 8,
+  }) {
+    var x = anchor.right + gap;
+    if (x + size.width > bounds.width - margin) {
+      x = anchor.left - gap - size.width;
+    }
+    x = _clamp(x, margin, bounds.width - margin - size.width);
+    final y = _clamp(
+      anchor.top - dy,
+      margin,
+      bounds.height - margin - size.height,
+    );
+    return Offset(x, y);
+  }
+
   /// [value] kept inside [min]…[max]; [min] wins when the layer is larger
   /// than the bounds.
   static double _clamp(double value, double min, double max) =>

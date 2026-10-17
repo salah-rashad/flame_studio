@@ -34,6 +34,10 @@ class FsDebugStates extends InheritedWidget {
   /// set. A widget without parts passes no [part] and gets only the states
   /// forced without one.
   ///
+  /// The nearest `FsDebugStates` that applies wins; ones for other parts are
+  /// skipped, so several can be nested to force different parts (the items
+  /// of one menu).
+  ///
   /// With [exact], states forced without a part don't count: for parts that
   /// stand for a situation rather than a region (a tree row's `drop-inside`).
   static Set<WidgetState> of(
@@ -42,11 +46,27 @@ class FsDebugStates extends InheritedWidget {
     bool exact = false,
   }) {
     if (kReleaseMode) return const {};
-    final forced = context.dependOnInheritedWidgetOfExactType<FsDebugStates>();
-    if (forced == null) return const {};
-    if (forced.part == null && exact) return const {};
-    if (forced.part != null && forced.part != part) return const {};
-    return forced.states;
+    bool applies(FsDebugStates forced) =>
+        forced.part == null ? !exact : forced.part == part;
+
+    final nearest = context
+        .getElementForInheritedWidgetOfExactType<FsDebugStates>();
+    if (nearest == null) return const {};
+    context.dependOnInheritedElement(nearest);
+    final first = nearest.widget as FsDebugStates;
+    if (applies(first)) return first.states;
+    // Look further up, past ones for other parts.
+    Set<WidgetState>? found;
+    nearest.visitAncestorElements((element) {
+      final widget = element.widget;
+      if (widget is FsDebugStates && applies(widget)) {
+        context.dependOnInheritedElement(element as InheritedElement);
+        found = widget.states;
+        return false;
+      }
+      return true;
+    });
+    return found ?? const {};
   }
 
   @override

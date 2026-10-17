@@ -24,6 +24,7 @@ void main() {
         'NumberProperty',
         'Vector2Property',
         'TreeRow',
+        'ContextMenu',
         'Tooltip',
         'Badge · DeviceChip',
       ]) {

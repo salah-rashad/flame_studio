@@ -193,6 +193,25 @@ void main() {
       );
       expect(_last, isNot(contains(WidgetState.hovered)));
     });
+
+    testWidgets('nested FsDebugStates: the nearest that applies wins', (
+      tester,
+    ) async {
+      await pumpFs(
+        tester,
+        FsDebugStates(
+          states: const {WidgetState.pressed},
+          child: FsDebugStates(
+            part: 'label',
+            states: const {WidgetState.hovered},
+            child: _target(onPressed: () {}),
+          ),
+        ),
+      );
+      // The 'label' one is skipped; the global one further up applies.
+      expect(_last, contains(WidgetState.pressed));
+      expect(_last, isNot(contains(WidgetState.hovered)));
+    });
   });
 
   test('FsStateColor picks the first matching state', () {

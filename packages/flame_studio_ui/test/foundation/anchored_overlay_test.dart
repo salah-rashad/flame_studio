@@ -102,6 +102,39 @@ void main() {
     });
   });
 
+  group('FsOverlayPlacement.placeBeside', () {
+    test('to the right, or to the left when there is no room', () {
+      expect(
+        FsOverlayPlacement.placeBeside(
+          anchor: const Rect.fromLTWH(100, 100, 240, 24),
+          size: const Size(232, 120),
+          bounds: _bounds,
+          dy: 5,
+        ),
+        const Offset(340, 95),
+      );
+      expect(
+        FsOverlayPlacement.placeBeside(
+          anchor: const Rect.fromLTWH(500, 100, 240, 24),
+          size: const Size(232, 120),
+          bounds: _bounds,
+        ).dx,
+        500 - 232,
+      );
+    });
+
+    test('shifts up to stay inside the window', () {
+      expect(
+        FsOverlayPlacement.placeBeside(
+          anchor: const Rect.fromLTWH(100, 560, 240, 24),
+          size: const Size(232, 120),
+          bounds: _bounds,
+        ).dy,
+        600 - 8 - 120,
+      );
+    });
+  });
+
   group('FsAnchoredOverlay', () {
     late OverlayPortalController controller;
     var dismissals = 0;

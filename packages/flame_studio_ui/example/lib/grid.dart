@@ -110,37 +110,41 @@ class StateGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = FsColors.of(context);
     final label = FsText.small.copyWith(color: c.textSecondary);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            SizedBox(width: labelWidth),
-            for (final column in columns)
-              SizedBox(
-                width: cellWidth + FsSpacing.s4,
-                child: SectionLabel(column),
-              ),
-          ],
-        ),
-        for (final row in rows)
-          Padding(
-            padding: const EdgeInsets.only(bottom: FsSpacing.s2),
-            child: Row(
-              children: [
+    // Wide grids scroll sideways instead of overflowing at 1280×800.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(width: labelWidth),
+              for (final column in columns)
                 SizedBox(
-                  width: labelWidth,
-                  child: Text(row.label, style: label),
+                  width: cellWidth + FsSpacing.s4,
+                  child: SectionLabel(column),
                 ),
-                for (final cell in row.cells)
-                  Padding(
-                    padding: const EdgeInsets.only(right: FsSpacing.s4),
-                    child: SampleBox(width: cellWidth, child: cell),
-                  ),
-              ],
-            ),
+            ],
           ),
-      ],
+          for (final row in rows)
+            Padding(
+              padding: const EdgeInsets.only(bottom: FsSpacing.s2),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: labelWidth,
+                    child: Text(row.label, style: label),
+                  ),
+                  for (final cell in row.cells)
+                    Padding(
+                      padding: const EdgeInsets.only(right: FsSpacing.s4),
+                      child: SampleBox(width: cellWidth, child: cell),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -24,6 +24,7 @@ void main() {
         'Vector2Property',
         'TreeRow',
         'Tooltip',
+        'Badge · DeviceChip',
       ]) {
         await tester.tap(find.text(name).first);
         await tester.pump();

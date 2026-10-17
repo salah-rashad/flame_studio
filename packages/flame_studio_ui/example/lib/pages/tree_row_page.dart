@@ -4,39 +4,11 @@ import 'package:flutter/services.dart';
 
 import '../grid.dart';
 
-/// A stand-in for FsBadge, which comes later.
-class _Badge extends StatelessWidget {
-  const _Badge(this.label, {required this.fg, required this.bg, this.icon});
-
-  final String label;
-  final Color fg;
-  final Color bg;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    height: 16,
-    padding: const EdgeInsets.symmetric(horizontal: FsSpacing.s1),
-    decoration: BoxDecoration(color: bg, borderRadius: FsRadii.xs),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (icon != null) ...[
-          Icon(icon, size: 12, color: fg),
-          const SizedBox(width: 2),
-        ],
-        Text(label, style: FsText.caption.copyWith(color: fg)),
-      ],
-    ),
-  );
-}
-
 class TreeRowPage extends StatelessWidget {
   const TreeRowPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final c = FsColors.of(context);
     final actions = [
       FsTreeRowAction(icon: FsIcons.eye, tooltip: 'Hide', onPressed: () {}),
       FsTreeRowAction(icon: FsIcons.unlock, tooltip: 'Lock', onPressed: () {}),
@@ -88,7 +60,7 @@ class TreeRowPage extends StatelessWidget {
       note:
           '22px row · 16px indent per level + 4 · 16px chevron box · 14px type '
           'icon · name · badges · row actions (hover only, or pinned when the '
-          'state is not the default). Badges here are stand-ins until FsBadge.',
+          'state is not the default).',
       children: [
         StateGrid(
           columns: const ['Scene tree'],
@@ -141,11 +113,9 @@ class TreeRowPage extends StatelessWidget {
                   icon: FsIcons.image,
                   tone: FsTreeRowTone.error,
                   badges: [
-                    _Badge(
-                      'Missing script',
-                      fg: c.error,
-                      bg: c.errorSubtle,
-                      icon: FsIcons.alertCircle,
+                    const FsBadge(
+                      kind: FsBadgeKind.missing,
+                      label: 'Missing script',
                     ),
                   ],
                   actions: actions,
@@ -160,13 +130,8 @@ class TreeRowPage extends StatelessWidget {
                   icon: FsIcons.box,
                   tone: FsTreeRowTone.prefab,
                   badges: [
-                    _Badge(
-                      '2',
-                      fg: c.warning,
-                      bg: c.warningSubtle,
-                      icon: FsIcons.alertTriangle,
-                    ),
-                    _Badge('Prefab', fg: c.prefab, bg: c.prefabSubtle),
+                    const FsBadge(kind: FsBadgeKind.warning, count: 2),
+                    const FsBadge(kind: FsBadgeKind.prefab, label: 'Prefab'),
                   ],
                   actions: actions,
                 ),

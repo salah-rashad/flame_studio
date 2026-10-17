@@ -55,7 +55,8 @@ class GalleryEntry {
   final bool reviewed;
 }
 
-const _pages = <GalleryEntry>[
+/// Every gallery page, in sidebar order. The golden test renders each one.
+const galleryPages = <GalleryEntry>[
   GalleryEntry('Foundations', 'Icons', IconsPage.new),
   GalleryEntry('Foundations', 'Field box · Interactive', FoundationsPage.new),
   GalleryEntry('Foundations', 'Anchored overlay', OverlayPage.new),
@@ -131,7 +132,7 @@ class _GalleryState extends State<_Gallery> {
             child: FsPanelFocus(
               child: ListView(
                 children: [
-                  for (final (i, page) in _pages.indexed) ...[
+                  for (final (i, page) in galleryPages.indexed) ...[
                     if (page.group != lastGroup) ...[
                       Padding(
                         padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
@@ -168,7 +169,7 @@ class _GalleryState extends State<_Gallery> {
               color: c.surfacePanel,
               child: KeyedSubtree(
                 key: ValueKey(_index),
-                child: _pages[_index].build(),
+                child: galleryPages[_index].build(),
               ),
             ),
           ),

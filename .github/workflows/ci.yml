@@ -62,6 +62,11 @@ jobs:
       - name: Test flame_studio_ui
         working-directory: packages/flame_studio_ui
         run: flutter test
+      # The gallery's smoke test everywhere; its goldens (tag `golden`) skip
+      # themselves off macOS, where fonts rasterise differently (Q84).
+      - name: Test the flame_studio_ui gallery
+        working-directory: packages/flame_studio_ui/example
+        run: flutter test
       - name: Test the Studio app
         working-directory: apps/flame_studio
         run: flutter test

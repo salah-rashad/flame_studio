@@ -13,3 +13,12 @@ cd packages/flame_studio_ui/example && flutter run -d macos
 **Acceptance check:** open the component's `preview.html` in a browser at the
 same zoom and compare by eye. When a page matches, set `reviewed: true` for it
 in `lib/main.dart`; the page list shows a tick.
+
+**Goldens:** `test/goldens_test.dart` renders every page (at the gallery's
+1440×900 content width, as tall as the page) and compares it with
+`test/goldens/<page>.png`. They run on macOS only, since fonts rasterise
+differently per platform. After a deliberate visual change:
+
+```bash
+flutter test --tags golden --update-goldens
+```

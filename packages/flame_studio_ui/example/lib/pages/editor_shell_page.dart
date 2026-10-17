@@ -95,17 +95,126 @@ class _EditorShellPageState extends State<EditorShellPage> {
               FsSpacing.s4,
               FsSpacing.s4,
             ),
-            child: window == null
-                ? shell
-                : FittedBox(
-                    alignment: Alignment.topLeft,
-                    child: SizedBox.fromSize(size: window, child: shell),
-                  ),
+            child: _Desktop(
+              child: window == null
+                  ? Padding(
+                      padding: const EdgeInsets.all(_Desktop.inset),
+                      child: _MacWindow(child: shell),
+                    )
+                  : FittedBox(
+                      child: Padding(
+                        padding: const EdgeInsets.all(_Desktop.inset),
+                        child: SizedBox.fromSize(
+                          size: window,
+                          child: _MacWindow(child: shell),
+                        ),
+                      ),
+                    ),
+            ),
           ),
         ),
       ],
     );
   }
+}
+
+/// A wallpaper-like backdrop that sets the window apart from the gallery,
+/// whose surfaces are close to the shell's `bg-app`.
+class _Desktop extends StatelessWidget {
+  const _Desktop({required this.child});
+
+  /// The room around the window, for its shadow.
+  static const double inset = FsSpacing.s8;
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: FsRadii.lg,
+    child: DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF353A4D), Color(0xFF4D3429)],
+        ),
+      ),
+      child: child,
+    ),
+  );
+}
+
+/// A macOS window frame: rounded corners, the dark-mode outline and inner
+/// highlight, the window shadow, and the traffic lights drawn in the
+/// shell's title-bar inset (a real window gets them from the runner).
+class _MacWindow extends StatelessWidget {
+  const _MacWindow({required this.child});
+
+  static const _radius = BorderRadius.all(Radius.circular(10));
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: const BoxDecoration(
+      borderRadius: _radius,
+      boxShadow: [
+        BoxShadow(color: Color(0xCC000000), spreadRadius: 1),
+        BoxShadow(
+          color: Color(0x80000000),
+          offset: Offset(0, 20),
+          blurRadius: 60,
+        ),
+      ],
+    ),
+    position: DecorationPosition.background,
+    child: ClipRRect(
+      borderRadius: _radius,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: _radius,
+          border: Border.all(color: const Color(0x1FFFFFFF)),
+        ),
+        position: DecorationPosition.foreground,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            child,
+            // Centred in the 38px title bar, inside its 78px inset.
+            const Positioned(left: 20, top: 13, child: _TrafficLights()),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _TrafficLights extends StatelessWidget {
+  const _TrafficLights();
+
+  static const _lights = [
+    (Color(0xFFFF5F57), Color(0xFFE0443E)),
+    (Color(0xFFFEBC2E), Color(0xFFDEA123)),
+    (Color(0xFF28C840), Color(0xFF1AAB29)),
+  ];
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    spacing: 8,
+    children: [
+      for (final (fill, edge) in _lights)
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: fill,
+            shape: BoxShape.circle,
+            border: Border.all(color: edge, width: 0.5),
+          ),
+        ),
+    ],
+  );
 }
 
 class _TitleBar extends StatelessWidget {

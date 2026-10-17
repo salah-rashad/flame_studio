@@ -40,6 +40,8 @@ class FsInteractive extends StatefulWidget {
     this.actions,
     this.semanticsLabel,
     this.semanticsToggled,
+    this.semanticsChecked,
+    this.semanticsMixed = false,
   });
 
   /// Builds the control from its current states.
@@ -93,6 +95,13 @@ class FsInteractive extends StatefulWidget {
 
   /// Semantics toggled state (toggle buttons).
   final bool? semanticsToggled;
+
+  /// Semantics checked state (checkboxes); null for other controls.
+  final bool? semanticsChecked;
+
+  /// Semantics mixed state (a checkbox that is neither checked nor
+  /// unchecked).
+  final bool semanticsMixed;
 
   @override
   State<FsInteractive> createState() => _FsInteractiveState();
@@ -246,6 +255,8 @@ class _FsInteractiveState extends State<FsInteractive> {
       enabled: _enabled,
       selected: widget.selected,
       toggled: widget.semanticsToggled,
+      checked: widget.semanticsChecked,
+      mixed: widget.semanticsMixed ? true : null,
       focusable: widget.focusable && _enabled,
       focused: widget.focusable && _focusNode.hasFocus,
       label: widget.semanticsLabel,

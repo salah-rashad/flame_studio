@@ -23,6 +23,7 @@ void main() {
         'PropertyRow',
         'NumberProperty',
         'Vector2Property',
+        'BoolProperty',
         'TreeRow',
         'ContextMenu',
         'Tooltip',

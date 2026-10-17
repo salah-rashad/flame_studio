@@ -43,6 +43,7 @@ class FsPropertyRow extends StatefulWidget {
     this.error,
     this.tooltip,
     this.labelScrub,
+    this.onLabelPressed,
   });
 
   /// The field's Dart name, verbatim (`jumpForce`).
@@ -80,6 +81,10 @@ class FsPropertyRow extends StatefulWidget {
 
   /// Makes the label a scrub handle; set by the number editors.
   final FsScrubHandle? labelScrub;
+
+  /// Called for a click on the label (a bool row toggles its checkbox);
+  /// ignored while the row is disabled or read-only.
+  final VoidCallback? onLabelPressed;
 
   @override
   State<FsPropertyRow> createState() => _FsPropertyRowState();
@@ -140,6 +145,13 @@ class _FsPropertyRowState extends State<FsPropertyRow> {
       ),
     );
     label = FsScrubRegion(handle: scrub, child: label);
+    if (widget.onLabelPressed != null) {
+      label = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: interactive ? widget.onLabelPressed : null,
+        child: label,
+      );
+    }
     final tip = (widget.error?.isNotEmpty ?? false)
         ? widget.error
         : widget.tooltip;

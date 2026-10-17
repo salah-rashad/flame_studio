@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../actions/icon_button.dart';
 import '../colors.dart';
 import '../floating/tooltip.dart';
 import '../foundation/debug_states.dart';
-import '../foundation/row_icon_button.dart';
 import '../foundation/scrub.dart';
 import '../foundation/value_source.dart';
 import '../icons.dart';
@@ -189,8 +189,10 @@ class _FsPropertyRowState extends State<FsPropertyRow> {
                         SizedBox(
                           width: FsSizes.controlSm,
                           child: showReset
-                              ? FsRowIconButton(
+                              ? FsIconButton(
                                   icon: FsIcons.reset,
+                                  size: FsIconButtonSize.small,
+                                  iconSize: FsSizes.iconSm,
                                   tooltip: widget.resetTooltip ?? '',
                                   onPressed: widget.enabled
                                       ? widget.onReset

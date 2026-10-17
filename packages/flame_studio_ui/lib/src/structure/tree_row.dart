@@ -4,13 +4,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../actions/icon_button.dart';
 import '../colors.dart';
 import '../foundation/debug_states.dart';
 import '../foundation/editable.dart';
 import '../foundation/focus_ring.dart';
 import '../foundation/interactive.dart';
 import '../foundation/panel_focus.dart';
-import '../foundation/row_icon_button.dart';
 import '../icons.dart';
 import '../metrics.dart';
 import '../typography.dart';
@@ -512,7 +512,9 @@ class _FsTreeRowState<T extends Object> extends State<FsTreeRow<T>> {
               for (final action in widget.actions)
                 Visibility.maintain(
                   visible: hovered || action.pinned,
-                  child: FsRowIconButton(
+                  child: FsIconButton(
+                    size: FsIconButtonSize.small,
+                    iconSize: FsSizes.iconSm,
                     icon: action.icon,
                     tooltip: action.tooltip,
                     onPressed: action.onPressed,

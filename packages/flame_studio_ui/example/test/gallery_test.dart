@@ -33,6 +33,7 @@ void main() {
         'EntitySlot',
         'Panel',
         'SectionHeader',
+        'Tabs',
         'TreeRow',
         'ContextMenu',
         'Tooltip',

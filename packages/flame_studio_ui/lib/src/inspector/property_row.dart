@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../actions/icon_button.dart';
@@ -15,8 +16,9 @@ import '../typography.dart';
 /// One 24px inspector row: the field's name on the left, its editor on the
 /// right, and a reset slot at the far right.
 ///
-/// - **Label column:** 40% of the row (minimum 72px). Resizing it by
-///   dragging comes later with `FsPropertyList`.
+/// - **Label column:** 40% of the row (minimum 72px). Inside an
+///   [FsPropertyList] the list's shared fraction instead, and the 4px gap
+///   between label and editor is the handle that resizes it.
 /// - **Default from code** ([FsValueSource.codeDefault]): label and value in
 ///   `text-secondary`, no marker, no reset.
 /// - **Overridden:** a 2px `accent-text` bar at the left edge, the label in
@@ -178,14 +180,19 @@ class _FsPropertyRowState extends State<FsPropertyRow> {
                 ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    final list = _PropertyListScope.maybeOf(context);
+                    final width = constraints.maxWidth;
                     final labelWidth = math.max(
                       _minLabelWidth,
-                      constraints.maxWidth * _labelFraction,
+                      width * (list?.fraction ?? _labelFraction),
                     );
                     return Row(
                       children: [
                         SizedBox(width: labelWidth, child: label),
-                        const SizedBox(width: FsSpacing.s1),
+                        if (list == null)
+                          const SizedBox(width: FsSpacing.s1)
+                        else
+                          _ColumnHandle(list: list, contentWidth: width),
                         Expanded(
                           child: FsPropertyRowScope(
                             hovered: hovered,
@@ -241,6 +248,169 @@ class _FsPropertyRowState extends State<FsPropertyRow> {
 
   static const double _labelFraction = 0.4;
   static const double _minLabelWidth = 72;
+}
+
+/// A list of [FsPropertyRow]s (and other widgets) that share one label
+/// column: drag the boundary between label and editor in any row and every
+/// row follows.
+///
+/// - The label column starts at [initialLabelFraction] of the row width
+///   and never goes below 72px; the editor keeps at least 72px.
+/// - The boundary is the 4px gap between label and editor, with the ↔
+///   column cursor. While the pointer is over it, every row shows a 1px
+///   `border-strong` line there (`accent-text` while dragging), like the
+///   editor shell's seams.
+/// - [onLabelFractionChanged] reports the new fraction when a drag ends, so
+///   the app can persist it. The list keeps the fraction itself.
+///
+/// The children are laid out in a column, stretched to the list's width.
+class FsPropertyList extends StatefulWidget {
+  /// Creates the list.
+  const FsPropertyList({
+    super.key,
+    required this.children,
+    this.initialLabelFraction = 0.4,
+    this.onLabelFractionChanged,
+  });
+
+  /// The rows, and anything between them (section headers).
+  final List<Widget> children;
+
+  /// The label column's share of the row width at first.
+  final double initialLabelFraction;
+
+  /// The fraction after a resize, once per drag.
+  final ValueChanged<double>? onLabelFractionChanged;
+
+  @override
+  State<FsPropertyList> createState() => _FsPropertyListState();
+}
+
+class _FsPropertyListState extends State<FsPropertyList> {
+  late double _fraction = widget.initialLabelFraction;
+  bool _hovered = false;
+  bool _dragging = false;
+  double _startWidth = 0;
+  double _dx = 0;
+
+  /// The narrowest the editor (and its reset slot) may get.
+  static const double _minEditor =
+      _FsPropertyRowState._minLabelWidth + 2 * FsSpacing.s1 + FsSizes.controlSm;
+
+  void _hover(bool hovered) {
+    if (_hovered != hovered) setState(() => _hovered = hovered);
+  }
+
+  void _start(double contentWidth) {
+    setState(() {
+      _dragging = true;
+      _dx = 0;
+      _startWidth = math.max(
+        _FsPropertyRowState._minLabelWidth,
+        contentWidth * _fraction,
+      );
+    });
+  }
+
+  void _update(double dx, double contentWidth) {
+    if (!_dragging || contentWidth <= 0) return;
+    _dx += dx;
+    const min = _FsPropertyRowState._minLabelWidth;
+    final max = math.max(min, contentWidth - _minEditor);
+    final width = (_startWidth + _dx).clamp(min, max);
+    setState(() => _fraction = width / contentWidth);
+  }
+
+  void _end() {
+    if (!_dragging) return;
+    setState(() => _dragging = false);
+    widget.onLabelFractionChanged?.call(_fraction);
+  }
+
+  @override
+  Widget build(BuildContext context) => _PropertyListScope(
+    state: this,
+    fraction: _fraction,
+    hovered: _hovered,
+    dragging: _dragging,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: widget.children,
+    ),
+  );
+}
+
+/// What the rows of an [FsPropertyList] share.
+class _PropertyListScope extends InheritedWidget {
+  const _PropertyListScope({
+    required this.state,
+    required this.fraction,
+    required this.hovered,
+    required this.dragging,
+    required super.child,
+  });
+
+  final _FsPropertyListState state;
+  final double fraction;
+  final bool hovered;
+  final bool dragging;
+
+  static _PropertyListScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_PropertyListScope>();
+
+  @override
+  bool updateShouldNotify(_PropertyListScope oldWidget) =>
+      fraction != oldWidget.fraction ||
+      hovered != oldWidget.hovered ||
+      dragging != oldWidget.dragging;
+}
+
+/// The 4px gap between a row's label and editor inside an
+/// [FsPropertyList]: the column boundary's handle and its 1px line.
+class _ColumnHandle extends StatelessWidget {
+  const _ColumnHandle({required this.list, required this.contentWidth});
+
+  final _PropertyListScope list;
+  final double contentWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = FsColors.of(context);
+    final Color line;
+    if (list.dragging) {
+      line = c.accentText;
+    } else if (list.hovered) {
+      line = c.borderStrong;
+    } else {
+      line = Colors.transparent;
+    }
+    final state = list.state;
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      onEnter: (_) => state._hover(true),
+      onExit: (_) => state._hover(false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        dragStartBehavior: DragStartBehavior.down,
+        onHorizontalDragStart: (_) => state._start(contentWidth),
+        onHorizontalDragUpdate: (d) => state._update(d.delta.dx, contentWidth),
+        onHorizontalDragEnd: (_) => state._end(),
+        onHorizontalDragCancel: state._end,
+        child: SizedBox(
+          width: FsSpacing.s1,
+          height: FsSizes.rowProperty,
+          child: Center(
+            child: SizedBox(
+              width: 1,
+              height: double.infinity,
+              child: ColoredBox(color: line),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// The state of the [FsPropertyRow] around an editor, so the editor can

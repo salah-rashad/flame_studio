@@ -32,7 +32,7 @@ export 'src/inputs/search_field.dart';
 export 'src/inputs/text_field.dart';
 export 'src/inspector/bool_property.dart';
 export 'src/inspector/number_property.dart';
-export 'src/inspector/property_row.dart' show FsPropertyRow;
+export 'src/inspector/property_row.dart' show FsPropertyList, FsPropertyRow;
 export 'src/inspector/vector2_property.dart';
 export 'src/metrics.dart';
 export 'src/shadows.dart';

@@ -1,4 +1,5 @@
 import 'package:flame_studio_ui/flame_studio_ui.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -168,4 +169,109 @@ void main() {
       contains(SystemMouseCursors.resizeLeftRight),
     );
   });
+
+  group('FsPropertyList', () {
+    testWidgets('rows share the label fraction', (tester) async {
+      await pumpFs(tester, _list(fraction: 0.5), width: 420);
+      // 420 - 16 - 4 = 400 of content; half is the label.
+      for (final name in ['speed', 'gravity', 'debugMode']) {
+        expect(_labelWidth(tester, name), 200);
+      }
+    });
+
+    testWidgets('dragging the boundary resizes every row; one report', (
+      tester,
+    ) async {
+      final reports = <double>[];
+      await pumpFs(tester, _list(onChanged: reports.add), width: 420);
+      // The boundary: 16 padding + 160 label, then the 4px gap.
+      final boundary = tester.getTopLeft(find.text('gravity')).dy;
+      final start = Offset(16 + 160 + 2, boundary + 4);
+      final gesture = await tester.startGesture(
+        start,
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.moveBy(const Offset(20, 0));
+      await tester.pump();
+      await gesture.moveBy(const Offset(20, 0));
+      await tester.pump();
+      expect(_lines(tester), everyElement(c.accentText));
+      await gesture.up();
+      await tester.pump();
+      for (final name in ['speed', 'gravity', 'debugMode']) {
+        expect(_labelWidth(tester, name), 200);
+      }
+      expect(reports, [0.5]);
+      await gesture.removePointer();
+    });
+
+    testWidgets('the label keeps 72px, the editor 72px plus reset', (
+      tester,
+    ) async {
+      await pumpFs(tester, _list(), width: 420);
+      await tester.dragFrom(
+        Offset(16 + 160 + 2, tester.getCenter(find.text('speed')).dy),
+        const Offset(-300, 0),
+      );
+      await tester.pump();
+      expect(_labelWidth(tester, 'speed'), 72);
+      await tester.dragFrom(
+        Offset(16 + 72 + 2, tester.getCenter(find.text('speed')).dy),
+        const Offset(600, 0),
+      );
+      await tester.pump();
+      // 400 - (72 + 4 + 4 + 20).
+      expect(_labelWidth(tester, 'speed'), 300);
+    });
+
+    testWidgets('hovering the boundary shows the line in every row', (
+      tester,
+    ) async {
+      await pumpFs(tester, _list(), width: 420);
+      expect(_lines(tester), everyElement(Colors.transparent));
+      final m = await mouse(tester);
+      await m.moveTo(
+        Offset(16 + 160 + 2, tester.getCenter(find.text('speed')).dy),
+      );
+      await tester.pump();
+      expect(_lines(tester), hasLength(3));
+      expect(_lines(tester), everyElement(c.borderStrong));
+    });
+
+    testWidgets('a row outside a list has no handle', (tester) async {
+      await pumpFs(tester, _row(), width: 420);
+      expect(
+        find.byWidgetPredicate((w) => w is SizedBox && w.width == 1),
+        findsNothing,
+      );
+    });
+  });
 }
+
+Widget _list({ValueChanged<double>? onChanged, double fraction = 0.4}) =>
+    FsPropertyList(
+      initialLabelFraction: fraction,
+      onLabelFractionChanged: onChanged,
+      children: [
+        for (final name in ['speed', 'gravity', 'debugMode'])
+          FsPropertyRow(label: name, editor: const SizedBox(height: 20)),
+      ],
+    );
+
+double _labelWidth(WidgetTester tester, String text) => tester
+    .getSize(
+      find.ancestor(of: find.text(text), matching: find.byType(SizedBox)).first,
+    )
+    .width;
+
+/// The colours of the rows' 1px boundary lines.
+Iterable<Color> _lines(WidgetTester tester) => tester
+    .widgetList<SizedBox>(
+      find.descendant(
+        of: find.byType(FsPropertyList),
+        matching: find.byWidgetPredicate(
+          (w) => w is SizedBox && w.width == 1 && w.child is ColoredBox,
+        ),
+      ),
+    )
+    .map((s) => (s.child! as ColoredBox).color);

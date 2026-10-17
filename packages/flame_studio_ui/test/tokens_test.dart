@@ -180,7 +180,11 @@ void main() {
         final name = s['name']! as String;
         final style = dart[name]!;
         seen.add(name);
-        expect(style.fontFamily, family, reason: name);
+        expect(
+          style.fontFamily,
+          'packages/flame_studio_ui/$family',
+          reason: name,
+        );
         expect(style.fontSize, _px(s['fontSize']! as String), reason: name);
         expect(
           style.fontSize! * style.height!,

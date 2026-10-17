@@ -5,7 +5,7 @@
 | **Status** | Reviewed draft (v2) |
 | **Date** | 2026-10-16 |
 | **Author** | Salah Ahmed |
-| **Companion docs** | [`decisions.md`](decisions.md) (decision log, Q1–Q80) · [`../GLOSSARY.md`](../GLOSSARY.md) (project vocabulary) · [`adr/`](adr/) (architecture decision records) · [`claude-design-prompts.md`](claude-design-prompts.md) (UI design prompts) |
+| **Companion docs** | [`decisions.md`](decisions.md) (decision log, Q1–Q80) · [`../GLOSSARY.md`](../GLOSSARY.md) (project vocabulary) · [`adr/`](adr/) (architecture decision records) · [`claude-design-prompts.md`](claude-design-prompts.md) (UI design prompts) · [`ui-components-plan.md`](ui-components-plan.md) (design-system widgets) |
 
 > **For reviewers.** Everything in sections 1–13 was decided in two structured design sessions;
 > the decision number (e.g. *Q17*) points to the entry in `decisions.md`. Q1–Q42 come from the
@@ -248,7 +248,8 @@ Runtime share it (*Q67*).
   `onHotReload`, *Q66*), `flame_behaviors` and Flutter. Keep it small: it ships in every game.
 - `flame_studio_generator` depends on the annotations, `source_gen`, `build` and `analyzer`, and
   matches annotations with `TypeChecker.fromUrl`. It **never** depends on the runtime.
-- `flame_studio_ui` depends on **Flutter only** (plus an icon set and bundled fonts), never on
+- `flame_studio_ui` depends on **Flutter only** (plus the Lucide icon font,
+  `lucide_icons_flutter`; Inter and JetBrains Mono are bundled), never on
   `flame`, the runtime or the app. Its widgets take plain values and callbacks; nothing in it knows
   about scenes, the document or Riverpod (*Q83*). Only the app depends on it.
 - The app depends on the runtime (format, built-in rendering), `flame_studio_ui`, `flame`,
@@ -586,13 +587,16 @@ doc.transact('Move 3 nodes', (d) => d.moveNodes(ids, delta), coalesceKey: gestur
 | `processProvider` | generator / game process state, attach info and log stream |
 | `nodeProvider(id)` | derived: one Node, rebuilds only that tree row / inspector |
 
-### 8.6 UI layout (*Q20, Q83*)
+### 8.6 UI layout (*Q20, Q83, Q84*)
 
 Fixed resizable panels: Hierarchy (left), Viewport (centre), Inspector (right), Assets/Console
 (bottom tabs), toolbar and status bar. Visual design comes from Claude Design using
-`claude-design-prompts.md`, then re-implemented in Flutter in `flame_studio_ui` (*Q83*): tokens
-and theme now, widgets as the panels need them; the panels themselves stay in the app. The author's `flutter_context_menu`
-package provides context menus.
+`claude-design-prompts.md`, then re-implemented in Flutter in `flame_studio_ui` (*Q83*): the
+tokens and theme, the design system's 29 components and the EditorShell layout, built ahead of
+the panels against a gallery app (`packages/flame_studio_ui/example`) and specified in
+[`ui-components-plan.md`](ui-components-plan.md) (*Q84*). The panels themselves stay in the app
+and compose those widgets. Context menus, dropdown lists and split-button menus are built on
+Flutter's `RawMenuAnchor`, tooltips on `RawTooltip` (*Q84*); no menu package.
 
 ---
 
@@ -817,6 +821,11 @@ before display (§9.3, *Q81*).
 - **Distribution:** GitHub Releases (`.dmg`; later `.msix`/`.zip`, AppImage) for the developer
   preview and v0.1; **auto-update** (Sparkle / WinSparkle) in v0.2; Homebrew cask / winget in v0.3
   (*Q40*).
+- **Third-party licences:** the Studio's About window opens Flutter's licence page
+  (`showLicensePage`). It lists every pub dependency's `LICENSE` on its own; the fonts bundled in
+  `flame_studio_ui` (Inter, JetBrains Mono, SIL OFL 1.1) are not packages, so their
+  `fonts/*-OFL.txt` become package assets and the app registers them with
+  `LicenseRegistry.addLicense` at startup. Part of work item 1.
 - **Packages** `flame_studio_annotations`, `flame_studio_runtime` and `flame_studio_generator` on
   pub.dev. **Name check with the Flame maintainers before the first `pub publish`** — pub names
   can't be released (*Q36, Q44*).
@@ -839,6 +848,7 @@ before display (§9.3, *Q81*).
 | Runtime loader | load fixture scenes into a `FlameGame` with `flame_test`; reference resolution; asset loading; unknown Type ID; Hot-swap hash check | Heavy |
 | **Contract (*Q59*)** | CI runs the generator on `example/`, checks the Manifest against its golden file, then loads every `example/` scene with `flame_test` against the real generated Registry | Heavy |
 | Process clients | daemon protocol parsing with recorded transcripts (no real Flutter); build_runner lock probe | Medium |
+| Design system (`flame_studio_ui`, *Q84*) | widget tests per component state; one golden per gallery grid (macOS CI only) | Medium |
 | Panels | a few widget tests for critical interactions | Light |
 | End-to-end | `example/` game smoke test on a device before each release, incl. Play, Hot-swap, Attach (manual in v0.1) | Manual |
 
@@ -875,7 +885,7 @@ Studio stops issuing reloads while an IDE is attached) remains the escape hatch.
 The goal is to prove, in a developer's own project, that the Studio does a real task more easily
 than editing Dart by hand, as early as possible. **Breadth and polish are cut; document integrity,
 the generator/Runtime contract and data preservation are not.** The final v0.1 scope is unchanged
-(*Q82* amends *Q65* and supersedes *Q73*); the early preview is a subset of it, ~38 of the ~74.5
+(*Q82* amends *Q65* and supersedes *Q73*); the early preview is a subset of it, ~42 of the ~92
 evenings.
 
 **The task testers do:** open their own Flame project, place an entity with a sprite and a hitbox,
@@ -886,27 +896,28 @@ attach a custom Behavior and tweak its fields, press Play and see the change in 
 | 0 | Repo setup | As in v0.1 | | 3 |
 | 1 | App shell | Project list, open project, basic SDK detection, Runtime compatibility check | "Add Flame Studio" flow and pubspec diff (a README recipe replaces it), SDK management and settings polish | 2 |
 | 2 | Document model | Transactions, undo/redo with coalescing, atomic save/load, recovery file, `schemaVersion` gate (never write an unreadable version, *Q49*) | Migrations framework, built when the first format change after the preview needs it | 4.5 |
-| 3 | Hierarchy | Add, delete, rename, reparent by drag | Duplicate, filter, duplicate-name warning | 2.5 |
+| 3 | Hierarchy | Add, delete, rename, reparent by drag (on `FsTreeRow`) | Duplicate, filter, duplicate-name warning | 2 |
 | 4 | Viewport | Preview world, reconciler, pan/zoom, selection, move gizmo | Grid, snapping, rotate/scale gizmos (numeric editing in the inspector covers them) | 6.5 |
-| 5 | Inspector | Transform; editors for `int`, `double`, `bool`, `String`, enum, `Vector2` and an asset-path dropdown; Override markers + *Reset to default*. Other Field types (`Color`, entity reference, `Sprite`, `SpriteAnimation`) show **read-only and round-trip untouched** | Remaining Field type editors, multi-select "mixed" values (v0.1.1) | 3.5 |
+| 5 | Inspector | Transform; editors for `int`, `double`, `bool`, `String`, enum, `Vector2` and an asset-path dropdown; Override markers + *Reset to default* (on `FsPropertyRow`, `FsNumberProperty`, `FsVector2Property`). Other Field types (`Color`, entity reference, `Sprite`, `SpriteAnimation`) show **read-only and round-trip untouched** | Remaining Field type editors, multi-select "mixed" values (v0.1.1) | 2.5 |
 | 6 | Built-in Node kinds | Entity, sprite, rectangle and circle hitboxes, placeholders | The remaining hitbox kind | 2 |
 | 7 | Generator | Introspection, Type IDs + collisions, supertypes, Registry + Manifest emitters, error reporting, goldens, at the field types above | Support for the remaining Field types in the inspector (the generator still records them) | 4.5 |
 | 8 | Runtime | Full: loader, two-pass references, assets, lookup API, unknown-type handling, Hot-swap | | 4 |
 | 9 | Behaviors in the inspector | Add/remove, compatibility filtering, Missing behavior state (so nothing is lost) | Reorder, Missing behavior polish | 2 |
 | 11 | Play | Run on the macOS desktop target by default (⚠ verify Hot-swap there first, ~0.5), daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, *Attach debugger* copying the current URI, image-restart toast | Device list + emulator boot, Attach info file, `launch.json`, unauthenticated mode | 4 |
-| | **Total** | | | **~38** |
+| 14 | Design system (core, *Q84*) | Foundations (interaction states, field box, panel focus, icons, gallery skeleton, test config) and the widgets whose behaviour items 3 and 5 would otherwise build in the panels: `FsTreeRow`, `FsPropertyRow`, `FsNumberProperty`, `FsVector2Property` | The other 25 components, the EditorShell, goldens; the rest of the preview uses Material widgets themed by `FsTheme.dark()` | 5.5 |
+| | **Total** | | | **~42** |
 
 Not in the early preview: the asset browser and pubspec sync (10), the CI contract test (12),
-the `example/` game (13), the visual design (14), signing and notarization (15; testers build from
+the `example/` game (13), the rest of the visual design (14; see the row above), signing and notarization (15; testers build from
 source) and the Getting Started docs (16; a README recipe covers setup). Setup friction is itself
 under test, so watch where testers get stuck.
 
 **Build order:** 0 → 2 → 7 → 8 → **vertical slice** (a hand-written Scene JSON through generator,
-Runtime, Play and Hot-swap, with no editor UI; the first slice of item 11) → 6 → 4 → 3 → 5 → 9 →
+Runtime, Play and Hot-swap, with no editor UI; the first slice of item 11) → 6 → 4 → 14 core → 3 → 5 → 9 →
 rest of 11 → 1 → *early preview*. The slice removes the integration risk the three spikes could
 not, and the author becomes the first user.
 
-**At 3 evenings a week:** ~13 weeks before overrun, ~4 months with a 1.4× overrun (against ~5
+**At 3 evenings a week:** ~14 weeks before overrun, ~4.5 months with a 1.4× overrun (against ~5
 months and ~7 months for the previous developer preview).
 
 **Before building, at no cost:** ask the Flame maintainers about the name (*Q36*), the longest
@@ -930,11 +941,11 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 | # | Work item | Est. (evenings) |
 |---|---|---|
 | 0 | Repo setup: workspace (3 packages + app; `flame_studio_ui` added by *Q83*), CI skeleton, lint rules, Riverpod learning spike | 3 |
-| 1 | App shell: project list, SDK detection, settings, "Add Flame Studio" flow + pubspec diff, Runtime compatibility check | 6 |
+| 1 | App shell: project list, SDK detection, settings, About window with licences (§12), "Add Flame Studio" flow + pubspec diff, Runtime compatibility check | 6 |
 | 2 | Document model, transactions, history, coalescing, save/load (atomic), recovery file, migrations framework | 5 |
-| 3 | Hierarchy panel (add, delete, rename, reparent drag, duplicate, filter, duplicate-name warning) | 4 |
+| 3 | Hierarchy panel (add, delete, rename, reparent drag, duplicate, filter, duplicate-name warning) | 3.5 |
 | 4 | Viewport: preview world, reconciler, pan/zoom, grid, selection, gizmos, snapping | 10 |
-| 5 | Inspector: transform + field editors for all v1 Field types, Override markers + *Reset to default* | 5.5 |
+| 5 | Inspector: transform + field editors for all v1 Field types, Override markers + *Reset to default* | 4.5 |
 | 6 | Built-in Node kinds: entity, sprite, 3 hitbox kinds, placeholders | 2.5 |
 | 7 | Generator: introspection, Type IDs + collisions, supertypes, Registry + Manifest emitters, error reporting, goldens | 6.5 |
 | 8 | Runtime: loader, two-pass references, asset loading, lookup API, unknown-type handling, Hot-swap (`onHotReload`, hash, `onReloaded`) | 4.5 |
@@ -943,25 +954,30 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 | 11 | Play: device list + emulator boot, daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, Attach (current URI, info file, launch.json, unauthenticated mode), lifecycle, image-restart toast | 9 |
 | 12 | CI contract test | 1 |
 | 13 | `example/` game | 2 |
-| 14 | Implement Claude Design visual design (theme, components) in `flame_studio_ui` (*Q83*) | 4 |
+| 14 | Design system in `flame_studio_ui` (*Q83, Q84*): tokens and theme (done), shared foundations, the 29 components, EditorShell, 60 icons, gallery app, widget tests and goldens ([`ui-components-plan.md`](ui-components-plan.md)) | 23 |
 | 15 | Signing, notarization, release pipeline | 3 |
 | 16 | README, Getting Started (incl. Attach and the CI check, §7.3), demo video, `ARCHITECTURE.md` polish | 3 |
-| | **Total** | **~74.5** |
+| | **Total** | **~92** |
 
 **Moved to v0.1.1 (*Q65*):** grid slicer and the animated sprite Node kind (~6), rename with
 reference rewriting (~1.5), multi-select "mixed" values (~2).
 
-**Reality check:** ~74.5 evenings at 3/week ≈ **25 weeks (~6 months)** before overrun, ~8 months
-with a 1.3× overrun, against the original ~4-month target.
+**Reality check:** ~92 evenings at 3/week ≈ **31 weeks (~7 months)** before overrun, ~9 months
+with a 1.3× overrun, against the original ~4-month target. Item 14 grew from 4 to ~23 when its
+components were estimated one by one (*Q84*); ~2.5 of that can move to v0.1.1 if needed (colour
+picker popover, NumberProperty expressions, goldens, SplitButton; `ui-components-plan.md` §8.1).
 
-**Early preview (*Q82*):** the v0.1 table above is the final scope. A subset of it (~38 evenings)
+**Early preview (*Q82*):** the v0.1 table above is the final scope. A subset of it (~42 evenings)
 ships first as the early preview described in the section above; the previous full-scope
 developer preview (*Q65*, *Q73*) is replaced by it. Feedback from the early preview is folded
-into the remaining ~36 evenings, so the order of the deferred items is open until then.
+into the remaining ~50 evenings, so the order of the deferred items is open until then.
 
-Build order after the early preview: 10 → the deferred parts of items 1, 3, 4, 5, 6, 9 and 11 →
-15 → 12 → 13 → 14 → 16 (core data and the generator/Runtime contract first; UI design last
-since it is pending).
+Build order after the early preview: 14 (the preview's panels move from Material widgets to the
+design system: Button, IconButton, Tooltip, TextField, Panel, SectionHeader, ContextMenu, Dropdown,
+BoolProperty, Dialog, Toast, Badge, Banner, Progress, then EditorShell, Toolbar, Tabs) → 10 →
+the deferred parts of items 1, 3, 4, 5, 6, 9 and 11, each preceded by the components it needs
+(`ui-components-plan.md` §8.3) → 15 → 12 → 13 → 14 (goldens, final pass against the design) →
+16.
 
 ### Roadmap after v0.1
 
@@ -985,7 +1001,7 @@ since it is pending).
 |---|---|---|---|
 | Hot-swap with an attached IDE depends on private flutter_tools/engine interfaces (`--project-root`, `_flutter.setAssetBundlePath`) | Medium | High (Attach workflow) | Spike #1 settled the mechanism (*Q74*); re-check on each Flutter stable release; fallback: Studio stops reloading while an IDE is attached |
 | Hot-swap rebuild loses runtime state and leaves stale references in game code | High (by design in v0.1) | Medium | Content-hash check; `onReloaded` + debug warning (*Q71*); node-level patching in v0.4 |
-| Scope/time overrun (solo, evenings) | **High** | Medium | Cuts to v0.1.1; early preview (~38 evenings, *Q82*); strict non-goals; estimates in §14 |
+| Scope/time overrun (solo, evenings) | **High** | Medium | Cuts to v0.1.1; early preview (~42 evenings, *Q82, Q84*); strict non-goals; estimates in §14 |
 | `build_runner` too slow on large projects | Medium | Medium | Spike #2; `triggers` so unannotated files are skipped; show "generating" state |
 | Flame / `flame_behaviors` breaking changes | Medium | Medium | Latest-minor-only policy; CI against Flame stable; Runtime kept small |
 | Studio and project Runtime versions drift | Medium | Medium | `pubspec.lock` compatibility check; never write an unreadable `schemaVersion` (*Q49*) |

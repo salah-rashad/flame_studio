@@ -7,25 +7,23 @@ import 'package:flutter/painting.dart';
 /// Hierarchy is weight, not size; nothing in the chrome is below 11px
 /// ([caption]). Mono is set 1px smaller than UI text so the x-heights match.
 abstract final class FsText {
-  /// The UI typeface.
-  ///
-  /// Not bundled yet, so it falls back to the platform UI font unless Inter is
-  /// installed.
+  /// The UI typeface, bundled with this package (`fonts/`).
   static const String uiFamily = 'Inter';
 
-  /// The monospace typeface: numbers in fields, paths, the Console.
-  ///
-  /// Not bundled yet, so it falls back to the platform monospace font unless
-  /// JetBrains Mono is installed.
+  /// The monospace typeface, bundled with this package: numbers in fields,
+  /// paths, the Console.
   static const String monoFamily = 'JetBrains Mono';
 
-  static const List<String> _uiFallback = ['.AppleSystemUIFont', 'Segoe UI'];
-  static const List<String> _monoFallback = ['Menlo', 'Consolas', 'monospace'];
+  // The fonts are declared in this package's pubspec, so every style names
+  // the package; Flutter then looks up `packages/flame_studio_ui/<family>`.
+  // No fallback list: `package` would prefix those names too, and glyphs the
+  // fonts lack fall back to the platform fonts anyway.
+  static const String _package = 'flame_studio_ui';
 
   /// Dialog titles and empty-state titles. The largest text in the chrome.
   static const TextStyle title = TextStyle(
     fontFamily: uiFamily,
-    fontFamilyFallback: _uiFallback,
+    package: _package,
     fontSize: 15,
     height: 20 / 15,
     fontWeight: FontWeight.w600,
@@ -34,7 +32,7 @@ abstract final class FsText {
   /// Panel titles, toast titles.
   static const TextStyle heading = TextStyle(
     fontFamily: uiFamily,
-    fontFamilyFallback: _uiFallback,
+    package: _package,
     fontSize: 13,
     height: 18 / 13,
     fontWeight: FontWeight.w600,
@@ -44,7 +42,7 @@ abstract final class FsText {
   /// that are words.
   static const TextStyle body = TextStyle(
     fontFamily: uiFamily,
-    fontFamilyFallback: _uiFallback,
+    package: _package,
     fontSize: 13,
     height: 18 / 13,
     fontWeight: FontWeight.w400,
@@ -53,7 +51,7 @@ abstract final class FsText {
   /// Button labels, active tab, overridden property labels.
   static const TextStyle bodyStrong = TextStyle(
     fontFamily: uiFamily,
-    fontFamilyFallback: _uiFallback,
+    package: _package,
     fontSize: 13,
     height: 18 / 13,
     fontWeight: FontWeight.w500,
@@ -62,7 +60,7 @@ abstract final class FsText {
   /// Collapsible section headers in the inspector.
   static const TextStyle section = TextStyle(
     fontFamily: uiFamily,
-    fontFamilyFallback: _uiFallback,
+    package: _package,
     fontSize: 12,
     height: 16 / 12,
     fontWeight: FontWeight.w600,
@@ -72,7 +70,7 @@ abstract final class FsText {
   /// explanation, device chips, status bar.
   static const TextStyle small = TextStyle(
     fontFamily: uiFamily,
-    fontFamilyFallback: _uiFallback,
+    package: _package,
     fontSize: 12,
     height: 16 / 12,
     fontWeight: FontWeight.w400,
@@ -81,7 +79,7 @@ abstract final class FsText {
   /// Badges and pills. The minimum size.
   static const TextStyle caption = TextStyle(
     fontFamily: uiFamily,
-    fontFamilyFallback: _uiFallback,
+    package: _package,
     fontSize: 11,
     height: 14 / 11,
     fontWeight: FontWeight.w500,
@@ -90,7 +88,7 @@ abstract final class FsText {
   /// Numbers in property fields, hex colours, file names in asset slots.
   static const TextStyle mono = TextStyle(
     fontFamily: monoFamily,
-    fontFamilyFallback: _monoFallback,
+    package: _package,
     fontSize: 12,
     height: 16 / 12,
     fontWeight: FontWeight.w400,
@@ -99,7 +97,7 @@ abstract final class FsText {
   /// Console output and stack traces, file paths.
   static const TextStyle monoConsole = TextStyle(
     fontFamily: monoFamily,
-    fontFamilyFallback: _monoFallback,
+    package: _package,
     fontSize: 12,
     height: 18 / 12,
     fontWeight: FontWeight.w400,
@@ -108,7 +106,7 @@ abstract final class FsText {
   /// Counts inside badges, coordinates and fps in the status bar.
   static const TextStyle monoSmall = TextStyle(
     fontFamily: monoFamily,
-    fontFamilyFallback: _monoFallback,
+    package: _package,
     fontSize: 11,
     height: 14 / 11,
     fontWeight: FontWeight.w500,

@@ -62,7 +62,8 @@ abstract final class FsTheme {
         selectionColor: c.surfaceSelected,
         selectionHandleColor: c.accent,
       ),
-      fontFamily: FsText.uiFamily,
+      // The package-qualified name (`packages/flame_studio_ui/Inter`).
+      fontFamily: FsText.body.fontFamily,
       textTheme: TextTheme(
         titleMedium: colored(FsText.title, c.textPrimary),
         titleSmall: colored(FsText.heading, c.textPrimary),

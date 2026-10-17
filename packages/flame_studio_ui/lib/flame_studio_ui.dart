@@ -8,6 +8,7 @@
 library;
 
 export 'src/colors.dart';
+export 'src/icons.dart';
 export 'src/metrics.dart';
 export 'src/shadows.dart';
 export 'src/theme.dart';

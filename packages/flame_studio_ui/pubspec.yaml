@@ -16,12 +16,34 @@ environment:
 resolution: workspace
 
 # Flutter only (Q83): no flame, no Runtime, no Riverpod, nothing from the app.
-# The icon set and the bundled fonts join when the first widgets need them.
 dependencies:
   flutter:
     sdk: flutter
+  # Lucide, the design system's icon set, as an icon font. FsIcons maps the
+  # icons the design system names onto it.
+  lucide_icons_flutter: ^4.0.0
 
 dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
+
+# Inter 4.1 and JetBrains Mono 2.304, the static .ttf files from their GitHub
+# releases (the design system's .woff2 files don't load in Flutter). Both are
+# SIL OFL 1.1; the licences sit next to the fonts.
+flutter:
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: fonts/Inter-SemiBold.ttf
+          weight: 600
+    - family: JetBrains Mono
+      fonts:
+        - asset: fonts/JetBrainsMono-Regular.ttf
+          weight: 400
+        - asset: fonts/JetBrainsMono-Medium.ttf
+          weight: 500

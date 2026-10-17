@@ -21,6 +21,7 @@ void main() {
         'ToggleButton',
         'SegmentedControl',
         'SplitButton',
+        'Toolbar',
         'TextField',
         'Dropdown',
         'SearchField',

@@ -26,6 +26,7 @@ import 'pages/split_button_page.dart';
 import 'pages/tabs_page.dart';
 import 'pages/text_field_page.dart';
 import 'pages/toggle_button_page.dart';
+import 'pages/toolbar_page.dart';
 import 'pages/tooltip_page.dart';
 import 'pages/tree_row_page.dart';
 import 'pages/vector2_property_page.dart';
@@ -58,6 +59,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Actions', 'ToggleButton', ToggleButtonPage.new),
   GalleryEntry('Actions', 'SegmentedControl', SegmentedControlPage.new),
   GalleryEntry('Actions', 'SplitButton', SplitButtonPage.new),
+  GalleryEntry('Actions', 'Toolbar', ToolbarPage.new),
   GalleryEntry('Inputs', 'TextField', TextFieldPage.new),
   GalleryEntry('Inputs', 'Dropdown', DropdownPage.new),
   GalleryEntry('Inputs', 'SearchField', SearchFieldPage.new),

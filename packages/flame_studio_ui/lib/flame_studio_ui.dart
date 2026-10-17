@@ -12,6 +12,7 @@ export 'src/actions/icon_button.dart';
 export 'src/actions/segmented_control.dart';
 export 'src/actions/split_button.dart';
 export 'src/actions/toggle_button.dart';
+export 'src/actions/toolbar.dart';
 export 'src/colors.dart';
 export 'src/floating/context_menu.dart';
 export 'src/floating/tooltip.dart';

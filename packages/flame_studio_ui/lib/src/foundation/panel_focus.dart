@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 
+import 'debug_states.dart';
+
 /// Tells the widgets inside a panel whether the panel has keyboard focus.
 ///
 /// A [FocusScope] (so focus anywhere inside counts, and requesting focus on
@@ -11,6 +13,9 @@ import 'package:flutter/widgets.dart';
 /// Tab traversal leaves the panel at its ends instead of looping inside it.
 /// Panel cycling (⌃Tab, ⌘1–⌘4) is the app's: it owns the panel order and
 /// calls `requestFocus` on each panel's [node].
+///
+/// Part for `FsDebugStates`: `panel` (exact); [WidgetState.focused] makes
+/// [of] report focus, for the gallery and goldens.
 class FsPanelFocus extends StatefulWidget {
   /// Wraps [child] in a panel focus scope.
   const FsPanelFocus({super.key, this.node, required this.child});
@@ -27,7 +32,8 @@ class FsPanelFocus extends StatefulWidget {
   static bool of(BuildContext context) {
     final scope = context
         .dependOnInheritedWidgetOfExactType<_PanelFocusScope>();
-    return scope?.notifier?.hasFocus ?? true;
+    if (scope == null) return true;
+    return scope.forced || (scope.notifier?.hasFocus ?? false);
   }
 
   @override
@@ -54,11 +60,29 @@ class _FsPanelFocusState extends State<FsPanelFocus> {
   Widget build(BuildContext context) {
     return FocusScope(
       node: _node,
-      child: _PanelFocusScope(notifier: _node, child: widget.child),
+      child: _PanelFocusScope(
+        notifier: _node,
+        forced: FsDebugStates.of(
+          context,
+          part: 'panel',
+          exact: true,
+        ).contains(WidgetState.focused),
+        child: widget.child,
+      ),
     );
   }
 }
 
 class _PanelFocusScope extends InheritedNotifier<FocusScopeNode> {
-  const _PanelFocusScope({required super.notifier, required super.child});
+  const _PanelFocusScope({
+    required super.notifier,
+    required this.forced,
+    required super.child,
+  });
+
+  final bool forced;
+
+  @override
+  bool updateShouldNotify(_PanelFocusScope oldWidget) =>
+      forced != oldWidget.forced || super.updateShouldNotify(oldWidget);
 }

@@ -18,7 +18,8 @@ import 'property_row.dart';
 /// value and edits it.
 ///
 /// Click or Tab in selects the value; Enter commits and keeps focus; Tab and
-/// clicking elsewhere commit; Esc reverts and leaves the field; ↑/↓ step
+/// clicking elsewhere commit (simple expressions such as `32*2` or `+=8`
+/// are evaluated then); Esc reverts and leaves the field; ↑/↓ step
 /// (Shift ×10, Alt ×0.1) and commit each step. Text that isn't a number, is
 /// out of range or fails the validator keeps the error state (and the typed
 /// text) until it is fixed or Esc.
@@ -204,7 +205,12 @@ class _FsNumberInputState extends State<FsNumberInput> {
       _setError(null);
       return true;
     }
-    final value = FsNumberEditing.parse(text, widget.kind);
+    // Typed text may be an expression: `32*2`, `+=8` (on the value).
+    final value = FsNumberEditing.parse(
+      text,
+      widget.kind,
+      current: widget.mixed ? null : widget.value,
+    );
     if (value == null) {
       _setError(widget.invalidMessage ?? '');
       return false;
@@ -242,7 +248,11 @@ class _FsNumberInputState extends State<FsNumberInput> {
     if (!_interactive) return;
     final keys = HardwareKeyboard.instance;
     final base =
-        FsNumberEditing.parse(_controller.text, widget.kind) ??
+        FsNumberEditing.parse(
+          _controller.text,
+          widget.kind,
+          current: widget.value,
+        ) ??
         widget.value ??
         widget.min ??
         0;

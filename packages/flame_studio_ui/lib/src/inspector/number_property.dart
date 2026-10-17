@@ -3,8 +3,10 @@ import 'package:flutter/widgets.dart';
 import '../foundation/number_editing.dart';
 import '../foundation/scrub.dart';
 import '../foundation/value_source.dart';
+import '../metrics.dart';
 import 'number_input.dart';
 import 'property_row.dart';
+import 'range_slider.dart';
 
 /// An `int` or `double` inspector row whose label is a scrub handle.
 ///
@@ -21,10 +23,15 @@ import 'property_row.dart';
 ///   [validator]) keeps the typed text with an `error` border and the
 ///   message in the label's tooltip until it is fixed or Esc.
 ///
-/// Not yet: expressions (`32*2`, `+=8`) and the range-slider variant.
+/// - **Expressions:** typed text such as `32*2`, `(10+6)/4` or `+=8` (on
+///   the current value) is evaluated on commit.
+/// - **Range variant** ([slider], needs [min] and [max]): a slider (track
+///   `border-control`, fill `accent`, 12px thumb) before a 56px field.
+///   Dragging the slider or pressing ← → on it changes the value like a
+///   scrub: [onChanged] while moving, [onCommit] once.
 ///
-/// Parts for `FsDebugStates`: `row`, `label` (from [FsPropertyRow]) and
-/// `field`.
+/// Parts for `FsDebugStates`: `row`, `label` (from [FsPropertyRow]),
+/// `field` and `slider`.
 class FsNumberProperty extends StatefulWidget {
   /// Creates the row.
   const FsNumberProperty({
@@ -47,7 +54,11 @@ class FsNumberProperty extends StatefulWidget {
     this.invalidMessage,
     this.enabled = true,
     this.focusNode,
-  });
+    this.slider = false,
+  }) : assert(
+         !slider || (min != null && max != null),
+         'The range slider needs min and max',
+       );
 
   /// The field's Dart name.
   final String label;
@@ -106,6 +117,9 @@ class FsNumberProperty extends StatefulWidget {
 
   /// The field's focus node.
   final FocusNode? focusNode;
+
+  /// The range variant: a slider before a 56px field.
+  final bool slider;
 
   @override
   State<FsNumberProperty> createState() => _FsNumberPropertyState();
@@ -189,24 +203,57 @@ class _FsNumberPropertyState extends State<FsNumberProperty> {
               active: scrub != null,
             )
           : null,
-      editor: FsNumberInput(
-        value: scrub?.value ?? widget.value,
-        mixed: widget.mixed && scrub == null,
-        focusNode: _focusNode,
-        kind: widget.kind,
-        min: widget.min,
-        max: widget.max,
-        step: _step,
-        unit: widget.unit,
-        scrubbing: scrub != null,
-        enabled: widget.enabled,
-        validator: widget.validator,
-        invalidMessage: widget.invalidMessage,
-        onChanged: widget.onChanged,
-        onCommit: widget.onCommit,
-        onErrorChanged: (error) => setState(() => _error = error),
-        debugPart: 'field',
+      editor: _withSlider(
+        FsNumberInput(
+          value: scrub?.value ?? widget.value,
+          mixed: widget.mixed && scrub == null,
+          focusNode: _focusNode,
+          kind: widget.kind,
+          min: widget.min,
+          max: widget.max,
+          step: _step,
+          unit: widget.unit,
+          scrubbing: scrub != null,
+          enabled: widget.enabled,
+          validator: widget.validator,
+          invalidMessage: widget.invalidMessage,
+          onChanged: widget.onChanged,
+          onCommit: widget.onCommit,
+          onErrorChanged: (error) => setState(() => _error = error),
+          debugPart: 'field',
+        ),
       ),
     );
   }
+
+  Widget _withSlider(Widget field) {
+    if (!widget.slider) return field;
+    final scrub = _scrub;
+    return Row(
+      children: [
+        Expanded(
+          child: FsRangeSlider(
+            value: scrub?.value ?? (widget.mixed ? null : widget.value),
+            min: widget.min!,
+            max: widget.max!,
+            step: _step,
+            kind: widget.kind,
+            active: scrub != null,
+            semanticsLabel: widget.label,
+            onChanged: widget.enabled
+                ? (v) {
+                    _focusNode.unfocus();
+                    widget.onChanged(v);
+                  }
+                : null,
+            onCommit: widget.enabled ? widget.onCommit : null,
+          ),
+        ),
+        const SizedBox(width: FsSpacing.s1),
+        SizedBox(width: _sliderFieldWidth, child: field),
+      ],
+    );
+  }
+
+  static const double _sliderFieldWidth = 56;
 }

@@ -18,7 +18,8 @@ import '../inspector/number_input.dart';
 ///   [onChanged] fires during the drag, [onCommit] once at its end.
 /// - **Edit:** a click without a drag, or Tab, edits with the value
 ///   selected; Enter, Tab or clicking elsewhere commits; Esc reverts; ↑/↓
-///   step (Shift ×10).
+///   step (Shift ×10). Expressions (`32*2`, `+=8`) are evaluated on
+///   commit.
 /// - **Invalid text** (not a number, outside [min]…[max], or rejected by
 ///   [validator]): `error` border, the message in a tooltip, the typed text
 ///   kept until fixed or Esc.

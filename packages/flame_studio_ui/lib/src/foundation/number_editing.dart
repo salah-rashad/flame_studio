@@ -9,10 +9,11 @@ enum FsNumberKind {
   double,
 }
 
-/// The number-editing core shared by the number editors: parsing,
-/// formatting, ↑/↓ steps and range checks. Scrub maths is [FsScrub].
+/// The number-editing core shared by the number editors: parsing (with
+/// simple expressions), formatting, ↑/↓ steps and range checks. Scrub
+/// maths is [FsScrub].
 ///
-/// Internal; not exported. Simple expressions (`32*2`, `+=8`) come later.
+/// Internal; not exported.
 abstract final class FsNumberEditing {
   /// Most decimals a formatted or rounded value keeps, which hides
   /// floating-point noise (`0.30000000000000004`).
@@ -48,10 +49,41 @@ abstract final class FsNumberEditing {
 
   /// The value of typed [text], or null when it isn't a finite number. Ints
   /// round to the nearest whole number.
-  static double? parse(String text, FsNumberKind kind) {
-    final value = double.tryParse(text.trim());
+  ///
+  /// [text] may be an expression ([evaluate]): `32*2`, `(10+6)/4`, or
+  /// `+=8` relative to [current].
+  static double? parse(String text, FsNumberKind kind, {double? current}) {
+    final trimmed = text.trim();
+    final value = double.tryParse(trimmed) ?? evaluate(trimmed, current);
     if (value == null || !value.isFinite) return null;
     return kind == FsNumberKind.int ? value.roundToDouble() : value;
+  }
+
+  /// The value of a simple expression, or null when [text] isn't one.
+  ///
+  /// Numbers (`12`, `0.5`, `.5`, `1e3`), `+ - * /` with the usual
+  /// precedence, unary `+`/`-`, parentheses and spaces. A leading
+  /// `+= -= *= /=` applies the rest to [current] (`+=8` on 32 is 40); it
+  /// needs a [current] value. Division by zero gives null.
+  static double? evaluate(String text, [double? current]) {
+    var source = text.trim();
+    String? compound;
+    if (source.length >= 2 && source[1] == '=' && '+-*/'.contains(source[0])) {
+      compound = source[0];
+      source = source.substring(2);
+      if (current == null) return null;
+    }
+    final parser = _Expression(source);
+    final value = parser.parse();
+    if (value == null) return null;
+    final result = switch (compound) {
+      null => value,
+      '+' => current! + value,
+      '-' => current! - value,
+      '*' => current! * value,
+      _ => current! / value,
+    };
+    return result.isFinite ? result : null;
   }
 
   /// Whether [value] lies within the optional bounds.
@@ -178,5 +210,90 @@ class FsScrub {
       max: max,
     );
     return value;
+  }
+}
+
+/// A recursive-descent parser for [FsNumberEditing.evaluate]:
+///
+/// ```text
+/// expression := term (('+' | '-') term)*
+/// term       := factor (('*' | '/') factor)*
+/// factor     := ('+' | '-') factor | number | '(' expression ')'
+/// ```
+class _Expression {
+  _Expression(this.source);
+
+  final String source;
+  int _at = 0;
+
+  /// The value, or null for anything that isn't a whole expression.
+  double? parse() {
+    try {
+      final value = _expression();
+      _skipSpaces();
+      return _at == source.length ? value : null;
+    } on FormatException {
+      return null;
+    }
+  }
+
+  void _skipSpaces() {
+    while (_at < source.length && source[_at] == ' ') {
+      _at++;
+    }
+  }
+
+  String? _peek() {
+    _skipSpaces();
+    return _at < source.length ? source[_at] : null;
+  }
+
+  double _expression() {
+    var value = _term();
+    for (var op = _peek(); op == '+' || op == '-'; op = _peek()) {
+      _at++;
+      final right = _term();
+      value = op == '+' ? value + right : value - right;
+    }
+    return value;
+  }
+
+  double _term() {
+    var value = _factor();
+    for (var op = _peek(); op == '*' || op == '/'; op = _peek()) {
+      _at++;
+      final right = _factor();
+      value = op == '*' ? value * right : value / right;
+    }
+    return value;
+  }
+
+  double _factor() {
+    final next = _peek();
+    if (next == '+' || next == '-') {
+      _at++;
+      final value = _factor();
+      return next == '-' ? -value : value;
+    }
+    if (next == '(') {
+      _at++;
+      final value = _expression();
+      if (_peek() != ')') throw const FormatException('expected )');
+      _at++;
+      return value;
+    }
+    return _number();
+  }
+
+  static final RegExp _numberPattern = RegExp(
+    r'(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?',
+  );
+
+  double _number() {
+    _skipSpaces();
+    final match = _numberPattern.matchAsPrefix(source, _at);
+    if (match == null) throw const FormatException('expected a number');
+    _at = match.end;
+    return double.parse(match.group(0)!);
   }
 }

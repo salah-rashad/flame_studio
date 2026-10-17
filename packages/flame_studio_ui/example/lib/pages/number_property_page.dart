@@ -73,8 +73,39 @@ class _NumberPropertyPageState extends State<NumberPropertyPage> {
         onCommit: noop,
       ),
     );
+    Widget opacity({
+      Set<WidgetState> states = const {},
+      String? part,
+      Set<WidgetState> slider = const {},
+      bool enabled = true,
+      bool mixed = false,
+      FsValueSource source = FsValueSource.codeDefault,
+      double value = 0.85,
+    }) => forced(
+      states,
+      part: part,
+      forced(
+        slider,
+        part: 'slider',
+        FsNumberProperty(
+          label: 'opacity',
+          value: mixed ? null : value,
+          mixed: mixed,
+          min: 0,
+          max: 1,
+          slider: true,
+          source: source,
+          enabled: enabled,
+          onReset: noop,
+          resetTooltip: 'Reset to default',
+          onChanged: noop,
+          onCommit: noop,
+        ),
+      ),
+    );
     GridRow row(
       String label, {
+      Set<WidgetState> slider = const {},
       Set<WidgetState> states = const {},
       String? part,
       bool enabled = true,
@@ -95,6 +126,14 @@ class _NumberPropertyPageState extends State<NumberPropertyPage> {
         mixed: mixed,
         source: source,
       ),
+      opacity(
+        states: states,
+        part: part,
+        slider: slider,
+        enabled: enabled,
+        mixed: mixed,
+        source: source,
+      ),
     ]);
 
     return GalleryPage(
@@ -103,15 +142,23 @@ class _NumberPropertyPageState extends State<NumberPropertyPage> {
           'Scrub: press on the label and drag, 1 step per 2px, Shift ×10, '
           'Alt ×0.1; the cursor stays visible (no hide or wrap yet). Click or '
           'Enter edits with the value selected; Enter or Tab commits; Esc '
-          'reverts; ↑/↓ step. Not yet: the range slider column and '
-          'expressions (32*2, +=8).',
+          'reverts; ↑/↓ step. Typed expressions (32*2, +=8) are evaluated on '
+          'commit. With a range, the slider variant: drag it or use ← →.',
       children: [
         StateGrid(
-          columns: const ['int', 'double + unit'],
+          columns: const ['int', 'double + unit', 'double · range slider'],
           rows: [
             row('Default'),
-            row('Hover · label', states: {WidgetState.hovered}),
-            row('Scrubbing', states: {WidgetState.dragged}),
+            row(
+              'Hover · label',
+              states: {WidgetState.hovered},
+              slider: {WidgetState.hovered},
+            ),
+            row(
+              'Scrubbing',
+              states: {WidgetState.dragged},
+              slider: {WidgetState.pressed},
+            ),
             row(
               'Focused · editing',
               states: {WidgetState.focused},
@@ -162,6 +209,7 @@ class _NumberPropertyPageState extends State<NumberPropertyPage> {
                     value: _opacity,
                     min: 0,
                     max: 1,
+                    slider: true,
                     validator: (v) =>
                         v < 0 || v > 1 ? 'Expected a number from 0 to 1' : null,
                     invalidMessage: 'Expected a number from 0 to 1',

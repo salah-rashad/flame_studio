@@ -16,7 +16,51 @@ void main() {
     });
   });
 
+  group('evaluate', () {
+    double? eval(String text, [double? current]) =>
+        FsNumberEditing.evaluate(text, current);
+
+    test('arithmetic with precedence, unary signs and parentheses', () {
+      expect(eval('32*2'), 64);
+      expect(eval('1 + 2 * 3'), 7);
+      expect(eval('(1 + 2) * 3'), 9);
+      expect(eval('10 / 4'), 2.5);
+      expect(eval('-(2 + 3)'), -5);
+      expect(eval('2 * -3'), -6);
+      expect(eval('.5 + 1e2'), 100.5);
+      expect(eval('8 - 2 - 1'), 5);
+      expect(eval('16 / 4 / 2'), 2);
+    });
+
+    test('compound assignment applies to the current value', () {
+      expect(eval('+=8', 32), 40);
+      expect(eval('-= 2', 10), 8);
+      expect(eval('*=1.5', 4), 6);
+      expect(eval('/=4', 10), 2.5);
+      expect(eval('+=8'), isNull); // no current value (mixed)
+    });
+
+    test('rejects what is not an expression', () {
+      expect(eval('12x'), isNull);
+      expect(eval('(1 + 2'), isNull);
+      expect(eval('1 +'), isNull);
+      expect(eval('* 2'), isNull);
+      expect(eval(''), isNull);
+      expect(eval('1 / 0'), isNull);
+      expect(eval('1..2'), isNull);
+    });
+  });
+
   group('parse', () {
+    test('evaluates expressions; ints round the result', () {
+      expect(FsNumberEditing.parse('32*2', FsNumberKind.double), 64);
+      expect(FsNumberEditing.parse('10/4', FsNumberKind.int), 3);
+      expect(
+        FsNumberEditing.parse('+=8', FsNumberKind.double, current: 32),
+        40,
+      );
+    });
+
     test('accepts numbers, rejects the rest', () {
       expect(FsNumberEditing.parse(' 412.5 ', FsNumberKind.double), 412.5);
       expect(FsNumberEditing.parse('-3', FsNumberKind.double), -3);

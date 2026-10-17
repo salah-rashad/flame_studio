@@ -1,4 +1,5 @@
 import 'package:flame_studio_ui/flame_studio_ui.dart';
+import 'package:flame_studio_ui/src/inspector/range_slider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,8 +17,10 @@ class _Harness extends StatefulWidget {
     this.mixed = false,
     this.enabled = true,
     this.validator,
+    this.slider = false,
   });
 
+  final bool slider;
   final double? initial;
   final FsNumberKind kind;
   final double? min;
@@ -48,6 +51,7 @@ class _HarnessState extends State<_Harness> {
     unit: 'px',
     enabled: widget.enabled,
     validator: widget.validator,
+    slider: widget.slider,
     invalidMessage: 'Expected a number',
     onChanged: (v) {
       changes.add(v);
@@ -351,6 +355,131 @@ void main() {
       );
       expect(fieldBorder(tester, _field), c.focusRing);
       expect(textColor(tester, 'priority'), c.textSecondary);
+    });
+  });
+
+  group('expressions', () {
+    Future<void> type(WidgetTester tester, String text) async {
+      await tester.tap(find.byType(EditableText));
+      await tester.pump();
+      await tester.enterText(find.byType(EditableText), text);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+    }
+
+    testWidgets('evaluated on commit', (tester) async {
+      await pumpFs(tester, const _Harness(initial: 32));
+      await type(tester, '32*2');
+      expect(commits, [64]);
+      expect(fieldText(tester), '64');
+      await type(tester, '+=8');
+      expect(commits, [64, 72]);
+      await type(tester, '(10 + 6) / 4');
+      expect(commits, [64, 72, 4]);
+    });
+
+    testWidgets('a bad expression is an error', (tester) async {
+      await pumpFs(tester, const _Harness());
+      await type(tester, '2 * (3');
+      expect(commits, isEmpty);
+      expect(fieldBorder(tester, _field), c.error);
+    });
+
+    testWidgets('mixed: += has nothing to add to', (tester) async {
+      await pumpFs(tester, const _Harness(initial: null, mixed: true));
+      await type(tester, '+=8');
+      expect(commits, isEmpty);
+      expect(fieldBorder(tester, _field), c.error);
+    });
+  });
+
+  group('range slider', () {
+    const harness = _Harness(
+      initial: 0.85,
+      kind: FsNumberKind.double,
+      min: 0,
+      max: 1,
+      slider: true,
+    );
+    final slider = find.byType(FsRangeSlider);
+
+    testWidgets('a slider before a 56px field', (tester) async {
+      await pumpFs(tester, harness, width: 420);
+      expect(tester.getSize(_field).width, 56);
+      expect(tester.getSize(slider).height, 20);
+      expect(tester.getTopRight(slider).dx + 4, tester.getTopLeft(_field).dx);
+      expect(fieldText(tester), '0.85');
+    });
+
+    testWidgets('a press jumps, a drag follows, one commit', (tester) async {
+      await pumpFs(tester, harness, width: 420);
+      final rect = tester.getRect(slider);
+      final gesture = await tester.startGesture(
+        rect.centerLeft + const Offset(6, 0), // the thumb's leftmost centre
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      expect(changes, [0]);
+      await gesture.moveTo(rect.center);
+      await tester.pump();
+      expect(changes.last, 0.5);
+      await gesture.moveTo(rect.centerRight + const Offset(40, 0));
+      await tester.pump();
+      expect(changes.last, 1);
+      expect(fieldText(tester), '1.0');
+      await gesture.up();
+      await tester.pump();
+      expect(commits, [1]);
+    });
+
+    testWidgets('← → step when focused', (tester) async {
+      await pumpFs(tester, harness, width: 420);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab); // the slider
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(commits, [0.86]);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      expect(commits, [0.86, 0.85, 0.84]);
+    });
+
+    testWidgets('label scrubbing moves the slider too', (tester) async {
+      await pumpFs(tester, harness, width: 420);
+      await mouseDrag(tester, _label, -10);
+      expect(commits, [0.8]);
+      expect(tester.widget<FsRangeSlider>(slider).value, 0.8);
+    });
+
+    testWidgets('mixed and disabled', (tester) async {
+      await pumpFs(
+        tester,
+        const _Harness(
+          initial: null,
+          mixed: true,
+          kind: FsNumberKind.double,
+          min: 0,
+          max: 1,
+          slider: true,
+        ),
+        width: 420,
+      );
+      expect(tester.widget<FsRangeSlider>(slider).value, isNull);
+      await pumpFs(
+        tester,
+        const _Harness(
+          initial: 0.5,
+          enabled: false,
+          kind: FsNumberKind.double,
+          min: 0,
+          max: 1,
+          slider: true,
+        ),
+        width: 420,
+      );
+      await tester.tap(slider);
+      expect(changes, isEmpty);
     });
   });
 }

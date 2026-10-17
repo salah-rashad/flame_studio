@@ -20,6 +20,7 @@ import 'pages/panel_page.dart';
 import 'pages/property_row_page.dart';
 import 'pages/search_field_page.dart';
 import 'pages/section_header_page.dart';
+import 'pages/segmented_control_page.dart';
 import 'pages/shortcut_label_page.dart';
 import 'pages/tabs_page.dart';
 import 'pages/text_field_page.dart';
@@ -54,6 +55,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Actions', 'Button', ButtonPage.new),
   GalleryEntry('Actions', 'IconButton', IconButtonPage.new),
   GalleryEntry('Actions', 'ToggleButton', ToggleButtonPage.new),
+  GalleryEntry('Actions', 'SegmentedControl', SegmentedControlPage.new),
   GalleryEntry('Inputs', 'TextField', TextFieldPage.new),
   GalleryEntry('Inputs', 'Dropdown', DropdownPage.new),
   GalleryEntry('Inputs', 'SearchField', SearchFieldPage.new),

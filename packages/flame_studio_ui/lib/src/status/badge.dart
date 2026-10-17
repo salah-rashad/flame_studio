@@ -49,6 +49,7 @@ class FsBadge extends StatelessWidget {
     this.label,
     this.count,
     this.icon,
+    this.showIcon = true,
     this.pill = false,
   }) : assert(label != null || count != null, 'Give a label or a count');
 
@@ -63,6 +64,10 @@ class FsBadge extends StatelessWidget {
 
   /// Replaces the kind's icon.
   final IconData? icon;
+
+  /// False drops the icon, where the words beside the badge already say
+  /// what it counts (a "Warnings" filter segment).
+  final bool showIcon;
 
   /// Fully round, 6px padding.
   final bool pill;
@@ -84,7 +89,7 @@ class FsBadge extends StatelessWidget {
       FsBadgeKind.neutral => (c.surfacePressed, c.textPrimary, null),
       FsBadgeKind.accent => (c.accentSubtle, c.accentText, null),
     };
-    final glyph = icon ?? defaultIcon;
+    final glyph = showIcon ? icon ?? defaultIcon : null;
     final words = [?label, if (count != null) '$count'].join(' ');
     final style = (label == null ? FsText.monoSmall : FsText.caption).copyWith(
       color: ink,

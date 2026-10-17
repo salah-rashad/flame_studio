@@ -81,6 +81,17 @@ void main() {
       );
       expect(find.byIcon(FsIcons.zap), findsOneWidget);
     });
+
+    testWidgets('showIcon: false drops the kind\'s icon', (tester) async {
+      await pumpFs(
+        tester,
+        _left(
+          const FsBadge(kind: FsBadgeKind.warning, count: 2, showIcon: false),
+        ),
+      );
+      expect(find.byType(Icon), findsNothing);
+      expect(textColor(tester, '2'), c.warning);
+    });
   });
 
   group('FsDeviceChip', () {

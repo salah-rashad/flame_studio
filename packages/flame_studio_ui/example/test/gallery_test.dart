@@ -19,6 +19,7 @@ void main() {
         'Button',
         'IconButton',
         'ToggleButton',
+        'SegmentedControl',
         'TextField',
         'Dropdown',
         'SearchField',

@@ -158,14 +158,18 @@ class FsToast extends StatelessWidget {
               child: Row(
                 spacing: FsSpacing.s1,
                 children: [
-                  for (final action in data.actions)
-                    FsButton(
-                      label: action.label,
-                      variant: FsButtonVariant.ghost,
-                      onPressed: () {
-                        action.onPressed();
-                        if (action.dismisses) onDismiss?.call();
-                      },
+                  for (final (i, action) in data.actions.indexed)
+                    _emphasise(
+                      // The first action reads as the main one.
+                      i == 0,
+                      FsButton(
+                        label: action.label,
+                        variant: FsButtonVariant.ghost,
+                        onPressed: () {
+                          action.onPressed();
+                          if (action.dismisses) onDismiss?.call();
+                        },
+                      ),
                     ),
                 ],
               ),
@@ -466,3 +470,6 @@ class _ToastScope extends InheritedWidget {
   bool updateShouldNotify(_ToastScope oldWidget) =>
       controller != oldWidget.controller;
 }
+
+Widget _emphasise(bool emphasis, Widget button) =>
+    emphasis ? FsGhostEmphasis(child: button) : button;

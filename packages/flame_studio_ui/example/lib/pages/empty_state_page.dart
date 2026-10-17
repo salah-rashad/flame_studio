@@ -71,7 +71,7 @@ class _EmptyStatePageState extends State<EmptyStatePage> {
                     'Logs, warnings and errors from your game appear here.',
                 action: FsButton(
                   label: 'Run game',
-                  icon: FsIcons.play,
+                  leading: const FsPlayGlyph(size: 14),
                   variant: FsButtonVariant.primary,
                   onPressed: () {},
                 ),

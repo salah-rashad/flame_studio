@@ -7,7 +7,7 @@
 /// system made in Claude Design.
 library;
 
-export 'src/actions/button.dart' hide FsOnTint;
+export 'src/actions/button.dart' hide FsGhostEmphasis, FsOnTint;
 export 'src/actions/icon_button.dart';
 export 'src/actions/segmented_control.dart';
 export 'src/actions/split_button.dart';

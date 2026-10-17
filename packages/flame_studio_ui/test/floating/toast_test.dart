@@ -169,6 +169,9 @@ void main() {
       for (final b in tester.widgetList<FsButton>(find.byType(FsButton))) {
         expect(b.variant, FsButtonVariant.ghost);
       }
+      // The first action is the main one: text-primary at rest.
+      expect(textColor(tester, 'Show in console'), c.textPrimary);
+      expect(textColor(tester, 'Restart game'), c.textSecondary);
       // The first label lines up with the title (as in the design, the
       // button's 1px transparent edge is left over).
       expect(

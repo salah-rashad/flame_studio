@@ -56,6 +56,7 @@ class FsButton extends StatelessWidget {
     this.variant = FsButtonVariant.secondary,
     this.size = FsButtonSize.regular,
     this.icon,
+    this.leading,
     this.tooltip,
     this.shortcut,
     this.disabledReason,
@@ -77,6 +78,10 @@ class FsButton extends StatelessWidget {
 
   /// A 16px leading icon.
   final IconData? icon;
+
+  /// A custom glyph in place of [icon] (`FsPlayGlyph` for "Run game"); it
+  /// takes the label colour and icon size through the [IconTheme].
+  final Widget? leading;
 
   /// A tooltip; with a [shortcut] it shows the key cap.
   final String? tooltip;
@@ -102,7 +107,12 @@ class FsButton extends StatelessWidget {
       autofocus: autofocus,
       semanticsLabel: label,
       builder: (context, states) {
-        final (fill, edge, ink) = _colors(c, FsOnTint.of(context), states);
+        final (fill, edge, ink) = _colors(
+          c,
+          FsOnTint.of(context),
+          FsGhostEmphasis.of(context),
+          states,
+        );
         final small = size == FsButtonSize.small;
         return FsFocusRing.outside(
           visible: states.contains(WidgetState.focused),
@@ -118,30 +128,36 @@ class FsButton extends StatelessWidget {
               border: Border.all(color: edge),
               borderRadius: FsRadii.sm,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (icon != null) ...[
-                  Icon(
-                    icon,
-                    size: small ? FsSizes.iconSm : FsSizes.icon,
-                    color: ink,
-                  ),
-                  const SizedBox(width: FsSpacing.s1),
-                ],
-                Text(
-                  label,
-                  maxLines: 1,
-                  softWrap: false,
-                  style:
-                      (small
-                              ? FsText.small.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                )
-                              : FsText.bodyStrong)
-                          .copyWith(color: ink),
+            // The label comes from semanticsLabel; excluded here so screen
+            // readers don't read it twice.
+            child: IconTheme.merge(
+              data: IconThemeData(
+                color: ink,
+                size: small ? FsSizes.iconSm : FsSizes.icon,
+              ),
+              child: ExcludeSemantics(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (leading != null || icon != null) ...[
+                      leading ?? Icon(icon),
+                      const SizedBox(width: FsSpacing.s1),
+                    ],
+                    Text(
+                      label,
+                      maxLines: 1,
+                      softWrap: false,
+                      style:
+                          (small
+                                  ? FsText.small.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    )
+                                  : FsText.bodyStrong)
+                              .copyWith(color: ink),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -162,6 +178,7 @@ class FsButton extends StatelessWidget {
   (Color, Color, Color) _colors(
     FsColors c,
     bool onTint,
+    bool emphasis,
     Set<WidgetState> states,
   ) {
     const none = Colors.transparent;
@@ -203,7 +220,7 @@ class FsButton extends StatelessWidget {
             ? c.surfaceHover
             : none,
         none,
-        hovered ? c.textPrimary : c.textSecondary,
+        hovered || emphasis ? c.textPrimary : c.textSecondary,
       ),
       FsButtonVariant.danger => (
         pressed
@@ -241,4 +258,21 @@ class FsOnTint extends InheritedWidget {
 
   @override
   bool updateShouldNotify(FsOnTint oldWidget) => false;
+}
+
+/// Marks the ghost button below it as the emphasised one of a group: its
+/// label is `text-primary` at rest, not `text-secondary` (a toast's first
+/// action, as preview.html draws it).
+///
+/// Internal; hidden from the package export.
+class FsGhostEmphasis extends InheritedWidget {
+  /// Marks [child].
+  const FsGhostEmphasis({super.key, required super.child});
+
+  /// Whether [context] sits under an emphasis marker.
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<FsGhostEmphasis>() != null;
+
+  @override
+  bool updateShouldNotify(FsGhostEmphasis oldWidget) => false;
 }

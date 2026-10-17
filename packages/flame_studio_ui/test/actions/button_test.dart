@@ -7,6 +7,11 @@ import '../helpers.dart';
 
 final _button = find.byType(FsButton);
 
+Widget _left(Widget child) => Align(
+  alignment: Alignment.topLeft,
+  child: Padding(padding: const EdgeInsets.all(20), child: child),
+);
+
 Widget _maybeForced(Set<WidgetState> states, Widget child) =>
     states.isEmpty ? child : FsDebugStates(states: states, child: child);
 
@@ -118,11 +123,10 @@ void main() {
 
   testWidgets('the icon takes the label colour', (tester) async {
     await pumpFs(tester, _sample(FsButtonVariant.primary, icon: FsIcons.plus));
-    expect(
-      tester.widget<Icon>(find.byIcon(FsIcons.plus)).color,
-      c.textOnAccent,
-    );
-    expect(tester.widget<Icon>(find.byIcon(FsIcons.plus)).size, 16);
+    // Colour and size come through the IconTheme, shared with `leading`.
+    final theme = IconTheme.of(tester.element(find.byIcon(FsIcons.plus)));
+    expect(theme.color, c.textOnAccent);
+    expect(theme.size, 16);
   });
 
   testWidgets('click, Enter and Space; focus ring only from the keyboard', (
@@ -148,6 +152,32 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
     expect(presses, 3);
+  });
+
+  testWidgets('leading takes a custom glyph in the label colour', (
+    tester,
+  ) async {
+    await pumpFs(
+      tester,
+      _left(
+        FsButton(
+          label: 'Run game',
+          variant: FsButtonVariant.primary,
+          leading: const FsPlayGlyph(size: 14),
+          onPressed: () {},
+        ),
+      ),
+    );
+    final glyph = find.byType(FsPlayGlyph);
+    expect(glyph, findsOneWidget);
+    expect(IconTheme.of(tester.element(glyph)).color, c.textOnAccent);
+  });
+
+  testWidgets('the label is read once', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pumpFs(tester, _sample(FsButtonVariant.secondary));
+    expect(find.bySemanticsLabel('Add component'), findsOneWidget);
+    handle.dispose();
   });
 
   testWidgets('a disabled button says why in its tooltip', (tester) async {

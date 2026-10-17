@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'pages/badge_page.dart';
 import 'pages/bool_property_page.dart';
 import 'pages/button_page.dart';
+import 'pages/color_picker_page.dart';
 import 'pages/context_menu_page.dart';
 import 'pages/dropdown_page.dart';
 import 'pages/foundations_page.dart';
@@ -55,6 +56,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Inspector', 'NumberProperty', NumberPropertyPage.new),
   GalleryEntry('Inspector', 'Vector2Property', Vector2PropertyPage.new),
   GalleryEntry('Inspector', 'BoolProperty', BoolPropertyPage.new),
+  GalleryEntry('Inspector', 'ColorPicker', ColorPickerPage.new),
   GalleryEntry('Structure', 'TreeRow', TreeRowPage.new),
   GalleryEntry('Floating', 'ContextMenu', ContextMenuPage.new),
   GalleryEntry('Floating', 'Tooltip', TooltipPage.new),

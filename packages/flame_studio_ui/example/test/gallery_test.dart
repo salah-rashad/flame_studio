@@ -29,6 +29,7 @@ void main() {
         'BoolProperty',
         'ColorProperty',
         'ColorPicker',
+        'AssetSlot',
         'TreeRow',
         'ContextMenu',
         'Tooltip',

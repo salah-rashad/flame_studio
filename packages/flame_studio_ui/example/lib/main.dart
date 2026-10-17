@@ -1,6 +1,7 @@
 import 'package:flame_studio_ui/flame_studio_ui.dart';
 import 'package:flutter/material.dart';
 
+import 'pages/asset_slot_page.dart';
 import 'pages/badge_page.dart';
 import 'pages/bool_property_page.dart';
 import 'pages/button_page.dart';
@@ -59,6 +60,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Inspector', 'BoolProperty', BoolPropertyPage.new),
   GalleryEntry('Inspector', 'ColorProperty', ColorPropertyPage.new),
   GalleryEntry('Inspector', 'ColorPicker', ColorPickerPage.new),
+  GalleryEntry('Inspector', 'AssetSlot', AssetSlotPage.new),
   GalleryEntry('Structure', 'TreeRow', TreeRowPage.new),
   GalleryEntry('Floating', 'ContextMenu', ContextMenuPage.new),
   GalleryEntry('Floating', 'Tooltip', TooltipPage.new),

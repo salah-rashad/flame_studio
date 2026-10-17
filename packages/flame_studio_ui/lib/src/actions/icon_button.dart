@@ -5,6 +5,7 @@ import '../floating/tooltip.dart';
 import '../foundation/focus_ring.dart';
 import '../foundation/interactive.dart';
 import '../metrics.dart';
+import 'button.dart' show FsOnTint;
 
 /// The two icon-button sizes.
 enum FsIconButtonSize {
@@ -100,6 +101,9 @@ class FsIconButton extends StatelessWidget {
         if (disabled) {
           fill = Colors.transparent;
           ink = c.textDisabled;
+        } else if (FsOnTint.of(context) && !selected) {
+          fill = FsOnTint.fill(c, states);
+          ink = c.textPrimary;
         } else if (selected) {
           fill = pressed || hovered ? c.surfaceSelected : c.accentSubtle;
           ink = c.accentText;

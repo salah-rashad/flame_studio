@@ -165,4 +165,27 @@ void main() {
     );
     expect(find.text('Select a node first'), findsOneWidget);
   });
+
+  testWidgets('small: 20px, 8px padding, a 12px medium label', (tester) async {
+    await pumpFs(
+      tester,
+      Align(
+        alignment: Alignment.topLeft,
+        child: FsButton(
+          label: 'Review',
+          size: FsButtonSize.small,
+          variant: FsButtonVariant.ghost,
+          onPressed: () {},
+        ),
+      ),
+    );
+    expect(tester.getSize(_button).height, 20);
+    final style = tester.widget<Text>(find.text('Review')).style!;
+    expect(style.fontSize, 12);
+    expect(style.fontWeight, FontWeight.w500);
+    expect(
+      tester.getTopLeft(find.text('Review')).dx - tester.getTopLeft(_button).dx,
+      FsSpacing.s2 + 1,
+    );
+  });
 }

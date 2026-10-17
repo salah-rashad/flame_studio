@@ -7,7 +7,7 @@
 /// system made in Claude Design.
 library;
 
-export 'src/actions/button.dart';
+export 'src/actions/button.dart' hide FsOnTint;
 export 'src/actions/icon_button.dart';
 export 'src/actions/segmented_control.dart';
 export 'src/actions/split_button.dart';
@@ -47,6 +47,7 @@ export 'src/inspector/vector2_property.dart';
 export 'src/metrics.dart';
 export 'src/shadows.dart';
 export 'src/status/badge.dart';
+export 'src/status/banner.dart';
 export 'src/status/progress.dart';
 export 'src/structure/panel.dart';
 export 'src/structure/section_header.dart';

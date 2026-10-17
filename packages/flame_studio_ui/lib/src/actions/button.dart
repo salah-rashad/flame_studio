@@ -23,7 +23,17 @@ enum FsButtonVariant {
   danger,
 }
 
-/// A text button for commands, 24px high, label in `body-strong`.
+/// The two button heights.
+enum FsButtonSize {
+  /// 24px, label in `body-strong`.
+  regular,
+
+  /// 20px, a 12px label (weight 500) and 8px padding: inside banners.
+  small,
+}
+
+/// A text button for commands, 24px high (20 with [FsButtonSize.small]),
+/// label in `body-strong`.
 ///
 /// | Variant | Fill (rest → hover → pressed) | Edge | Label |
 /// |---|---|---|---|
@@ -44,6 +54,7 @@ class FsButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.variant = FsButtonVariant.secondary,
+    this.size = FsButtonSize.regular,
     this.icon,
     this.tooltip,
     this.shortcut,
@@ -60,6 +71,9 @@ class FsButton extends StatelessWidget {
 
   /// Primary, secondary, ghost or danger.
   final FsButtonVariant variant;
+
+  /// 24 or 20.
+  final FsButtonSize size;
 
   /// A 16px leading icon.
   final IconData? icon;
@@ -88,13 +102,14 @@ class FsButton extends StatelessWidget {
       autofocus: autofocus,
       semanticsLabel: label,
       builder: (context, states) {
-        final (fill, edge, ink) = _colors(c, states);
+        final (fill, edge, ink) = _colors(c, FsOnTint.of(context), states);
+        final small = size == FsButtonSize.small;
         return FsFocusRing.outside(
           visible: states.contains(WidgetState.focused),
           child: Container(
-            height: FsSizes.control,
+            height: small ? FsSizes.controlSm : FsSizes.control,
             padding: EdgeInsets.symmetric(
-              horizontal: variant == FsButtonVariant.ghost
+              horizontal: small || variant == FsButtonVariant.ghost
                   ? FsSpacing.s2
                   : FsSpacing.s3,
             ),
@@ -107,14 +122,24 @@ class FsButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: FsSizes.icon, color: ink),
+                  Icon(
+                    icon,
+                    size: small ? FsSizes.iconSm : FsSizes.icon,
+                    color: ink,
+                  ),
                   const SizedBox(width: FsSpacing.s1),
                 ],
                 Text(
                   label,
                   maxLines: 1,
                   softWrap: false,
-                  style: FsText.bodyStrong.copyWith(color: ink),
+                  style:
+                      (small
+                              ? FsText.small.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                )
+                              : FsText.bodyStrong)
+                          .copyWith(color: ink),
                 ),
               ],
             ),
@@ -134,10 +159,19 @@ class FsButton extends StatelessWidget {
   }
 
   /// Fill, edge and label colour for [states].
-  (Color, Color, Color) _colors(FsColors c, Set<WidgetState> states) {
+  (Color, Color, Color) _colors(
+    FsColors c,
+    bool onTint,
+    Set<WidgetState> states,
+  ) {
     const none = Colors.transparent;
     final pressed = states.contains(WidgetState.pressed);
     final hovered = pressed || states.contains(WidgetState.hovered);
+    if (onTint &&
+        variant == FsButtonVariant.ghost &&
+        !states.contains(WidgetState.disabled)) {
+      return (FsOnTint.fill(c, states), none, c.textPrimary);
+    }
     if (states.contains(WidgetState.disabled)) {
       return variant == FsButtonVariant.ghost
           ? (none, none, c.textDisabled)
@@ -182,4 +216,29 @@ class FsButton extends StatelessWidget {
       ),
     };
   }
+}
+
+/// Marks ghost buttons and icon buttons that sit on a tinted fill (a
+/// banner's `*-subtle`): their ink is `text-primary` and hover and press
+/// lay a white wash over the tint instead of the opaque `surface-hover`.
+///
+/// Internal to the package (FsBanner uses it).
+class FsOnTint extends InheritedWidget {
+  /// Marks [child].
+  const FsOnTint({super.key, required super.child});
+
+  /// Whether [context] sits on a tint.
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<FsOnTint>() != null;
+
+  /// The wash for [states]: `text-primary` at 8% on hover (the design's
+  /// `#ffffff14`, which has no token) and 12% pressed; none at rest.
+  static Color fill(FsColors c, Set<WidgetState> states) =>
+      FsStateColor.resolve(states, {
+        WidgetState.pressed: c.textPrimary.withValues(alpha: 0.12),
+        WidgetState.hovered: c.textPrimary.withValues(alpha: 0.08),
+      }, fallback: Colors.transparent);
+
+  @override
+  bool updateShouldNotify(FsOnTint oldWidget) => false;
 }

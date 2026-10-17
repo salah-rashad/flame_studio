@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'pages/asset_slot_page.dart';
 import 'pages/badge_page.dart';
+import 'pages/banner_page.dart';
 import 'pages/bool_property_page.dart';
 import 'pages/button_page.dart';
 import 'pages/color_picker_page.dart';
@@ -85,6 +86,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Floating', 'Toast', ToastPage.new),
   GalleryEntry('Status', 'Badge · DeviceChip', BadgePage.new),
   GalleryEntry('Status', 'Progress', ProgressPage.new),
+  GalleryEntry('Status', 'Banner', BannerPage.new),
 ];
 
 class GalleryApp extends StatelessWidget {

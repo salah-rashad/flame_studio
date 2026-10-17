@@ -16,6 +16,7 @@ void main() {
         'Field box · Interactive',
         'PropertyRow',
         'NumberProperty',
+        'Vector2Property',
       ]) {
         await tester.tap(find.text(name).first);
         await tester.pump();

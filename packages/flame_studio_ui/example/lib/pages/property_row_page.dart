@@ -3,39 +3,30 @@ import 'package:flutter/material.dart';
 
 import '../grid.dart';
 
-/// A stand-in editor until the number editors exist.
-class _Value extends StatelessWidget {
-  const _Value(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => FsFieldBox(
-    size: FsFieldSize.dense,
-    child: Text(text, style: FsText.mono),
-  );
-}
-
 class PropertyRowPage extends StatelessWidget {
   const PropertyRowPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    FsPropertyRow row(
+    FsNumberProperty number(
       String label,
-      String value, {
+      double? value, {
       FsValueSource source = FsValueSource.codeDefault,
+      bool mixed = false,
       bool enabled = true,
-      String? error,
-    }) => FsPropertyRow(
+      String? unit,
+    }) => FsNumberProperty(
       label: label,
-      editor: _Value(value),
+      value: value,
+      mixed: mixed,
+      unit: unit,
       source: source,
       enabled: enabled,
-      error: error,
       onReset: noop,
       resetTooltip: 'Reset to default',
       tooltip: 'double · default 180.0',
+      onChanged: noop,
+      onCommit: noop,
     );
 
     return GalleryPage(
@@ -43,17 +34,35 @@ class PropertyRowPage extends StatelessWidget {
       note:
           'A 24px inspector row: label 40% (min 72px), editor, reset slot. '
           'The label column is fixed for now; resizing it comes with '
-          'FsPropertyList. The editors here are stand-ins.',
+          'FsPropertyList. Only the number and Vector2 editors exist yet, so '
+          'the "every field kind" column of preview.html is not shown.',
       children: [
         const SectionLabel('Value states'),
         SampleBox(
           width: 360,
           child: Column(
             children: [
-              row('speed', '180.0'),
-              row('jumpForce', '520.0', source: FsValueSource.overridden),
-              row('maxHealth', 'abc', error: 'Expected a number'),
-              row('hitboxType', 'passive', enabled: false),
+              number('speed', 180, unit: 'px/s'),
+              number(
+                'jumpForce',
+                520,
+                unit: 'px/s',
+                source: FsValueSource.overridden,
+              ),
+              const FsVector2Property(
+                label: 'position',
+                x: null,
+                y: 288,
+                mixedX: true,
+                source: FsValueSource.overridden,
+                onReset: noop,
+                resetTooltip: 'Reset to default',
+                onChanged: noop,
+                onCommit: noop,
+              ),
+              number('friction', null, mixed: true),
+              forced(const {WidgetState.error}, number('maxHealth', 100)),
+              number('hitboxType', 1, enabled: false),
             ],
           ),
         ),
@@ -62,7 +71,7 @@ class PropertyRowPage extends StatelessWidget {
           width: 360,
           child: forced(
             const {WidgetState.hovered},
-            row('speed', '180.0'),
+            number('speed', 180, unit: 'px/s'),
             part: 'row',
           ),
         ),

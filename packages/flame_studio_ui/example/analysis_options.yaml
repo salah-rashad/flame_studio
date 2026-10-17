@@ -1,0 +1,8 @@
+include:
+  - ../../../analysis_options.yaml
+  - package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # The gallery is not a library; its pages don't need public API docs.
+    public_member_api_docs: false

@@ -1,0 +1,15 @@
+# flame_studio_ui gallery
+
+Every `flame_studio_ui` component in every state, one page per component,
+laid out like the design system's `preview.html` pages (same row and column
+labels, same sample content) so the two can be compared side by side. The
+static grids force their states with `FsDebugStates`; next to each grid is a
+live copy to try with mouse and keyboard.
+
+```bash
+cd packages/flame_studio_ui/example && flutter run -d macos
+```
+
+**Acceptance check:** open the component's `preview.html` in a browser at the
+same zoom and compare by eye. When a page matches, set `reviewed: true` for it
+in `lib/main.dart`; the page list shows a tick.

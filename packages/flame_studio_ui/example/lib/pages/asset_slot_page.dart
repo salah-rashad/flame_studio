@@ -24,7 +24,6 @@ class AssetSlotPage extends StatefulWidget {
 }
 
 class _AssetSlotPageState extends State<AssetSlotPage> {
-  final _inFlight = FsDragInFlight<String>();
   final _coin = FsDragInFlight<String>()..value = 'coin.png';
   String? _sprite = 'player_run.png';
   String? _sound;
@@ -32,7 +31,6 @@ class _AssetSlotPageState extends State<AssetSlotPage> {
 
   @override
   void dispose() {
-    _inFlight.dispose();
     _coin.dispose();
     super.dispose();
   }
@@ -83,11 +81,11 @@ class _AssetSlotPageState extends State<AssetSlotPage> {
     return GalleryPage(
       title: 'AssetSlot',
       note:
-          'Drag from the Assets panel or Finder. While dragging, every '
-          'compatible slot shows the drop-target state (FsDragInFlight); '
-          'incompatible slots stay quiet and only show the reject state '
-          'under the pointer. Click the name to reveal the file in Assets; '
-          '⌫ clears.',
+          'Drag from the Assets panel or Finder. A compatible file shows the '
+          'drop-target state under the pointer; a wrong type shows the '
+          'reject state there. (An app can also pass an FsDragInFlight to '
+          'light up every compatible slot while a drag runs.) Click the name '
+          'to reveal the file in Assets; ⌫ clears.',
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +188,6 @@ class _AssetSlotPageState extends State<AssetSlotPage> {
                       willAccept: _images,
                       onDrop: (f) => setState(() => _sprite = f),
                       dropHint: (f) => 'Drop $f here',
-                      dragInFlight: _inFlight,
                     ),
                   ),
                   row(
@@ -206,7 +203,6 @@ class _AssetSlotPageState extends State<AssetSlotPage> {
                       willAccept: _audio,
                       onDrop: (f) => setState(() => _sound = f),
                       dropHint: (f) => 'Drop $f here',
-                      dragInFlight: _inFlight,
                     ),
                   ),
                 ],
@@ -220,9 +216,12 @@ class _AssetSlotPageState extends State<AssetSlotPage> {
                   Draggable<String>(
                     data: file,
                     dragAnchorStrategy: pointerDragAnchorStrategy,
-                    onDragStarted: () => _inFlight.value = file,
-                    onDragEnd: (_) => _inFlight.value = null,
-                    feedback: FsBadge(kind: FsBadgeKind.neutral, label: file),
+                    // The drag layer has no text style of its own; without
+                    // one, Text falls back to the debug double underline.
+                    feedback: DefaultTextStyle(
+                      style: FsText.body,
+                      child: FsBadge(kind: FsBadgeKind.neutral, label: file),
+                    ),
                     child: FsDeviceChip(
                       icon: FsIcons.file,
                       label: file,

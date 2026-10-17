@@ -148,8 +148,6 @@ class _EntitySlotPageState extends State<EntitySlotPage> {
                                 _picking = false;
                               })
                             : null,
-                        dragFeedback: () =>
-                            FsBadge(kind: FsBadgeKind.neutral, label: node),
                       ),
                   ],
                 ),

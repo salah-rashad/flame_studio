@@ -329,6 +329,33 @@ void main() {
       return g;
     }
 
+    testWidgets('drag feedback text gets a style, not the debug underline', (
+      tester,
+    ) async {
+      await pumpFs(
+        tester,
+        FsTreeRow<String>(
+          depth: 0,
+          name: 'Camera',
+          dragData: 'camera',
+          dragFeedback: () => const Text('feedback', key: Key('fb')),
+        ),
+      );
+      final g = await tester.startGesture(
+        tester.getCenter(find.text('Camera')),
+        kind: PointerDeviceKind.mouse,
+      );
+      await g.moveBy(const Offset(0, 20));
+      await tester.pump();
+      final style = DefaultTextStyle.of(
+        tester.element(find.byKey(const Key('fb'))),
+      ).style;
+      expect(style.decoration, isNot(TextDecoration.underline));
+      expect(style.fontFamily, contains('Inter'));
+      await g.up();
+      await tester.pump();
+    });
+
     for (final (fraction, zone) in const [
       (0.1, FsDropZone.above),
       (0.5, FsDropZone.inside),

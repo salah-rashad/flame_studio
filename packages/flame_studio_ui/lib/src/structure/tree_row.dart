@@ -391,7 +391,13 @@ class _FsTreeRowState<T extends Object> extends State<FsTreeRow<T>> {
         data: data,
         maxSimultaneousDrags: 1,
         dragAnchorStrategy: pointerDragAnchorStrategy,
-        feedback: widget.dragFeedback?.call() ?? _DragChip(row: widget),
+        // The drag layer sits above any Material, so give the feedback a
+        // text style: without one, Text falls back to the debug double
+        // underline.
+        feedback: DefaultTextStyle(
+          style: FsText.body.copyWith(color: FsColors.of(context).textPrimary),
+          child: widget.dragFeedback?.call() ?? _DragChip(row: widget),
+        ),
         child: row,
       );
     }

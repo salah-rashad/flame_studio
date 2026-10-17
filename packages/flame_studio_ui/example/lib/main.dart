@@ -8,6 +8,7 @@ import 'pages/button_page.dart';
 import 'pages/color_picker_page.dart';
 import 'pages/color_property_page.dart';
 import 'pages/context_menu_page.dart';
+import 'pages/dialog_page.dart';
 import 'pages/dropdown_page.dart';
 import 'pages/entity_slot_page.dart';
 import 'pages/foundations_page.dart';
@@ -79,6 +80,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Structure', 'TreeRow', TreeRowPage.new),
   GalleryEntry('Floating', 'ContextMenu', ContextMenuPage.new),
   GalleryEntry('Floating', 'Tooltip', TooltipPage.new),
+  GalleryEntry('Floating', 'Dialog', DialogPage.new),
   GalleryEntry('Status', 'Badge · DeviceChip', BadgePage.new),
   GalleryEntry('Status', 'Progress', ProgressPage.new),
 ];

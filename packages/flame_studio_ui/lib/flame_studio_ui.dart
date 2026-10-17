@@ -15,6 +15,7 @@ export 'src/actions/toggle_button.dart';
 export 'src/actions/toolbar.dart';
 export 'src/colors.dart';
 export 'src/floating/context_menu.dart';
+export 'src/floating/dialog.dart';
 export 'src/floating/tooltip.dart';
 export 'src/foundation/anchored_overlay.dart';
 export 'src/foundation/debug_states.dart';

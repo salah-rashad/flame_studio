@@ -73,7 +73,8 @@ class FsTextField extends StatefulWidget {
   /// Every change.
   final ValueChanged<String>? onChanged;
 
-  /// Enter.
+  /// Enter. Without it, Enter is left to the widgets around the field (an
+  /// `FsDialog` answers its primary button).
   final ValueChanged<String>? onSubmitted;
 
   /// JetBrains Mono 12/16, for paths.
@@ -231,10 +232,14 @@ class _FsTextFieldState extends State<FsTextField> {
                 style: base.copyWith(
                   color: widget.enabled ? c.textPrimary : c.textDisabled,
                 ),
+                // Without onSubmitted, Enter passes up (a dialog answers
+                // its primary button).
                 shortcuts: {
-                  const SingleActivator(LogicalKeyboardKey.enter): _submit,
-                  const SingleActivator(LogicalKeyboardKey.numpadEnter):
-                      _submit,
+                  if (widget.onSubmitted != null) ...{
+                    const SingleActivator(LogicalKeyboardKey.enter): _submit,
+                    const SingleActivator(LogicalKeyboardKey.numpadEnter):
+                        _submit,
+                  },
                 },
               ),
             ],

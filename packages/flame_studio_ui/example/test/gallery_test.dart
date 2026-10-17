@@ -40,6 +40,7 @@ void main() {
         'TreeRow',
         'ContextMenu',
         'Tooltip',
+        'Dialog',
         'Badge · DeviceChip',
         'Progress',
       ]) {

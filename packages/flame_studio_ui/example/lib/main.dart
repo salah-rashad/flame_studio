@@ -27,6 +27,7 @@ import 'pages/shortcut_label_page.dart';
 import 'pages/split_button_page.dart';
 import 'pages/tabs_page.dart';
 import 'pages/text_field_page.dart';
+import 'pages/toast_page.dart';
 import 'pages/toggle_button_page.dart';
 import 'pages/toolbar_page.dart';
 import 'pages/tooltip_page.dart';
@@ -81,6 +82,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Floating', 'ContextMenu', ContextMenuPage.new),
   GalleryEntry('Floating', 'Tooltip', TooltipPage.new),
   GalleryEntry('Floating', 'Dialog', DialogPage.new),
+  GalleryEntry('Floating', 'Toast', ToastPage.new),
   GalleryEntry('Status', 'Badge · DeviceChip', BadgePage.new),
   GalleryEntry('Status', 'Progress', ProgressPage.new),
 ];

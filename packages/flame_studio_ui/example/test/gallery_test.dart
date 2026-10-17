@@ -41,6 +41,7 @@ void main() {
         'ContextMenu',
         'Tooltip',
         'Dialog',
+        'Toast',
         'Badge · DeviceChip',
         'Progress',
       ]) {

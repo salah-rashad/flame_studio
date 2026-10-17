@@ -19,6 +19,7 @@ void main() {
         'Button',
         'IconButton',
         'ToggleButton',
+        'TextField',
         'PropertyRow',
         'NumberProperty',
         'Vector2Property',

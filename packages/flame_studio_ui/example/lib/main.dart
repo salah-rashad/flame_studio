@@ -5,6 +5,7 @@ import 'pages/badge_page.dart';
 import 'pages/bool_property_page.dart';
 import 'pages/button_page.dart';
 import 'pages/context_menu_page.dart';
+import 'pages/dropdown_page.dart';
 import 'pages/foundations_page.dart';
 import 'pages/icon_button_page.dart';
 import 'pages/icons_page.dart';
@@ -45,6 +46,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Actions', 'IconButton', IconButtonPage.new),
   GalleryEntry('Actions', 'ToggleButton', ToggleButtonPage.new),
   GalleryEntry('Inputs', 'TextField', TextFieldPage.new),
+  GalleryEntry('Inputs', 'Dropdown', DropdownPage.new),
   GalleryEntry('Inspector', 'PropertyRow', PropertyRowPage.new),
   GalleryEntry('Inspector', 'NumberProperty', NumberPropertyPage.new),
   GalleryEntry('Inspector', 'Vector2Property', Vector2PropertyPage.new),

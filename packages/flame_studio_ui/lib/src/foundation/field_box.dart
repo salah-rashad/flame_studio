@@ -25,7 +25,8 @@ enum FsFieldSize {
 ///
 /// The caller passes the [states]: [WidgetState.hovered],
 /// [WidgetState.focused] (fields show focus for mouse clicks too),
-/// [WidgetState.disabled] and [WidgetState.error].
+/// [WidgetState.disabled], [WidgetState.error] and [WidgetState.pressed]
+/// (fields that are buttons, like a dropdown: fill `surface-hover`).
 class FsFieldBox extends StatelessWidget {
   /// Creates the box.
   const FsFieldBox({
@@ -71,6 +72,7 @@ class FsFieldBox extends StatelessWidget {
     final error = states.contains(WidgetState.error);
     final focused = states.contains(WidgetState.focused);
     final hovered = states.contains(WidgetState.hovered);
+    final pressed = states.contains(WidgetState.pressed);
     final flat = disabled || readOnly;
 
     final Color border;
@@ -100,7 +102,9 @@ class FsFieldBox extends StatelessWidget {
             horizontal: size == FsFieldSize.regular ? FsSpacing.s2 : 6,
           ),
       decoration: BoxDecoration(
-        color: flat ? c.surfacePanel : c.surfaceInput,
+        color: flat
+            ? c.surfacePanel
+            : (pressed ? c.surfaceHover : c.surfaceInput),
         border: Border.all(color: border),
         borderRadius: FsRadii.sm,
       ),

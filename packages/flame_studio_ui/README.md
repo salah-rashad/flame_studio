@@ -59,7 +59,10 @@ Built from [`docs/ui-components-plan.md`](../../docs/ui-components-plan.md)
 -d macos`) laid out like its `preview.html`, and widget tests per state.
 
 All 29 components of the design system, the EditorShell and the 60 icons are
-built.
+built, and every component page has been compared side by side with its
+`preview.html` (ticked in the gallery's page list). One golden per gallery
+page guards the look (`example/test/goldens`, macOS only; see the
+[gallery README](example/README.md)).
 
 | Group | Widget | Notes |
 |---|---|---|
@@ -90,8 +93,6 @@ built.
 
 ## Not done yet
 
-- **Goldens** (one per gallery grid, macOS CI only), then the final
-  side-by-side pass against each `preview.html` (`ui-components-plan.md` §8.3).
 - **Native hooks.** The eyedropper (`NSColorSampler`) and hiding and wrapping
   the cursor while scrubbing need code in the app's macOS runner; until then
   the widgets hide or simplify those features (Q84).

@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Status** | Proposed (not started) |
+| **Status** | Built (2026-10-18): every component, the EditorShell, the icons, the gallery with one golden per page, and a side-by-side review against `preview.html` |
 | **Date** | 2026-10-17 |
 | **Scope** | `packages/flame_studio_ui`: the 29 components and the EditorShell of the Claude Design design system, their shared foundations, the icon set, a gallery app and the tests |
-| **Decisions** | *Q83* (package boundary), *Q84* (proposed, this plan) |
+| **Decisions** | *Q83* (package boundary), *Q84* (this plan) |
 | **Sources** | The design system in Claude Design (`project/README.md`, `components/<Name>/README.md` and `preview.html`, `design-system.json`); `packages/flame_studio_ui/`; [`project-plan.md`](project-plan.md) §8.6, §14 |
 
 The design system's component guidelines already give each widget's inputs ("Consumer provides")
@@ -1049,7 +1049,7 @@ All under `packages/flame_studio_ui/` unless noted.
 | `lib/src/foundation/` | `interactive.dart`, `focus_ring.dart`, `debug_states.dart`, `field_box.dart`, `panel_focus.dart`, `anchored_overlay.dart`, `platform_hooks.dart`, `value_source.dart`, `number_editing.dart`, `shortcut_label.dart` |
 | `lib/src/actions/`, `inputs/`, `inspector/`, `structure/`, `floating/`, `status/`, `shell/` | one file per component, grouped as in §3 |
 | `lib/src/icons.dart` | 60 `FsIcons` + `FsPlayGlyph` |
-| `test/` | `flutter_test_config.dart`, one `<component>_test.dart` each, `goldens/` |
+| `test/` | `flutter_test_config.dart`, one `<component>_test.dart` each (the goldens live in the gallery, `example/test/goldens/`, since they render its pages) |
 | `example/` | the gallery app (macOS) |
 | root `pubspec.yaml` | `packages/flame_studio_ui/example` added to `workspace:` |
 | `README.md` | "Not done yet" replaced by a component list with links to the gallery |

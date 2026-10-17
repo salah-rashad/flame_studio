@@ -89,7 +89,7 @@ class _ColorPropertyPageState extends State<ColorPropertyPage> {
               children: [
                 const SectionLabel('Swatch click opens the picker popover'),
                 SampleBox(
-                  width: 300,
+                  width: 360,
                   child: forced(
                     const {WidgetState.selected},
                     part: 'picker',

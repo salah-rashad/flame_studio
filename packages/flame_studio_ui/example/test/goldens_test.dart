@@ -34,19 +34,16 @@ void main() {
       Future<void> pumpPage() async {
         tester.view.physicalSize = Size(width, height);
         await tester.pumpWidget(
-          MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: FsTheme.dark(),
-            home: Material(
-              color: FsColors.dark.surfacePanel,
-              child: RepaintBoundary(
-                key: const Key('page'),
-                // The fill inside the boundary, so the golden isn't
-                // transparent.
-                child: ColoredBox(
-                  color: FsColors.dark.surfacePanel,
-                  child: page.build(),
-                ),
+          // The boundary wraps the whole app, so layers in the app's Overlay
+          // (an open dropdown list, a menu) are part of the golden.
+          RepaintBoundary(
+            key: const Key('page'),
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              theme: FsTheme.dark(),
+              home: Material(
+                color: FsColors.dark.surfacePanel,
+                child: page.build(),
               ),
             ),
           ),

@@ -168,6 +168,7 @@ class _ToolbarPageState extends State<ToolbarPage> {
                 label: 'iPhone 15',
                 detail: '852×393',
                 selected: true,
+                chevron: true,
                 onPressed: () {},
               ),
               FsStatusDot(

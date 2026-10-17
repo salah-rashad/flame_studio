@@ -159,6 +159,25 @@ void main() {
       expect(find.text('offline'), findsOneWidget);
     });
 
+    testWidgets('chevron: a trailing chevron for a device list', (
+      tester,
+    ) async {
+      await pumpFs(
+        tester,
+        _left(
+          FsDeviceChip(
+            icon: FsIcons.smartphone,
+            label: 'iPhone 15',
+            chevron: true,
+            onPressed: () {},
+          ),
+        ),
+      );
+      final chevron = tester.widget<Icon>(find.byIcon(FsIcons.chevronDown));
+      expect(chevron.size, 12);
+      expect(chevron.color, c.textSecondary);
+    });
+
     testWidgets('disabled: everything text-disabled', (tester) async {
       await pumpFs(tester, sample(enabled: false));
       expect(look(tester), (c.surfaceRaised, c.borderSubtle, c.textDisabled));

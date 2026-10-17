@@ -139,6 +139,7 @@ class FsDeviceChip extends StatelessWidget {
     this.detail,
     this.selected = false,
     this.error = false,
+    this.chevron = false,
     this.onPressed,
   });
 
@@ -156,6 +157,10 @@ class FsDeviceChip extends StatelessWidget {
 
   /// The device is unavailable.
   final bool error;
+
+  /// A trailing 12px chevron: the chip opens a device list (the main
+  /// toolbar's target chip).
+  final bool chevron;
 
   /// Picks the device; null disables the chip.
   final VoidCallback? onPressed;
@@ -243,6 +248,10 @@ class FsDeviceChip extends StatelessWidget {
                       fontWeight: FontWeight.w400,
                     ),
                   ),
+                ],
+                if (chevron) ...[
+                  const SizedBox(width: FsSpacing.s1),
+                  Icon(FsIcons.chevronDown, size: 12, color: quiet),
                 ],
               ],
             ),

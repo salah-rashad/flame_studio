@@ -17,6 +17,7 @@ import 'pages/number_field_page.dart';
 import 'pages/number_property_page.dart';
 import 'pages/overlay_page.dart';
 import 'pages/panel_page.dart';
+import 'pages/progress_page.dart';
 import 'pages/property_row_page.dart';
 import 'pages/search_field_page.dart';
 import 'pages/section_header_page.dart';
@@ -79,6 +80,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Floating', 'ContextMenu', ContextMenuPage.new),
   GalleryEntry('Floating', 'Tooltip', TooltipPage.new),
   GalleryEntry('Status', 'Badge · DeviceChip', BadgePage.new),
+  GalleryEntry('Status', 'Progress', ProgressPage.new),
 ];
 
 class GalleryApp extends StatelessWidget {

@@ -318,10 +318,7 @@ class _LivePanelsState extends State<_LivePanels> {
               ],
               overflow: _overflow,
               overflowTooltip: 'More',
-              // Stand-in until FsProgressBar exists (Phase F).
-              headerProgress: _busy
-                  ? Container(height: 2, color: c.accentText)
-                  : null,
+              headerProgress: _busy ? const FsProgressBar() : null,
               body: const _InspectorBody(),
             ),
           ),

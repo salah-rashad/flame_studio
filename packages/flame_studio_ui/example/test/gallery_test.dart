@@ -41,6 +41,7 @@ void main() {
         'ContextMenu',
         'Tooltip',
         'Badge · DeviceChip',
+        'Progress',
       ]) {
         // The sidebar is longer than the window: scroll the entry in.
         await tester.scrollUntilVisible(

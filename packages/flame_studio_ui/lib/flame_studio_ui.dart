@@ -45,6 +45,7 @@ export 'src/inspector/vector2_property.dart';
 export 'src/metrics.dart';
 export 'src/shadows.dart';
 export 'src/status/badge.dart';
+export 'src/status/progress.dart';
 export 'src/structure/panel.dart';
 export 'src/structure/section_header.dart';
 export 'src/structure/tabs.dart';

@@ -170,7 +170,10 @@ class _ToolbarPageState extends State<ToolbarPage> {
                 selected: true,
                 onPressed: () {},
               ),
-              _Status(running ? 'Running' : 'Hot reload ready'),
+              FsStatusDot(
+                status: running ? FsStatus.ok : FsStatus.idle,
+                label: running ? 'Running' : 'Hot reload ready',
+              ),
             ],
           ),
           FsToolbarGroup(
@@ -289,34 +292,6 @@ class _ToolbarPageState extends State<ToolbarPage> {
         FsTooltipGroup(child: box(1120, main(running: true))),
         const SectionLabel('Viewport toolbar · 32px · surface-panel'),
         FsTooltipGroup(child: box(720, viewport)),
-      ],
-    );
-  }
-}
-
-/// Stand-in for the runtime status (FsStatusDot comes with the status
-/// components): an 8px dot and a small label.
-class _Status extends StatelessWidget {
-  const _Status(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = FsColors.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 6,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: c.success,
-            borderRadius: FsRadii.full,
-          ),
-        ),
-        Text(label, style: FsText.small.copyWith(color: c.textSecondary)),
       ],
     );
   }

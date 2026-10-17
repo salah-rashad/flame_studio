@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../colors.dart';
+import '../floating/tooltip.dart';
 import '../metrics.dart';
 import 'focus_ring.dart';
 import 'interactive.dart';
-import 'interim_tooltip.dart';
 
 /// The 20px icon button inside rows (property reset, tree row actions).
 ///
@@ -42,7 +42,7 @@ class FsRowIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = FsColors.of(context);
-    return FsInterimTooltip(
+    return FsTooltip(
       message: tooltip,
       child: FsInteractive(
         onPressed: onPressed,

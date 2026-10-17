@@ -20,6 +20,7 @@ void main() {
         'NumberProperty',
         'Vector2Property',
         'TreeRow',
+        'Tooltip',
       ]) {
         await tester.tap(find.text(name).first);
         await tester.pump();

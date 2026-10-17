@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../colors.dart';
+import '../floating/tooltip.dart';
 import '../foundation/debug_states.dart';
-import '../foundation/interim_tooltip.dart';
 import '../foundation/row_icon_button.dart';
 import '../foundation/scrub.dart';
 import '../foundation/value_source.dart';
@@ -140,11 +140,12 @@ class _FsPropertyRowState extends State<FsPropertyRow> {
       ),
     );
     label = FsScrubRegion(handle: scrub, child: label);
-    label = FsInterimTooltip(
-      message: widget.error ?? widget.tooltip,
-      error: error,
-      child: label,
-    );
+    final tip = (widget.error?.isNotEmpty ?? false)
+        ? widget.error
+        : widget.tooltip;
+    if (tip != null && tip.isNotEmpty) {
+      label = FsTooltip(message: tip, error: tip == widget.error, child: label);
+    }
 
     final showReset = overridden && widget.onReset != null;
     return MouseRegion(

@@ -7,6 +7,7 @@ import 'pages/number_property_page.dart';
 import 'pages/overlay_page.dart';
 import 'pages/property_row_page.dart';
 import 'pages/shortcut_label_page.dart';
+import 'pages/tooltip_page.dart';
 import 'pages/tree_row_page.dart';
 import 'pages/vector2_property_page.dart';
 
@@ -37,6 +38,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Inspector', 'NumberProperty', NumberPropertyPage.new),
   GalleryEntry('Inspector', 'Vector2Property', Vector2PropertyPage.new),
   GalleryEntry('Structure', 'TreeRow', TreeRowPage.new),
+  GalleryEntry('Floating', 'Tooltip', TooltipPage.new),
 ];
 
 class GalleryApp extends StatelessWidget {

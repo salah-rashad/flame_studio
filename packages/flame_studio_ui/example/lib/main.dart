@@ -1,6 +1,7 @@
 import 'package:flame_studio_ui/flame_studio_ui.dart';
 import 'package:flutter/material.dart';
 
+import 'pages/button_page.dart';
 import 'pages/foundations_page.dart';
 import 'pages/icon_button_page.dart';
 import 'pages/icons_page.dart';
@@ -35,6 +36,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Foundations', 'Field box · Interactive', FoundationsPage.new),
   GalleryEntry('Foundations', 'Anchored overlay', OverlayPage.new),
   GalleryEntry('Foundations', 'Shortcut label', ShortcutLabelPage.new),
+  GalleryEntry('Actions', 'Button', ButtonPage.new),
   GalleryEntry('Actions', 'IconButton', IconButtonPage.new),
   GalleryEntry('Inspector', 'PropertyRow', PropertyRowPage.new),
   GalleryEntry('Inspector', 'NumberProperty', NumberPropertyPage.new),

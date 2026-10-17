@@ -7,6 +7,7 @@
 /// system made in Claude Design.
 library;
 
+export 'src/actions/button.dart';
 export 'src/actions/icon_button.dart';
 export 'src/colors.dart';
 export 'src/floating/tooltip.dart';

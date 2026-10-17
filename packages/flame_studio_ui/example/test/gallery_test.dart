@@ -16,6 +16,7 @@ void main() {
         'Field box · Interactive',
         'Anchored overlay',
         'Shortcut label',
+        'Button',
         'IconButton',
         'PropertyRow',
         'NumberProperty',

@@ -22,5 +22,6 @@ export 'src/inspector/property_row.dart' show FsPropertyRow;
 export 'src/inspector/vector2_property.dart';
 export 'src/metrics.dart';
 export 'src/shadows.dart';
+export 'src/structure/tree_row.dart' hide FsDropPainter;
 export 'src/theme.dart';
 export 'src/typography.dart';

@@ -5,6 +5,7 @@ import 'pages/foundations_page.dart';
 import 'pages/icons_page.dart';
 import 'pages/number_property_page.dart';
 import 'pages/property_row_page.dart';
+import 'pages/tree_row_page.dart';
 import 'pages/vector2_property_page.dart';
 
 void main() => runApp(const GalleryApp());
@@ -31,6 +32,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Inspector', 'PropertyRow', PropertyRowPage.new),
   GalleryEntry('Inspector', 'NumberProperty', NumberPropertyPage.new),
   GalleryEntry('Inspector', 'Vector2Property', Vector2PropertyPage.new),
+  GalleryEntry('Structure', 'TreeRow', TreeRowPage.new),
 ];
 
 class GalleryApp extends StatelessWidget {
@@ -83,10 +85,18 @@ class _GalleryState extends State<_Gallery> {
                         ),
                       ),
                     ],
-                    _NavItem(
+                    FsTreeRow<Object>(
+                      depth: 0,
                       name: page.name,
                       selected: i == _index,
-                      reviewed: page.reviewed,
+                      badges: [
+                        if (page.reviewed)
+                          Icon(
+                            FsIcons.check,
+                            size: FsSizes.iconSm,
+                            color: c.success,
+                          ),
+                      ],
                       onTap: () => setState(() => _index = i),
                     ),
                   ],
@@ -105,60 +115,6 @@ class _GalleryState extends State<_Gallery> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// A page link in the sidebar.
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.name,
-    required this.selected,
-    required this.reviewed,
-    required this.onTap,
-  });
-
-  final String name;
-  final bool selected;
-  final bool reviewed;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = FsColors.of(context);
-    return FsInteractive(
-      onPressed: onTap,
-      selected: selected,
-      builder: (context, states) => FsFocusRing.inset(
-        visible: states.contains(WidgetState.focused),
-        child: Container(
-          height: FsSizes.rowTree,
-          margin: const EdgeInsets.symmetric(horizontal: FsSpacing.s1),
-          padding: const EdgeInsets.symmetric(horizontal: FsSpacing.s3),
-          decoration: BoxDecoration(
-            color: FsStateColor.resolve(states, {
-              WidgetState.selected: FsPanelFocus.of(context)
-                  ? c.surfaceSelected
-                  : c.surfaceSelectedInactive,
-              WidgetState.pressed: c.surfacePressed,
-              WidgetState.hovered: c.surfaceHover,
-            }, fallback: Colors.transparent),
-            borderRadius: FsRadii.sm,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  name,
-                  style: FsText.body.copyWith(color: c.textPrimary),
-                ),
-              ),
-              if (reviewed)
-                Icon(FsIcons.check, size: FsSizes.iconSm, color: c.success),
-            ],
-          ),
-        ),
       ),
     );
   }

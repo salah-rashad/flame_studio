@@ -17,6 +17,7 @@ void main() {
         'PropertyRow',
         'NumberProperty',
         'Vector2Property',
+        'TreeRow',
       ]) {
         await tester.tap(find.text(name).first);
         await tester.pump();

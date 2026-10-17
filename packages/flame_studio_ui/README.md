@@ -52,8 +52,28 @@ Naming: token `surface-panel` is `FsColors.surfacePanel`, `space-2` is
   `LucideIcons100`…`600`). Widgets use `FsIcons`, which names the icons the
   design system uses; add an icon there before using it.
 
+## Components
+
+Built from [`docs/ui-components-plan.md`](../../docs/ui-components-plan.md)
+(Q84). Each has a page in the [gallery](example) (`cd example && flutter run
+-d macos`) laid out like its `preview.html`, and widget tests per state.
+
+| Group | Widget | Notes |
+|---|---|---|
+| Foundations | `FsInteractive`, `FsStateColor` | interaction states; focus ring for keyboard focus only |
+| | `FsFocusRing`, `FsDebugStates` | ring outside / inset; forced states for the gallery and tests |
+| | `FsFieldBox`, `FsPanelFocus`, `FsValueSource`, `FsScrubHandle` | field chrome; panel-focus propagation |
+| Icons | `FsIcons` (60), `FsPlayGlyph` | `test/icons_test.dart` pins the names that differ from Lucide |
+| Inspector | `FsPropertyRow` | fixed 40% label column (resizing comes with `FsPropertyList`) |
+| | `FsNumberProperty` | scrub, modifiers, edit, commit; no expressions or range slider yet |
+| | `FsVector2Property` | per-axis scrub and mixed; no aspect lock yet |
+| Structure | `FsTreeRow` | all states, drop zones, inline rename, auto-expand |
+
 ## Not done yet
 
+- **The other components** of the plan (§8.3): Button, IconButton, Tooltip,
+  TextField, Panel, SectionHeader, ContextMenu first. Until `FsTooltip`
+  exists, the rows use a Material `Tooltip` dressed in the tooltip tokens.
+- **Goldens** (one per gallery grid, macOS CI only).
 - **Light theme.** Tokens exist for dark only; a light theme adds a second
   `FsColors` and `FsShadows` constant.
-- **Widgets.** None yet (v0.1 work item 14).

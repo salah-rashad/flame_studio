@@ -43,6 +43,7 @@ export 'src/metrics.dart';
 export 'src/shadows.dart';
 export 'src/status/badge.dart';
 export 'src/structure/panel.dart';
+export 'src/structure/section_header.dart';
 export 'src/structure/tree_row.dart' hide FsDropPainter;
 export 'src/theme.dart';
 export 'src/typography.dart';

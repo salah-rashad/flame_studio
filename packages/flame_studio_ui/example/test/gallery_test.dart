@@ -32,6 +32,7 @@ void main() {
         'AssetSlot',
         'EntitySlot',
         'Panel',
+        'SectionHeader',
         'TreeRow',
         'ContextMenu',
         'Tooltip',

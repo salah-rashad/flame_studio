@@ -19,6 +19,7 @@ import 'pages/overlay_page.dart';
 import 'pages/panel_page.dart';
 import 'pages/property_row_page.dart';
 import 'pages/search_field_page.dart';
+import 'pages/section_header_page.dart';
 import 'pages/shortcut_label_page.dart';
 import 'pages/text_field_page.dart';
 import 'pages/toggle_button_page.dart';
@@ -65,6 +66,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Inspector', 'AssetSlot', AssetSlotPage.new),
   GalleryEntry('Inspector', 'EntitySlot', EntitySlotPage.new),
   GalleryEntry('Structure', 'Panel', PanelPage.new),
+  GalleryEntry('Structure', 'SectionHeader', SectionHeaderPage.new),
   GalleryEntry('Structure', 'TreeRow', TreeRowPage.new),
   GalleryEntry('Floating', 'ContextMenu', ContextMenuPage.new),
   GalleryEntry('Floating', 'Tooltip', TooltipPage.new),

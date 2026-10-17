@@ -235,11 +235,13 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.pumpAndSettle();
     expect(_panel, findsNWidgets(2));
-    // Beside the parent item, first item level with it.
+    // Beside the parent item: the submenu box starts 1px right of the item
+    // and 2px below its top (gap 1, dy -2), so its first item sits a further
+    // 1px border + 4px padding in.
     final parent = tester.getRect(_row('Add child'));
     final sprite = tester.getRect(_row('SpriteComponent'));
-    expect(sprite.left, greaterThan(parent.right));
-    expect(sprite.top, parent.top);
+    expect(sprite.left, parent.right + 1 + 1 + 4);
+    expect(sprite.top, parent.top + 2 + 1 + 4);
     // Focus went to the first item; the parent keeps surface-pressed.
     expect(_fill(tester, 'SpriteComponent'), c.accent);
     expect(_fill(tester, 'Add child'), c.surfacePressed);

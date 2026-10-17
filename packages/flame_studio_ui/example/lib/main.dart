@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'pages/foundations_page.dart';
 import 'pages/icons_page.dart';
 import 'pages/number_property_page.dart';
+import 'pages/overlay_page.dart';
 import 'pages/property_row_page.dart';
 import 'pages/tree_row_page.dart';
 import 'pages/vector2_property_page.dart';
@@ -29,6 +30,7 @@ class GalleryEntry {
 const _pages = <GalleryEntry>[
   GalleryEntry('Foundations', 'Icons', IconsPage.new),
   GalleryEntry('Foundations', 'Field box · Interactive', FoundationsPage.new),
+  GalleryEntry('Foundations', 'Anchored overlay', OverlayPage.new),
   GalleryEntry('Inspector', 'PropertyRow', PropertyRowPage.new),
   GalleryEntry('Inspector', 'NumberProperty', NumberPropertyPage.new),
   GalleryEntry('Inspector', 'Vector2Property', Vector2PropertyPage.new),

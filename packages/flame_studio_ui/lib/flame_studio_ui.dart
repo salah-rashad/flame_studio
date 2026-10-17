@@ -8,6 +8,7 @@
 library;
 
 export 'src/colors.dart';
+export 'src/foundation/anchored_overlay.dart';
 export 'src/foundation/debug_states.dart';
 export 'src/foundation/field_box.dart';
 export 'src/foundation/focus_ring.dart' show FsFocusRing;

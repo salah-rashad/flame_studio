@@ -14,6 +14,7 @@ void main() {
       for (final name in const [
         'Icons',
         'Field box · Interactive',
+        'Anchored overlay',
         'PropertyRow',
         'NumberProperty',
         'Vector2Property',

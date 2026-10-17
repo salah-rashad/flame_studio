@@ -15,6 +15,7 @@ void main() {
         'Icons',
         'Field box · Interactive',
         'Anchored overlay',
+        'Shortcut label',
         'PropertyRow',
         'NumberProperty',
         'Vector2Property',

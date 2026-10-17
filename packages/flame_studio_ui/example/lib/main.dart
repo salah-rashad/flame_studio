@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'pages/foundations_page.dart';
 import 'pages/icons_page.dart';
+import 'pages/property_row_page.dart';
 
 void main() => runApp(const GalleryApp());
 
@@ -25,6 +26,7 @@ class GalleryEntry {
 const _pages = <GalleryEntry>[
   GalleryEntry('Foundations', 'Icons', IconsPage.new),
   GalleryEntry('Foundations', 'Field box · Interactive', FoundationsPage.new),
+  GalleryEntry('Inspector', 'PropertyRow', PropertyRowPage.new),
 ];
 
 class GalleryApp extends StatelessWidget {

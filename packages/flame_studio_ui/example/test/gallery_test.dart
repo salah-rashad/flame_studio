@@ -11,7 +11,11 @@ void main() {
 
       await tester.pumpWidget(const GalleryApp());
       await tester.pump();
-      for (final name in const ['Icons', 'Field box · Interactive']) {
+      for (final name in const [
+        'Icons',
+        'Field box · Interactive',
+        'PropertyRow',
+      ]) {
         await tester.tap(find.text(name).first);
         await tester.pump();
         await tester.pump();

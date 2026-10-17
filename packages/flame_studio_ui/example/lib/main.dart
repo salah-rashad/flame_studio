@@ -9,6 +9,7 @@ import 'pages/number_property_page.dart';
 import 'pages/overlay_page.dart';
 import 'pages/property_row_page.dart';
 import 'pages/shortcut_label_page.dart';
+import 'pages/toggle_button_page.dart';
 import 'pages/tooltip_page.dart';
 import 'pages/tree_row_page.dart';
 import 'pages/vector2_property_page.dart';
@@ -38,6 +39,7 @@ const _pages = <GalleryEntry>[
   GalleryEntry('Foundations', 'Shortcut label', ShortcutLabelPage.new),
   GalleryEntry('Actions', 'Button', ButtonPage.new),
   GalleryEntry('Actions', 'IconButton', IconButtonPage.new),
+  GalleryEntry('Actions', 'ToggleButton', ToggleButtonPage.new),
   GalleryEntry('Inspector', 'PropertyRow', PropertyRowPage.new),
   GalleryEntry('Inspector', 'NumberProperty', NumberPropertyPage.new),
   GalleryEntry('Inspector', 'Vector2Property', Vector2PropertyPage.new),

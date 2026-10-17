@@ -18,6 +18,7 @@ void main() {
         'Shortcut label',
         'Button',
         'IconButton',
+        'ToggleButton',
         'PropertyRow',
         'NumberProperty',
         'Vector2Property',

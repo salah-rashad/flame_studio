@@ -60,7 +60,7 @@ class PanelPage extends StatelessWidget {
         ),
         const SectionLabel(
           'Live: click a panel (or a row) to focus it; Tab moves on; the '
-          'zap toggle shows a header-progress stand-in',
+          'zap toggle shows an FsProgressBar as header progress',
         ),
         const _LivePanels(),
       ],

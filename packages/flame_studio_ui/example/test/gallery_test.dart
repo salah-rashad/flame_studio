@@ -1,5 +1,6 @@
 import 'package:flame_studio_ui_gallery/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -61,4 +62,23 @@ void main() {
       }
     });
   }
+
+  testWidgets('Tab moves through the page, past the sidebar', (tester) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const GalleryApp());
+    await tester.tap(find.text('Button'));
+    await tester.pump();
+    final seen = <FocusNode>{};
+    for (var i = 0; i < 3; i++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      final focus = FocusManager.instance.primaryFocus!;
+      expect(focus, isNot(isA<FocusScopeNode>()));
+      seen.add(focus);
+    }
+    expect(seen, hasLength(3));
+  });
 }

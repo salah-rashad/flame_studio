@@ -71,9 +71,8 @@ class FsPanel extends StatefulWidget {
   final Widget? headerProgress;
 
   /// The panel's focus scope, for the app's panel cycling; one is created
-  /// when null. Create it with
-  /// `traversalEdgeBehavior: TraversalEdgeBehavior.parentScope` so Tab can
-  /// leave the panel.
+  /// when null. Create it with `FsPanelFocus.createNode` so Tab can leave
+  /// the panel and skips it when empty.
   final FocusScopeNode? focusNode;
 
   /// The header's height.
@@ -88,10 +87,7 @@ class _FsPanelState extends State<FsPanel> {
 
   FocusScopeNode get _node =>
       widget.focusNode ??
-      (_ownNode ??= FocusScopeNode(
-        debugLabel: 'FsPanel',
-        traversalEdgeBehavior: TraversalEdgeBehavior.parentScope,
-      ));
+      (_ownNode ??= FsPanelFocus.createNode(debugLabel: 'FsPanel'));
 
   @override
   void dispose() {

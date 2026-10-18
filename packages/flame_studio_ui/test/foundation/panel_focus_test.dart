@@ -80,12 +80,71 @@ void main() {
     expect(b.hasFocus, isTrue);
   });
 
+  testWidgets('Tab skips a panel with nothing focusable inside', (
+    tester,
+  ) async {
+    final a = FocusNode();
+    final b = FocusNode();
+    addTearDown(a.dispose);
+    addTearDown(b.dispose);
+    await pumpFs(
+      tester,
+      Column(
+        children: [
+          const FsPanelFocus(child: SizedBox(width: 20, height: 20)),
+          _Probe('a', a),
+          _Probe('b', b),
+        ],
+      ),
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(a.hasFocus, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(b.hasFocus, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(a.hasFocus, isTrue);
+  });
+
+  testWidgets('Tab leaves an empty panel that holds focus', (tester) async {
+    final scope = FsPanelFocus.createNode();
+    final a = FocusNode();
+    addTearDown(scope.dispose);
+    addTearDown(a.dispose);
+    await pumpFs(
+      tester,
+      Column(
+        children: [
+          FsPanelFocus(
+            node: scope,
+            child: const SizedBox(width: 20, height: 20),
+          ),
+          _Probe('a', a),
+        ],
+      ),
+    );
+    // FsPanel focuses its scope on pointer down.
+    scope.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(a.hasFocus, isTrue);
+
+    scope.requestFocus();
+    await tester.pump();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shift);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shift);
+    await tester.pump();
+    expect(a.hasFocus, isTrue);
+  });
+
   testWidgets('requesting focus on the panel node returns to its last focus', (
     tester,
   ) async {
-    final scope = FocusScopeNode(
-      traversalEdgeBehavior: TraversalEdgeBehavior.parentScope,
-    );
+    final scope = FsPanelFocus.createNode();
     final a = FocusNode();
     final b = FocusNode();
     addTearDown(scope.dispose);

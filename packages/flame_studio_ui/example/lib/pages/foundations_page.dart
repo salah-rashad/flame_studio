@@ -73,9 +73,9 @@ class FoundationsPage extends StatelessWidget {
       title: 'Foundations',
       note:
           'FsFieldBox, the chrome every field shares, and FsInteractive with '
-          'FsFocusRing. The FsInteractive sample is a stand-in button (FsButton '
-          'comes later); the focus ring shows for keyboard focus only: Tab to '
-          'the live copy, then click it.',
+          'FsFocusRing. The FsInteractive sample is the bare primitive that '
+          'FsButton and the other controls are built on; the focus ring shows '
+          'for keyboard focus only: Tab to the live copy, then click it.',
       children: [
         StateGrid(
           columns: const ['regular · 24', 'dense · 20'],

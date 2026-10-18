@@ -148,6 +148,10 @@ iterate on quickly.
 - **Spec Kit flow:** each feature's `plan.md` MUST pass the Constitution Check before research
   and again after design. A violation is either fixed or justified in Complexity Tracking with
   the simpler alternative that was rejected and why.
+- **Spec branches:** each feature's work MUST happen on a branch named `specs/<spec-id>`, where
+  `<spec-id>` is its directory under `specs/` (`specs/001-scene-format` for
+  `specs/001-scene-format/`). Spec Kit doesn't create branches in this repository, so the branch
+  is created by hand when a spec's work starts, and all of that spec's commits go on it.
 - **CI gates (every push and PR):** format check, analyze with `--fatal-infos`, and all tests on
   macOS, Windows and Linux; the contract job; release builds of the app. A red gate blocks
   merging.
@@ -175,4 +179,4 @@ plan and decisions log describe *what* Pyro is; this file governs *how* it is bu
 - **Runtime guidance:** day-to-day design detail lives in `docs/project-plan.md`,
   `docs/ARCHITECTURE.md`, `docs/ui-components-plan.md` and `GLOSSARY.md`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-18 | **Last Amended**: 2026-10-18
+**Version**: 1.1.0 | **Ratified**: 2026-10-18 | **Last Amended**: 2026-10-18

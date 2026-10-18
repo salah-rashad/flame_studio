@@ -108,9 +108,10 @@ removes the integration risk the spikes couldn't, and the author becomes the fir
 
 ## Phase 4 — Editor ⬜
 
-In §14's order. The panels are built from `Pr` widgets only, never Material widgets (*Q87*); all
-of them already exist, including the ones these panels lean on most (`PrTreeRow`,
-`PrPropertyRow`, `PrNumberProperty`, `PrVector2Property`).
+In §14's order. The panels are built from the Pyro components (`Pr` widgets) throughout; a
+component that's missing is proposed, and the author decides whether it is built (*Q87*). All 29
+already exist, including the ones these panels lean on most (`PrTreeRow`, `PrPropertyRow`,
+`PrNumberProperty`, `PrVector2Property`).
 
 - [ ] **#6 Built-in Node kinds** (2): entity, sprite, rectangle and circle hitboxes, placeholders
 - [ ] **#4 Viewport** (6.5): preview world, reconciler, pan/zoom, selection, move gizmo. §8.3
@@ -156,8 +157,8 @@ changed in §14 (and here).
 
 ## Phase 7 — Assets ⬜
 
-The switch of the preview's panels from Material widgets to the design system that used to open
-this phase is gone: the panels use `Pr` widgets from the start (*Q87*).
+The switch of the preview's panels onto the design system that used to open this phase is gone:
+the panels use the Pyro components from the start (*Q87*).
 
 - [ ] **#10 Asset browser + pubspec sync** (2.5), incl. subfolders and the "Not in pubspec.yaml"
   mark (*Q53, Q85*). §10
@@ -200,10 +201,7 @@ Signed and notarized, on GitHub Releases. After it: v0.1.1, v0.2, … as in §14
 
 ## Open questions
 
-- **The `MaterialApp` host.** *Q87* keeps Material widgets out of the app, but the app and the
-  gallery still run inside a `MaterialApp` themed by `PrTheme.dark()` (`ThemeData`), and
-  `PrDialog` wraps its route in a transparent `Material`. Whether *Q87* reaches that far (a
-  `WidgetsApp` host instead) is not decided.
+None right now.
 
 The phase estimates are the per-item figures in §14's two tables. Phase 8's #7 and #8 lines are
 the differences between those tables, so they are rough.

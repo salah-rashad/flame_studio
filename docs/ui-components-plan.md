@@ -1036,14 +1036,13 @@ Button next to an `PrMenuButton` caret works, −0.25). That brings it to ~21.
 
 ### 8.2 The early preview (*Q82*)
 
-> *Superseded in part by Q87 (2026-10-18).* All of item 14 was built before the preview, so its
-> panels use `Pr` widgets throughout and never Material widgets, and §8.3's switch from Material
-> to the design after the preview is dropped. The reasoning below is kept as the record.
+> *Updated by Q87 (2026-10-18).* All of item 14 was built before the preview. Pyro's UI depends
+> on the Pyro components (`Pr` widgets) for everything, the early preview included; a component
+> that's missing is proposed, and the author decides whether it is built. The core below is what
+> was estimated to land first.
 
-The early preview leaves out the visual design: its panels would be built with Material widgets
-styled by `PrTheme.dark()`. Most of that is fine to throw away later (a button is a button). Four
-widgets aren't: **TreeRow** (drop zones, focus-aware selection, rename), **NumberProperty** and
-**Vector2Property** (label scrubbing), and **PropertyRow** (the Override marker and *Reset to
+Four widgets carry behaviour the preview's own work items need: **TreeRow** (drop zones,
+focus-aware selection, rename), **NumberProperty** and **Vector2Property** (label scrubbing), and **PropertyRow** (the Override marker and *Reset to
 default*). The preview's own work items 3 and 5 already have to build that behaviour (reparent by
 drag, numeric editing, Override markers). Built inside the panels, it would be written twice. Built
 in the package, it is written once.
@@ -1062,12 +1061,7 @@ in the package, it is written once.
 In return, items 3 and 5 no longer build their own drag zones, scrub fields and override rows
 (~0.5 off item 3 and ~1 off item 5), so the preview grows by **~4 net (38 → ~42, ~14 weeks)**. Everything else in the
 preview (buttons, text fields, dropdowns, context menus, dialogs, toasts, tooltips, the panel layout)
-uses themed Material widgets as Q82 intended. Because the package's APIs take plain strings for
-tooltips and labels, swapping in `PrButton`, `PrTooltip` and the rest later changes the panels'
-call sites, not their logic.
-
-Not recommended: moving the proposed first set (11 components) in whole. That's ~10–11
-evenings (~+8 net) for looks the preview deliberately cuts, and it delays first feedback by ~3 weeks.
+uses the Pyro components too (*Q87*); the rest of item 14 was built ahead of the preview for that.
 
 ### 8.3 Build order
 
@@ -1075,9 +1069,9 @@ evenings (~+8 net) for looks the preview deliberately cuts, and it delays first 
 `… → 6 → 4 → 14 core (foundations → PropertyRow → NumberProperty → Vector2Property → TreeRow)
 → 3 → 5 → 9 → …`
 
-**v0.1, after the preview.** First the rest of the proposed first set, so the preview's panels
-switch from Material to the design in one pass, then the components each deferred panel needs,
-built just before that panel:
+**v0.1, after the preview.** Planned as below, with each component built just before the panel
+that needs it. All of them were built ahead of the preview instead (*Q84, Q87*); the list is kept
+as the record:
 
 1. Button, IconButton, Tooltip (with `PrAnchoredOverlay`), TextField, Panel, SectionHeader,
    ContextMenu: the remainder of the proposed first set.

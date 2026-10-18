@@ -21,7 +21,8 @@ import 'property_row.dart';
 ///   is read from the % field. A click, Enter or Space opens the
 ///   [FsColorPicker] popover below it; a click outside or Esc closes it.
 /// - **Keyboard:** Enter or Space opens the popover with focus in its hex
-///   field (a click leaves focus where it was). In the Tab order the
+///   field, ready to type or paste (a click leaves focus where it was);
+///   ⇧Tab reaches the hue slider and SV area, which step with the arrows. In the Tab order the
 ///   popover sits between the swatch and the row's hex field: Tab past its
 ///   last control goes on to the row's hex field, ⇧Tab before its first
 ///   back to the swatch, and either closes it. Focus moving anywhere else
@@ -55,6 +56,8 @@ class FsColorProperty extends StatefulWidget {
     required this.onCommit,
     this.recentColors = const [],
     this.eyedropperTooltip,
+    this.pickerAreaLabel,
+    this.pickerHueLabel,
     this.enabled = true,
   });
 
@@ -90,6 +93,12 @@ class FsColorProperty extends StatefulWidget {
 
   /// The picker's eyedropper tooltip.
   final String? eyedropperTooltip;
+
+  /// The picker's SV area semantics label (`FsColorPicker.areaLabel`).
+  final String? pickerAreaLabel;
+
+  /// The picker's hue slider semantics label (`FsColorPicker.hueLabel`).
+  final String? pickerHueLabel;
 
   /// False disables the row.
   final bool enabled;
@@ -200,6 +209,8 @@ class _FsColorPropertyState extends State<FsColorProperty> {
         value: _value ?? FsSwatchInk.marker,
         recentColors: widget.recentColors,
         eyedropperTooltip: widget.eyedropperTooltip,
+        areaLabel: widget.pickerAreaLabel,
+        hueLabel: widget.pickerHueLabel,
         onChanged: widget.onChanged,
         onCommit: widget.onCommit,
         autofocus: _focusPicker,

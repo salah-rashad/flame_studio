@@ -244,6 +244,11 @@ void main() {
     testWidgets('⇧Tab before its first control closes it, back to the '
         'swatch', (tester) async {
       await openWithKeyboard(tester);
+      // Hex → hue → SV area, then out.
+      for (var i = 0; i < 2; i++) {
+        await press(tester, LogicalKeyboardKey.tab, shift: true);
+        expect(focusInPicker(), isTrue);
+      }
       await press(tester, LogicalKeyboardKey.tab, shift: true);
       expect(picker, findsNothing);
       expect(swatchFocused(tester), isTrue);

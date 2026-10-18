@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../actions/icon_button.dart';
 import '../colors.dart';
 import '../foundation/field_box.dart';
+import '../foundation/focus_ring.dart';
 import '../foundation/interactive.dart';
 import '../foundation/number_editing.dart';
 import '../foundation/platform_hooks.dart';
@@ -36,8 +38,15 @@ abstract final class FsSwatchInk {
 /// - 232px wide, 8px padding and gaps, on the overlay surface
 ///   (`surface-overlay`, `border-overlay`, `radius-md`, the popover shadow).
 /// - **SV area** (120px): drag to set saturation (→) and brightness (↑);
-///   a 10px white ring marks the colour.
-/// - **Hue slider** (8px): drag to set the hue; a 12×14 white thumb.
+///   a 10px white ring marks the colour. From the keyboard, ← → step the
+///   saturation and ↑ ↓ the brightness by 1% (Shift: 10%).
+/// - **Hue slider** (8px): drag to set the hue; a 12×14 white thumb. From
+///   the keyboard, → and ↑ step it up by 1°, ← and ↓ down (Shift: 10°), as
+///   sliders do.
+/// - Both take focus (a click focuses them too) and draw the focus ring for
+///   keyboard focus; screen readers get them as sliders named [areaLabel]
+///   and [hueLabel], valued "40%, 80%" (saturation, brightness) and "210°".
+///   Tab order: SV area, hue, hex, alpha.
 /// - **Hex** (`FFD7A8`, the alpha kept) and **alpha** (0–100 %, a number
 ///   field that also scrubs).
 /// - **Eyedropper:** a 20px button before the hex field, only when
@@ -46,7 +55,7 @@ abstract final class FsSwatchInk {
 /// - **Recent colours:** 20×16 swatches; a click picks one.
 ///
 /// Dragging calls [onChanged] while moving and [onCommit] once on release;
-/// fields, swatches and the eyedropper call both. The hue is kept while
+/// fields, swatches, arrow-key steps and the eyedropper call both. The hue is kept while
 /// saturation or brightness is zero, so dragging back restores it.
 ///
 /// Usually shown by `FsColorProperty`'s swatch; it can be placed directly.
@@ -59,6 +68,8 @@ class FsColorPicker extends StatefulWidget {
     required this.onCommit,
     this.recentColors = const [],
     this.eyedropperTooltip,
+    this.areaLabel,
+    this.hueLabel,
     this.autofocus = false,
   });
 
@@ -76,6 +87,12 @@ class FsColorPicker extends StatefulWidget {
 
   /// The eyedropper button's tooltip ("Pick a colour from the screen").
   final String? eyedropperTooltip;
+
+  /// The SV area's semantics label ("Saturation and brightness").
+  final String? areaLabel;
+
+  /// The hue slider's semantics label ("Hue").
+  final String? hueLabel;
 
   /// Focus the hex field when shown.
   final bool autofocus;
@@ -134,6 +151,25 @@ class _FsColorPickerState extends State<FsColorPicker> {
     if (_color != before) widget.onChanged(_color);
   }
 
+  /// An arrow-key step: one change, committed at once.
+  void _step(HSVColor hsv) {
+    final before = _color;
+    _set(hsv);
+    if (_color != before) widget.onCommit(_color);
+  }
+
+  HSVColor _svStepped(Offset step) => _hsv
+      .withSaturation((_hsv.saturation + step.dx / 100).clamp(0.0, 1.0))
+      .withValue((_hsv.value + step.dy / 100).clamp(0.0, 1.0));
+
+  HSVColor _hueStepped(Offset step) =>
+      _hsv.withHue((_hsv.hue + step.dx).clamp(0.0, 360.0));
+
+  static String _svText(HSVColor hsv) =>
+      '${(hsv.saturation * 100).round()}%, ${(hsv.value * 100).round()}%';
+
+  static String _hueText(HSVColor hsv) => '${hsv.hue.round()}°';
+
   void _dragStarted() => _dragStart = widget.value;
 
   void _dragEnded() {
@@ -190,7 +226,12 @@ class _FsColorPickerState extends State<FsColorPicker> {
             onStart: _dragStarted,
             onEnd: _dragEnded,
             onMove: (p) => _set(_hsv.withSaturation(p.dx).withValue(1 - p.dy)),
+            onStep: (step) => _step(_svStepped(step)),
             painter: _SvPainter(_hsv),
+            semanticsLabel: widget.areaLabel,
+            semanticsValue: _svText(_hsv),
+            increasedValue: _svText(_svStepped(const Offset(1, 0))),
+            decreasedValue: _svText(_svStepped(const Offset(-1, 0))),
           ),
           const SizedBox(height: _padding),
           _Pad(
@@ -199,7 +240,13 @@ class _FsColorPickerState extends State<FsColorPicker> {
             onStart: _dragStarted,
             onEnd: _dragEnded,
             onMove: (p) => _set(_hsv.withHue(p.dx * 360)),
+            onStep: (step) => _step(_hueStepped(step)),
+            vertical: false,
             painter: _HuePainter(_hsv.hue),
+            semanticsLabel: widget.hueLabel,
+            semanticsValue: _hueText(_hsv),
+            increasedValue: _hueText(_hueStepped(const Offset(1, 0))),
+            decreasedValue: _hueText(_hueStepped(const Offset(-1, 0))),
           ),
           const SizedBox(height: _padding),
           Row(
@@ -323,14 +370,21 @@ class FsSwatch extends StatelessWidget {
   }
 }
 
-/// A drag surface reporting the pointer as fractions (0…1) of its size.
-class _Pad extends StatelessWidget {
+/// A drag surface reporting the pointer as fractions (0…1) of its size,
+/// and a focusable slider: arrow keys report steps through [onStep].
+class _Pad extends StatefulWidget {
   const _Pad({
     required this.height,
     required this.onStart,
     required this.onMove,
     required this.onEnd,
+    required this.onStep,
     required this.painter,
+    required this.semanticsLabel,
+    required this.semanticsValue,
+    required this.increasedValue,
+    required this.decreasedValue,
+    this.vertical = true,
     this.overhang = 0,
   });
 
@@ -338,32 +392,110 @@ class _Pad extends StatelessWidget {
   final VoidCallback onStart;
   final ValueChanged<Offset> onMove;
   final VoidCallback onEnd;
+
+  /// An arrow key: (±1, 0) for ← →, (0, ±1) for ↑ ↓ (up is +1), ×10 with
+  /// Shift.
+  final ValueChanged<Offset> onStep;
   final CustomPainter painter;
+  final String? semanticsLabel;
+  final String semanticsValue;
+  final String increasedValue;
+  final String decreasedValue;
+
+  /// Whether ↑ ↓ step the vertical axis (the SV area); otherwise they step
+  /// the one axis like → ← (the hue bar), as sliders do.
+  final bool vertical;
 
   /// Extra hit area above and below (the hue bar's thumb sticks out).
   final double overhang;
 
   @override
+  State<_Pad> createState() => _PadState();
+}
+
+class _PadState extends State<_Pad> {
+  final _focus = FocusNode(debugLabel: 'FsColorPicker pad');
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    final keys = HardwareKeyboard.instance;
+    if (keys.isMetaPressed || keys.isControlPressed || keys.isAltPressed) {
+      return KeyEventResult.ignored;
+    }
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final Offset? step = switch (event.logicalKey) {
+      LogicalKeyboardKey.arrowRight => Offset(rtl ? -1 : 1, 0),
+      LogicalKeyboardKey.arrowLeft => Offset(rtl ? 1 : -1, 0),
+      LogicalKeyboardKey.arrowUp => Offset(
+        widget.vertical ? 0 : 1,
+        widget.vertical ? 1 : 0,
+      ),
+      LogicalKeyboardKey.arrowDown => Offset(
+        widget.vertical ? 0 : -1,
+        widget.vertical ? -1 : 0,
+      ),
+      _ => null,
+    };
+    if (step == null) return KeyEventResult.ignored;
+    widget.onStep(keys.isShiftPressed ? step * 10 : step);
+    return KeyEventResult.handled;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = Size(constraints.maxWidth, height);
+        final size = Size(constraints.maxWidth, widget.height);
         Offset fraction(Offset local) => Offset(
           (local.dx / size.width).clamp(0.0, 1.0),
-          ((local.dy - overhang) / size.height).clamp(0.0, 1.0),
+          ((local.dy - widget.overhang) / size.height).clamp(0.0, 1.0),
         );
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onPanDown: (d) {
-            onStart();
-            onMove(fraction(d.localPosition));
-          },
-          onPanUpdate: (d) => onMove(fraction(d.localPosition)),
-          onPanEnd: (_) => onEnd(),
-          onPanCancel: onEnd,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: overhang),
-            child: CustomPaint(size: size, painter: painter),
+        return Semantics(
+          slider: true,
+          label: widget.semanticsLabel,
+          value: widget.semanticsValue,
+          increasedValue: widget.increasedValue,
+          decreasedValue: widget.decreasedValue,
+          onIncrease: () => widget.onStep(const Offset(1, 0)),
+          onDecrease: () => widget.onStep(const Offset(-1, 0)),
+          child: Focus(
+            focusNode: _focus,
+            includeSemantics: false,
+            onKeyEvent: _onKey,
+            onFocusChange: (_) => setState(() {}),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanDown: (d) {
+                // A click focuses it too, so the arrows work next.
+                _focus.requestFocus();
+                widget.onStart();
+                widget.onMove(fraction(d.localPosition));
+              },
+              onPanUpdate: (d) => widget.onMove(fraction(d.localPosition)),
+              onPanEnd: (_) => widget.onEnd(),
+              onPanCancel: widget.onEnd,
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: widget.overhang),
+                child: ListenableBuilder(
+                  listenable: FsInputModality.instance,
+                  builder: (context, child) => FsFocusRing.outside(
+                    visible:
+                        _focus.hasFocus &&
+                        FsInputModality.instance.showsFocusRing,
+                    child: child!,
+                  ),
+                  child: CustomPaint(size: size, painter: widget.painter),
+                ),
+              ),
+            ),
           ),
         );
       },

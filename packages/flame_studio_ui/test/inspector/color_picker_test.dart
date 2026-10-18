@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flame_studio_ui/flame_studio_ui.dart';
+import 'package:flame_studio_ui/src/foundation/focus_ring.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,6 +37,8 @@ class _HarnessState extends State<_Harness> {
         value: value,
         recentColors: widget.recent,
         eyedropperTooltip: 'Pick from the screen',
+        areaLabel: 'Saturation and brightness',
+        hueLabel: 'Hue',
         onChanged: (v) {
           _changes.add(v);
           setState(() => value = v);
@@ -55,6 +58,20 @@ Finder _pads() => find.descendant(
     (w) => w is CustomPaint && w.painter != null && w.size.height > 0,
   ),
 );
+
+/// Whether the focus ring is drawn around [pad] (it wraps the painter).
+bool _ringOn(WidgetTester tester, Finder pad) => find
+    .ancestor(
+      of: pad,
+      matching: find.byWidgetPredicate(
+        (w) =>
+            w is CustomPaint &&
+            (w.painter is FsEdgePainter ||
+                w.foregroundPainter is FsEdgePainter),
+      ),
+    )
+    .evaluate()
+    .isNotEmpty;
 
 String _hex(Color c) =>
     (c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase();
@@ -119,6 +136,97 @@ void main() {
     await tester.pump();
     expect(_commits, hasLength(1));
     expect(HSVColor.fromColor(_commits.single).value, closeTo(0, 0.02));
+  });
+
+  group('keyboard', () {
+    final start = HSVColor.fromColor(_peach);
+    HSVColor committed() => HSVColor.fromColor(_commits.last);
+    Future<void> press(
+      WidgetTester tester,
+      LogicalKeyboardKey key, {
+      bool shift = false,
+    }) async {
+      if (shift) await tester.sendKeyDownEvent(LogicalKeyboardKey.shift);
+      await tester.sendKeyEvent(key);
+      if (shift) await tester.sendKeyUpEvent(LogicalKeyboardKey.shift);
+      await tester.pump();
+    }
+
+    testWidgets('SV area: Tab reaches it first; arrows step 1%, Shift 10%, '
+        'one commit each', (tester) async {
+      await pumpFs(tester, const _Harness());
+      await press(tester, LogicalKeyboardKey.tab);
+      expect(_ringOn(tester, _pads().first), isTrue);
+
+      await press(tester, LogicalKeyboardKey.arrowRight);
+      expect(_commits, hasLength(1));
+      expect(committed().saturation, closeTo(start.saturation + 0.01, 0.005));
+
+      await press(tester, LogicalKeyboardKey.arrowDown, shift: true);
+      expect(_commits, hasLength(2));
+      expect(committed().value, closeTo(start.value - 0.1, 0.005));
+
+      // Already at full brightness? Up clamps; no change, no commit.
+      await press(tester, LogicalKeyboardKey.arrowUp, shift: true);
+      await press(tester, LogicalKeyboardKey.arrowUp);
+      expect(committed().value, closeTo(1, 0.005));
+      expect(_commits, hasLength(3));
+    });
+
+    testWidgets('hue: → ↑ up 1°, ← ↓ down, Shift 10°', (tester) async {
+      await pumpFs(tester, const _Harness());
+      await press(tester, LogicalKeyboardKey.tab);
+      await press(tester, LogicalKeyboardKey.tab);
+      expect(_ringOn(tester, _pads().last), isTrue);
+
+      await press(tester, LogicalKeyboardKey.arrowRight, shift: true);
+      expect(_commits, hasLength(1));
+      expect(committed().hue, closeTo(start.hue + 10, 1));
+      await press(tester, LogicalKeyboardKey.arrowLeft);
+      expect(committed().hue, closeTo(start.hue + 9, 1));
+
+      await press(tester, LogicalKeyboardKey.arrowUp, shift: true);
+      expect(committed().hue, closeTo(start.hue + 19, 1));
+      await press(tester, LogicalKeyboardKey.arrowDown);
+      expect(committed().hue, closeTo(start.hue + 18, 1));
+      expect(_commits, hasLength(4));
+      // The arrows stay with the slider: focus didn't move.
+      expect(_ringOn(tester, _pads().last), isTrue);
+    });
+
+    testWidgets('a click focuses the SV area without the ring', (tester) async {
+      await pumpFs(tester, const _Harness());
+      final m = await mouse(tester);
+      await m.down(tester.getCenter(_pads().first));
+      await m.up();
+      await tester.pump();
+      expect(_ringOn(tester, _pads().first), isFalse);
+      final before = _commits.length;
+      await press(tester, LogicalKeyboardKey.arrowRight);
+      expect(_commits, hasLength(before + 1));
+    });
+
+    testWidgets('screen readers get two sliders with values', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await pumpFs(tester, const _Harness());
+      final s = (start.saturation * 100).round();
+      final v = (start.value * 100).round();
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('Saturation and brightness')),
+        isSemantics(
+          isSlider: true,
+          value: '$s%, $v%',
+          increasedValue: '${s + 1}%, $v%',
+          hasIncreaseAction: true,
+          hasDecreaseAction: true,
+        ),
+      );
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('Hue')),
+        isSemantics(isSlider: true, value: '${start.hue.round()}°'),
+      );
+      semantics.dispose();
+    });
   });
 
   testWidgets('the hue survives black and grey', (tester) async {

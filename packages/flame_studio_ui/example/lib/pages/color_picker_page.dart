@@ -33,7 +33,8 @@ class _ColorPickerPageState extends State<ColorPickerPage> {
           'The ColorProperty swatch opens this popover: SV area, hue slider, '
           'hex + alpha, recent colours. The eyedropper shows only when '
           'FsPlatformHooks.sampleScreenColor is set (here: a stand-in that '
-          'returns a fixed green).',
+          'returns a fixed green). The SV area and hue slider take focus: '
+          'arrows step 1% / 1° (Shift ×10), one commit per press.',
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,6 +63,8 @@ class _ColorPickerPageState extends State<ColorPickerPage> {
                     value: _color,
                     recentColors: _recent,
                     eyedropperTooltip: 'Pick a colour from the screen',
+                    areaLabel: 'Saturation and brightness',
+                    hueLabel: 'Hue',
                     onChanged: (v) => setState(() => _color = v),
                     onCommit: (v) => setState(() => _last = '$v'),
                   ),

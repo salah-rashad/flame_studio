@@ -121,6 +121,8 @@ class _ColorPropertyPageState extends State<ColorPropertyPage> {
             tooltip: 'Color · default #FFD7A8',
             recentColors: _recent,
             eyedropperTooltip: 'Pick a colour from the screen',
+            pickerAreaLabel: 'Saturation and brightness',
+            pickerHueLabel: 'Hue',
             onChanged: (v) => setState(() => _tint = v),
             onCommit: _remember,
           ),

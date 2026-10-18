@@ -475,7 +475,8 @@ FsColorProperty({
   bool enabled = true,
 })
 FsColorPicker({required Color value, required ValueChanged<Color> onChanged,
-               required ValueChanged<Color> onCommit, List<Color> recentColors = const []})
+               required ValueChanged<Color> onCommit, List<Color> recentColors = const [],
+               String? areaLabel, String? hueLabel}) // the sliders' semantics labels
 ```
 
 Swatch 28×16 with a 1px inner white-15% edge, 6-digit upper-case hex field, separate 52px alpha
@@ -485,8 +486,11 @@ when `FsPlatformHooks.sampleScreenColor` is set (§7.2). The popover isn't modal
 on the swatch opens it with focus in its hex field (a click leaves focus put); in the Tab order it
 sits between the swatch and the row's hex field, so Tab past its end moves on and ⇧Tab before its
 start returns to the swatch, closing it either way; focus moving anywhere else closes it; Esc
-anywhere in it closes it and returns focus to the swatch. *Known gap:* the SV area and hue slider
-take no keyboard focus, so from the keyboard the colour is set through the hex and alpha fields.
+anywhere in it closes it and returns focus to the swatch. Inside it the SV area and hue slider are
+focusable sliders (Tab order: SV, hue, hex, alpha): the SV area steps saturation with ← → and
+brightness with ↑ ↓, the hue slider steps with all four arrows, 1% / 1° per press (Shift ×10), one
+`onCommit` per press; screen readers get slider roles with "40%, 80%" and "210°" values and the
+app's `areaLabel` / `hueLabel`.
 States: default, hover, focused hex,
 disabled, error, mixed, overridden; picker open. Uses: `FsPropertyRow`, `FsFieldBox`,
 `FsNumberField` (alpha), `FsAnchoredOverlay`, `FsIconButton`.

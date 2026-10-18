@@ -22,7 +22,7 @@ import 'button.dart';
 ///   fill (`accent-pressed` for primary).
 /// - **Divider:** 1px `accent-pressed` (primary) or `border-control`
 ///   (secondary); `border-subtle` while disabled.
-/// - **Menu:** [menuItems] in an `PrMenuPanel` below the button, left
+/// - **Menu:** [menuItems] in a `PrMenuPanel` below the button, left
 ///   aligned; ↓ or Alt+↓ on the focused button opens it. Mark the current
 ///   default with `PrMenuItem.checked`. "The main action repeats the last
 ///   choice" is the app's rule: it passes the matching [label] and

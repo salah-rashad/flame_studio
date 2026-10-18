@@ -1,5 +1,7 @@
 # Goldens are rendered on macOS only (fonts rasterise differently per
-# platform); run them with `flutter test --tags golden`, refresh them with
-# `flutter test --tags golden --update-goldens` after a deliberate change.
+# platform); run them with `flutter test --tags golden`. After a deliberate
+# change, refresh them with the "Update goldens" workflow on your branch (it
+# renders on CI's image), or locally with
+# `flutter test --tags golden --update-goldens`.
 tags:
   golden:

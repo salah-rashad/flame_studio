@@ -68,7 +68,8 @@ class ToastPage extends StatelessWidget {
           ],
         ),
         const SectionLabel(
-          'Live · an PrToastHost in this box (the app has one above the shell)',
+          'Live',
+          detail: 'a PrToastHost in this box (the app has one above the shell)',
         ),
         Container(
           height: 380,

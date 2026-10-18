@@ -13,7 +13,7 @@ import 'range_slider.dart';
 /// - **Scrub:** press on the label and drag: 1 step per 2px, Shift ×10,
 ///   Alt ×0.1. The label and the field border turn `accent-text` and the
 ///   cursor is ↔. [onChanged] fires while dragging, [onCommit] once when
-///   the drag ends (one undo entry per gesture). With an `PrPointerLock`
+///   the drag ends (one undo entry per gesture). With a `PrPointerLock`
 ///   from `PrPlatformHooks` the cursor hides and the scrub doesn't stop at
 ///   the screen edge; without one it stays visible (plan §7.1) and a second
 ///   drag continues from the new value.

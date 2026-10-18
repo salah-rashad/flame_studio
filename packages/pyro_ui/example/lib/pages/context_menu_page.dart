@@ -182,7 +182,8 @@ class _ContextMenuPageState extends State<ContextMenuPage> {
           ],
         ),
         const SectionLabel(
-          'Live · right-click the box, or use the More button',
+          'Live',
+          detail: 'right-click the box, or use the More button',
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,

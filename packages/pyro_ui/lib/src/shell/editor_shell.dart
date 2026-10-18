@@ -155,7 +155,7 @@ class PrEditorShell extends StatefulWidget {
   /// at its end, for symmetry).
   final double titleBarLeadingInset;
 
-  /// The main toolbar, usually an `PrToolbar`.
+  /// The main toolbar, usually a `PrToolbar`.
   final Widget toolbar;
 
   /// The left dock: Scene / Hierarchy.

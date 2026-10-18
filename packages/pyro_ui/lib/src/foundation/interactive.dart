@@ -23,7 +23,7 @@ import 'focus_ring.dart';
 /// - [WidgetState.selected] and [WidgetState.error] from [selected] and
 ///   [error].
 ///
-/// States forced by an `PrDebugStates` above it are added on top.
+/// States forced by a `PrDebugStates` above it are added on top.
 class PrInteractive extends StatefulWidget {
   /// Creates the wrapper.
   const PrInteractive({

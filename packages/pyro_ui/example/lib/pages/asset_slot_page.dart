@@ -83,7 +83,7 @@ class _AssetSlotPageState extends State<AssetSlotPage> {
       note:
           'Drag from the Assets panel or Finder. A compatible file shows the '
           'drop-target state under the pointer; a wrong type shows the '
-          'reject state there. (An app can also pass an PrDragInFlight to '
+          'reject state there. (An app can also pass a PrDragInFlight to '
           'light up every compatible slot while a drag runs.) Click the name '
           'to reveal the file in Assets; ⌫ clears.',
       children: [
@@ -131,7 +131,8 @@ class _AssetSlotPageState extends State<AssetSlotPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SectionLabel(
-                  'Other asset kinds: the thumbnail becomes a type icon',
+                  'Other asset kinds',
+                  detail: 'the thumbnail becomes a type icon',
                 ),
                 SampleBox(
                   width: 320,
@@ -164,8 +165,10 @@ class _AssetSlotPageState extends State<AssetSlotPage> {
           ],
         ),
         const SectionLabel(
-          'Live · drag a file onto the slots (the sprite takes .png, the '
-          'sound .wav/.ogg)',
+          'Live',
+          detail:
+              'drag a file onto the slots (the sprite takes .png, the sound '
+              '.wav/.ogg)',
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,

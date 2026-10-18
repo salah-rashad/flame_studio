@@ -205,7 +205,7 @@ class PrTreeRow<T extends Object> extends StatefulWidget {
   /// The drag rested 600ms inside this collapsed row.
   final VoidCallback? onAutoExpand;
 
-  /// A drag of [dragData] started (the app can set an `PrDragInFlight`, so
+  /// A drag of [dragData] started (the app can set a `PrDragInFlight`, so
   /// every compatible slot lights up while it runs).
   final VoidCallback? onDragStarted;
 

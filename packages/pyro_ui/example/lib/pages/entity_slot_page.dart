@@ -100,8 +100,10 @@ class _EntitySlotPageState extends State<EntitySlotPage> {
           ],
         ),
         const SectionLabel(
-          'Live · the crosshair toggles pick mode (click "Camera2" to pick '
-          'it); or drag a node (only cameras fit)',
+          'Live',
+          detail:
+              'the crosshair toggles pick mode (click "Camera2" to pick it); '
+              'or drag a node (only cameras fit)',
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,

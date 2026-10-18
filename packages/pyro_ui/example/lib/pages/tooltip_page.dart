@@ -107,7 +107,8 @@ class TooltipPage extends StatelessWidget {
           ],
         ),
         const SectionLabel(
-          'Live · move along the row: after the first, no delay',
+          'Live',
+          detail: 'move along the row: after the first, no delay',
         ),
         PrTooltipGroup(
           child: Row(

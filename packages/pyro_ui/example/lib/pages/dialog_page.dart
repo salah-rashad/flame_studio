@@ -125,7 +125,10 @@ class _DialogPageState extends State<DialogPage> {
       children: [
         const SectionLabel('Unsaved changes · primary focused'),
         sample,
-        const SectionLabel('Live · showFsDialog (200ms fade over the scrim)'),
+        const SectionLabel(
+          'Live',
+          detail: 'showFsDialog (200ms fade over the scrim)',
+        ),
         Row(
           spacing: PrSpacing.s2,
           children: [

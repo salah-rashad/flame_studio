@@ -34,7 +34,7 @@ import '../typography.dart';
 ///   should say why they are disabled; keyboard users reach those only when
 ///   the control sets `focusableWhenDisabled`.
 ///
-/// Built on [RawTooltip]. For the gallery and goldens, an `PrDebugStates`
+/// Built on [RawTooltip]. For the gallery and goldens, a `PrDebugStates`
 /// with part `tooltip` (any state) draws the tooltip below its anchor
 /// without hover.
 class PrTooltip extends StatelessWidget {

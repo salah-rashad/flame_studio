@@ -7,13 +7,15 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pyro_ui/pyro_ui.dart';
+import 'package:pyro_ui_gallery/grid.dart';
 import 'package:pyro_ui_gallery/main.dart';
 
 /// One golden per gallery page (plan §6.2): the automatic check that a
 /// component still looks like its preview.html after a token or layout
 /// change. macOS only, since font rasterisation differs between platforms.
 ///
-/// Refresh deliberately: `flutter test --tags golden --update-goldens`.
+/// Refresh deliberately: the "Update goldens" workflow on your branch, or
+/// `flutter test --tags golden --update-goldens`.
 void main() {
   setUpAll(() {
     final local = goldenFileComparator as LocalFileComparator;
@@ -41,9 +43,13 @@ void main() {
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
               theme: PrTheme.dark(),
-              home: Material(
-                color: PrColors.dark.surfacePanel,
-                child: page.build(),
+              // Headings only: rewording a page's prose shouldn't fail its
+              // golden.
+              home: BriefCaptions(
+                child: Material(
+                  color: PrColors.dark.surfacePanel,
+                  child: page.build(),
+                ),
               ),
             ),
           ),

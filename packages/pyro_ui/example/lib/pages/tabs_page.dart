@@ -129,8 +129,10 @@ class TabsPage extends StatelessWidget {
           ],
         ),
         const SectionLabel(
-          'Live: click to select, × or middle click to close, ⌘W closes the '
-          'focused strip’s tab; click the panel below the dock to focus it',
+          'Live',
+          detail:
+              'click to select, × or middle click to close, ⌘W closes the '
+              'focused strip’s tab; click the panel below the dock to focus it',
         ),
         const _LiveTabs(),
       ],

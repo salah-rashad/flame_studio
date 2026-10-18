@@ -6,8 +6,8 @@ version: 0.0.1
 # Never published: it exists to keep Pyro's look apart from its state
 # and logic (Q83), not to be reused.
 publish_to: none
-issue_tracker: https://github.com/salah-rashad/flame_studio/issues
-repository: https://github.com/salah-rashad/flame_studio/tree/main/packages/pyro_ui
+issue_tracker: https://github.com/salah-rashad/pyro/issues
+repository: https://github.com/salah-rashad/pyro/tree/main/packages/pyro_ui
 
 environment:
   sdk: ^3.12.0

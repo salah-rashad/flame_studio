@@ -4,8 +4,8 @@ description: >-
   re-exports pyro_annotations.
 version: 0.0.1
 publish_to: none # Until the package names are cleared with the Flame maintainers (Q36).
-issue_tracker: https://github.com/salah-rashad/flame_studio/issues
-repository: https://github.com/salah-rashad/flame_studio/tree/main/packages/pyro_runtime
+issue_tracker: https://github.com/salah-rashad/pyro/issues
+repository: https://github.com/salah-rashad/pyro/tree/main/packages/pyro_runtime
 
 environment:
   sdk: ^3.12.0

@@ -5,7 +5,7 @@
 | **Status** | Reviewed draft (v2) |
 | **Date** | 2026-10-16 |
 | **Author** | Salah Ahmed |
-| **Companion docs** | [`decisions.md`](decisions.md) (decision log, Q1–Q85) · [`../GLOSSARY.md`](../GLOSSARY.md) (project vocabulary) · [`adr/`](adr/) (architecture decision records) · [`claude-design-prompts.md`](claude-design-prompts.md) (UI design prompts) · [`ui-components-plan.md`](ui-components-plan.md) (design-system widgets) |
+| **Companion docs** | [`decisions.md`](decisions.md) (decision log, Q1–Q85) · [`../GLOSSARY.md`](../GLOSSARY.md) (project vocabulary) · [`adr/`](adr/) (architecture decision records) · [`claude-design-prompts.md`](claude-design-prompts.md) (UI design prompts) · [`ui-components-plan.md`](ui-components-plan.md) (design-system widgets) · [`phases.md`](phases.md) (phases and progress to v0.1) |
 
 > **For reviewers.** Everything in sections 1–13 was decided in two structured design sessions;
 > the decision number (e.g. *Q17*) points to the entry in `decisions.md`. Q1–Q42 come from the
@@ -869,7 +869,8 @@ all three; on tags, sign + notarize the macOS build and attach artifacts to a Gi
 
 **Capacity assumption:** ~3 evenings/week of ~3 hours. Estimates are in evenings and are
 deliberately rough. Solo evening projects typically overrun by 1.3–1.5×; the totals below do not
-include that.
+include that. [`phases.md`](phases.md) groups this section's build order into phases and tracks
+progress; change it in the same commit as this section.
 
 ### v0.0 — De-risking spike (throwaway) (*Q42, Q69*)
 

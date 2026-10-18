@@ -31,7 +31,7 @@
 |---|---|---|---|
 | 0 | Design system | — | ✅ |
 | 1 | Project list (welcome window) | early preview (list, open, SDK, Runtime check); v0.1 rest | |
-| 2 | Editor shell, toolbar, scene tabs | v0.1 (the early preview uses themed Material widgets, *Q82*) | |
+| 2 | Editor shell, toolbar, scene tabs | early preview (its panels use the `Pr` widgets, `PrEditorShell` included, *Q87*); v0.1 rest | |
 | 3 | Hierarchy | early preview (add, delete, rename, reparent); v0.1 rest; prefabs v0.2 | |
 | 4 | Viewport | early preview (selection, move gizmo, pan/zoom); v0.1 rest; animated sprites v0.1.1; Tiled v0.2 | |
 | 5 | Inspector | early preview (core field types); v0.1 rest; mixed values v0.1.1 | |

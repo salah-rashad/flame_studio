@@ -912,7 +912,7 @@ attach a custom Behavior and tweak its fields, press Play and see the change in 
 | 8 | Runtime | Full: loader, two-pass references, assets, lookup API, unknown-type handling, Hot-swap | | 4 |
 | 9 | Behaviors in the inspector | Add/remove, compatibility filtering, Missing behavior state (so nothing is lost) | Reorder, Missing behavior polish | 2 |
 | 11 | Play | Run on the macOS desktop target by default (⚠ verify Hot-swap there first, ~0.5), daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, *Attach debugger* copying the current URI, image-restart toast | Device list + emulator boot, Attach info file, `launch.json`, unauthenticated mode | 4 |
-| 14 | Design system (core, *Q84*) | Foundations (interaction states, field box, panel focus, icons, gallery skeleton, test config) and the widgets whose behaviour items 3 and 5 would otherwise build in the panels: `PrTreeRow`, `PrPropertyRow`, `PrNumberProperty`, `PrVector2Property` | The other 25 components, the EditorShell, goldens; the rest of the preview uses Material widgets themed by `PrTheme.dark()` | 5.5 |
+| 14 | Design system (core, *Q84, Q87*) | Foundations (interaction states, field box, panel focus, icons, gallery skeleton, test config) and the widgets whose behaviour items 3 and 5 would otherwise build in the panels: `PrTreeRow`, `PrPropertyRow`, `PrNumberProperty`, `PrVector2Property` | The other 25 components, the EditorShell, goldens (all since built ahead of the preview, so its panels use `Pr` widgets throughout and never Material widgets, *Q87*) | 5.5 |
 | | **Total** | | | **~42** |
 
 Not in the early preview: the asset browser and pubspec sync (10), the CI contract test (12),
@@ -929,8 +929,8 @@ not, and the author becomes the first user.
 months and ~7 months for the previous developer preview).
 
 **Before building, at no cost:** ask the Flame maintainers about the name (*Q36*), the longest
-lead-time item; post the spike #1 loop as a short GIF on the Flame Discord as a demand check
-(it measures interest, not usability).
+lead-time item. (A short GIF of the spike #1 loop on the Flame Discord, as a demand check, was
+planned here too; it was canceled on 2026-10-18.)
 
 **Testers and exit criteria.** 5–8 hand-picked developers using their own games, a few watched on
 a call, not a public Discord post. Record: time from install to the first running scene, where
@@ -980,12 +980,10 @@ ships first as the early preview described in the section above; the previous fu
 developer preview (*Q65*, *Q73*) is replaced by it. Feedback from the early preview is folded
 into the remaining ~50 evenings, so the order of the deferred items is open until then.
 
-Build order after the early preview: 14 (the preview's panels move from Material widgets to the
-design system: Button, IconButton, Tooltip, TextField, Panel, SectionHeader, ContextMenu, Dropdown,
-BoolProperty, Dialog, Toast, Badge, Banner, Progress, then EditorShell, Toolbar, Tabs) → 10 →
-the deferred parts of items 1, 3, 4, 5, 6, 9 and 11, each preceded by the components it needs
-(`ui-components-plan.md` §8.3) → 15 → 12 → 13 → 14 (goldens, final pass against the design) →
-16.
+Build order after the early preview: 10 → the deferred parts of items 1, 3, 4, 5, 6, 9 and 11
+→ 15 → 12 → 13 → 14 (goldens, final pass against the design) → 16. There is no switch from
+Material widgets to the design system: every component was built ahead of the panels, and the
+panels use `Pr` widgets from the start (*Q87*).
 
 ### Roadmap after v0.1
 

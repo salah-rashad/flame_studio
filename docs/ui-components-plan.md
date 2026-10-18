@@ -1036,6 +1036,10 @@ Button next to an `PrMenuButton` caret works, −0.25). That brings it to ~21.
 
 ### 8.2 The early preview (*Q82*)
 
+> *Superseded in part by Q87 (2026-10-18).* All of item 14 was built before the preview, so its
+> panels use `Pr` widgets throughout and never Material widgets, and §8.3's switch from Material
+> to the design after the preview is dropped. The reasoning below is kept as the record.
+
 The early preview leaves out the visual design: its panels would be built with Material widgets
 styled by `PrTheme.dark()`. Most of that is fine to throw away later (a button is a button). Four
 widgets aren't: **TreeRow** (drop zones, focus-aware selection, rename), **NumberProperty** and

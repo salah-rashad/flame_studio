@@ -10,7 +10,7 @@ The road from the spikes to the first public release, in the order §14 builds i
 (`#2`, `#7`, …) are §14's v0.1 numbers. Estimates are evenings (~3 hours, ~3 a week) without the
 1.3–1.5× solo overrun §14 warns about.
 
-**Legend:** ✅ done · 🔶 partly done · ⬜ not started · ❓ status unknown
+**Legend:** ✅ done · 🔶 partly done · ⬜ not started · 🚫 canceled
 
 ---
 
@@ -18,14 +18,14 @@ The road from the spikes to the first public release, in the order §14 builds i
 
 ```mermaid
 flowchart LR
-  P0["Phase 0<br/>De-risking spikes ✅"] --> P1["Phase 1<br/>Foundations 🔶"]
+  P0["Phase 0<br/>De-risking spikes ✅"] --> P1["Phase 1<br/>Foundations ✅"]
   P1 --> P2["Phase 2<br/>Data contract ⬜"]
   P2 --> P3["Phase 3<br/>Vertical slice ⬜"]
   P3 --> P4["Phase 4<br/>Editor ⬜"]
   P4 --> P5["Phase 5<br/>Play and shell ⬜"]
   P5 --> M1(["Early preview"])
   M1 --> P6["Phase 6<br/>Testers and feedback ⬜"]
-  P6 --> P7["Phase 7<br/>Design pass and assets ⬜"]
+  P6 --> P7["Phase 7<br/>Assets ⬜"]
   P7 --> P8["Phase 8<br/>Deferred breadth ⬜"]
   P8 --> P9["Phase 9<br/>Release ⬜"]
   P9 --> M2(["v0.1"])
@@ -34,14 +34,14 @@ flowchart LR
 | Phase | Contents (§14 items) | Evenings | Left | Status |
 |---|---|---|---|---|
 | 0 — De-risking spikes | v0.0 spikes #1–#3 | ~4 | 0 | ✅ |
-| 1 — Foundations | #0 repo setup, #14 design system (all of it) | 3 + 23 | Riverpod spike | 🔶 |
+| 1 — Foundations | #0 repo setup, #14 design system (all of it) | 3 + 23 | 0 | ✅ |
 | 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 13 | 13 | ⬜ |
 | 3 — Vertical slice | First slice of #11 | (in #11) | — | ⬜ |
 | 4 — Editor | #6, #4, #3, #5, #9 | 15 | 15 | ⬜ |
 | 5 — Play and shell | Rest of #11 (preview part), #1 (preview part) | 6 | 6 | ⬜ |
 | **Early preview** | | **~42** | **~34** | |
 | 6 — Testers and feedback | 5–8 testers, pivot table | — | — | ⬜ |
-| 7 — Design pass and assets | #14 panels onto the design system, #10 | 2.5 + ? | 2.5 + ? | ⬜ |
+| 7 — Assets | #10 | 2.5 | 2.5 | ⬜ |
 | 8 — Deferred breadth | Deferred parts of #1, #2, #3, #4, #5, #6, #7, #8, #9, #11 | ~20.5 | ~20.5 | ⬜ |
 | 9 — Release | #15, #12, #13, #14 final pass, #16 | 9 | 9 | ⬜ |
 | **v0.1** | | **~92** | **~66** | |
@@ -50,9 +50,6 @@ flowchart LR
 **Left to v0.1:** ~66 evenings ≈ 22 weeks, ~31 weeks with a 1.4× overrun. Of the ~92, the
 ~26 already done are the repo setup and the whole design system (the spikes come on top): #14 was
 planned as a ~5.5-evening core in the preview plus ~17.5 after it, and all ~23 are built.
-
-"?" is the work of moving the preview's panels from Material widgets onto the design system,
-which §14 orders but doesn't estimate (see [Open questions](#open-questions)).
 
 ---
 
@@ -66,10 +63,10 @@ Throwaway code in `spikes/`, findings in [`ARCHITECTURE.md`](ARCHITECTURE.md) (*
 
 **Done when:** every item in §15.3 is ticked. ✅
 
-## Phase 1 — Foundations 🔶
+## Phase 1 — Foundations ✅
 
 - [x] **#0 Repo setup:** pub workspace, the four packages and the app, CI skeleton, lint rules
-- [ ] **#0 Riverpod learning spike** (Q26, §8.5): Riverpod isn't a dependency yet
+- [x] **#0 Riverpod learning spike** (Q26, §8.5)
 - [x] **#14 Design system** in `pyro_ui` (*Q83, Q84*): foundations, all 29 components,
   the EditorShell, the 60 icons, the gallery app, widget tests, one golden per gallery page and the
   side-by-side review against `preview.html` ([`ui-components-plan.md`](ui-components-plan.md))
@@ -78,10 +75,11 @@ Free tasks §14 lists before building:
 
 - [x] Ask the Flame maintainers about the name (*Q36*): "Flame Studio" is reserved for their
   official package, so the app is now **Pyro** (*Q86*)
-- [ ] ❓ Post the spike #1 loop as a short GIF on the Flame Discord (a demand check)
+- 🚫 ~~Post the spike #1 loop as a short GIF on the Flame Discord (a demand check)~~: canceled
+  (2026-10-18)
 
 **Done when:** the Riverpod spike has settled the provider layout of §8.5 well enough to start
-Phase 2.
+Phase 2. ✅
 
 ## Phase 2 — Data contract ⬜
 
@@ -110,8 +108,9 @@ removes the integration risk the spikes couldn't, and the author becomes the fir
 
 ## Phase 4 — Editor ⬜
 
-In §14's order. The design-system widgets these panels need (`PrTreeRow`, `PrPropertyRow`,
-`PrNumberProperty`, `PrVector2Property`) are already built.
+In §14's order. The panels are built from `Pr` widgets only, never Material widgets (*Q87*); all
+of them already exist, including the ones these panels lean on most (`PrTreeRow`,
+`PrPropertyRow`, `PrNumberProperty`, `PrVector2Property`).
 
 - [ ] **#6 Built-in Node kinds** (2): entity, sprite, rectangle and circle hitboxes, placeholders
 - [ ] **#4 Viewport** (6.5): preview world, reconciler, pan/zoom, selection, move gizmo. §8.3
@@ -155,12 +154,11 @@ Built from source, no signing, macOS. Everything above is in; nothing below is.
 **Done when:** each observation has its response, and the order of Phases 7–8 is confirmed or
 changed in §14 (and here).
 
-## Phase 7 — Design pass and assets ⬜
+## Phase 7 — Assets ⬜
 
-- [ ] **#14 Panels onto the design system:** replace the preview's Material widgets with the `Pr`
-  widgets, starting with Button, IconButton, Tooltip, TextField, Panel, SectionHeader,
-  ContextMenu, Dropdown, BoolProperty, Dialog, Toast, Badge, Banner, Progress, then EditorShell,
-  Toolbar, Tabs (`ui-components-plan.md` §8.3). The widgets exist; this is the switch
+The switch of the preview's panels from Material widgets to the design system that used to open
+this phase is gone: the panels use `Pr` widgets from the start (*Q87*).
+
 - [ ] **#10 Asset browser + pubspec sync** (2.5), incl. subfolders and the "Not in pubspec.yaml"
   mark (*Q53, Q85*). §10
 
@@ -202,12 +200,10 @@ Signed and notarized, on GitHub Releases. After it: v0.1.1, v0.2, … as in §14
 
 ## Open questions
 
-- **Preview panels on Material or on the design system?** §14 (*Q82, Q84*) has the preview use
-  themed Material widgets and move to the design system after it, because only a ~5.5-evening core
-  of #14 was to be built first. All of #14 is now built, so the preview could use the `Pr` widgets
-  from the start and Phase 7's switch would disappear. Not decided; §14 and Phase 7 stay as they
-  are until it is.
-- **The Discord GIF** in Phase 1: done or not?
+- **The `MaterialApp` host.** *Q87* keeps Material widgets out of the app, but the app and the
+  gallery still run inside a `MaterialApp` themed by `PrTheme.dark()` (`ThemeData`), and
+  `PrDialog` wraps its route in a transparent `Material`. Whether *Q87* reaches that far (a
+  `WidgetsApp` host instead) is not decided.
 
 The phase estimates are the per-item figures in §14's two tables. Phase 8's #7 and #8 lines are
 the differences between those tables, so they are rough.

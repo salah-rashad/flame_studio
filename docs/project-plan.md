@@ -893,7 +893,7 @@ Pyro stops issuing reloads while an IDE is attached) remains the escape hatch. F
 The goal is to prove, in a developer's own project, that Pyro does a real task more easily
 than editing Dart by hand, as early as possible. **Breadth and polish are cut; document integrity,
 the generator/Runtime contract and data preservation are not.** The final v0.1 scope is unchanged
-(*Q82* amends *Q65* and supersedes *Q73*); the early preview is a subset of it, ~42 of the ~92
+(*Q82* amends *Q65* and supersedes *Q73*); the early preview is a subset of it, ~45 of the ~93
 evenings.
 
 **The task testers do:** open their own Flame project, place an entity with a sprite and a hitbox,
@@ -902,7 +902,7 @@ attach a custom Behavior and tweak its fields, press Play and see the change in 
 | # | Work item (v0.1 numbering) | In the early preview | Deferred to v0.1 | Est. |
 |---|---|---|---|---|
 | 0 | Repo setup | As in v0.1 | | 3 |
-| 1 | App shell | Project list, open project, basic SDK detection, Runtime compatibility check | "Add Pyro" flow and pubspec diff (a README recipe replaces it), SDK management and settings polish | 2 |
+| 1 | App shell | Project list, open project, basic SDK detection, Runtime compatibility check; the editor window: EditorShell with panel slots, scene tabs, new/open/save scene, dirty marker, close confirmation, recovery *Restore* prompt (*Q88*) | "Add Pyro" flow and pubspec diff (a README recipe replaces it), SDK management and settings polish | 3 |
 | 2 | Document model | Transactions, undo/redo with coalescing, atomic save/load, recovery file, `schemaVersion` gate (never write an unreadable version, *Q49*) | Migrations framework, built when the first format change after the preview needs it | 4.5 |
 | 3 | Hierarchy | Add, delete, rename, reparent by drag (on `PrTreeRow`) | Duplicate, filter, duplicate-name warning | 2 |
 | 4 | Viewport | Preview world, reconciler, pan/zoom, selection, move gizmo | Grid, snapping, rotate/scale gizmos (numeric editing in the inspector covers them) | 6.5 |
@@ -911,21 +911,27 @@ attach a custom Behavior and tweak its fields, press Play and see the change in 
 | 7 | Generator | Introspection, Type IDs + collisions, supertypes, Registry + Manifest emitters, error reporting, goldens, at the field types above | Support for the remaining Field types in the inspector (the generator still records them) | 4.5 |
 | 8 | Runtime | Full: loader, two-pass references, assets, lookup API, unknown-type handling, Hot-swap | | 4 |
 | 9 | Behaviors in the inspector | Add/remove, compatibility filtering, Missing behavior state (so nothing is lost) | Reorder, Missing behavior polish | 2 |
-| 11 | Play | Run on the macOS desktop target by default (⚠ verify Hot-swap there first, ~0.5), daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, *Attach debugger* copying the current URI, image-restart toast | Device list + emulator boot, Attach info file, `launch.json`, unauthenticated mode | 4 |
+| 11 | Play | Run on the macOS desktop target by default (Hot-swap there verified in the vertical slice, ~0.5, *Q88*), daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, *Attach debugger* copying the current URI, image-restart toast | Device list + emulator boot, Attach info file, `launch.json`, unauthenticated mode | 4 |
+| 12 | CI contract test | As in v0.1, turned on in the vertical slice (*Q88*) | | 1 |
+| 13 | `example/` game | A skeleton for the vertical slice and the contract test: one annotated Behavior, one custom component, one Scene, macOS target (*Q88*) | The small sample game | 0.5 |
 | 14 | Design system (core, *Q84, Q87*) | Foundations (interaction states, field box, panel focus, icons, gallery skeleton, test config) and the widgets whose behaviour items 3 and 5 would otherwise build in the panels: `PrTreeRow`, `PrPropertyRow`, `PrNumberProperty`, `PrVector2Property` | The other 25 components, the EditorShell, goldens (all since built ahead of the preview, which uses them throughout, *Q87*) | 5.5 |
-| | **Total** | | | **~42** |
+| | **Total** | | | **~45** |
 
-Not in the early preview: the asset browser and pubspec sync (10), the CI contract test (12),
-the `example/` game (13), the rest of the visual design (14; see the row above), signing and notarization (15; testers build from
+Not in the early preview: the asset browser and pubspec sync (10), the `example/` game beyond its
+skeleton (13), the rest of the visual design (14; see the row above), signing and notarization (15; testers build from
 source) and the Getting Started docs (16; a README recipe covers setup). Setup friction is itself
 under test, so watch where testers get stuck.
 
-**Build order:** 0 → 2 → 7 → 8 → **vertical slice** (a hand-written Scene JSON through generator,
-Runtime, Play and Hot-swap, with no editor UI; the first slice of item 11) → 6 → 4 → 14 core → 3 → 5 → 9 →
-rest of 11 → 1 → *early preview*. The slice removes the integration risk the three spikes could
-not, and the author becomes the first user.
+**Build order:** 0 → 14 (all of it, built ahead, *Q84, Q87*) → 2 → 7 → 8 → **vertical slice**
+(the `example/` skeleton from item 13, the contract test (12), and a hand-written Scene JSON
+through generator, Runtime, Play and Hot-swap on the macOS desktop target, with no editor UI; the
+first slice of item 11) → 1 → 6 → 4 → 3 → 5 → 9 → rest of 11 → *early preview* (*Q88*). The slice
+removes the integration risk the three spikes could not, checks Hot-swap on the preview's default
+Play target, guards the data contract in CI from then on, and makes the author the first user.
+Item 1 comes before the panels because they need a window, an open project and scene files to
+work in.
 
-**At 3 evenings a week:** ~14 weeks before overrun, ~4.5 months with a 1.4× overrun (against ~5
+**At 3 evenings a week:** ~15 weeks before overrun, ~5 months with a 1.4× overrun (against ~5
 months and ~7 months for the previous developer preview).
 
 **Before building, at no cost:** ask the Flame maintainers about the name (*Q36*), the longest
@@ -949,10 +955,10 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 | # | Work item | Est. (evenings) |
 |---|---|---|
 | 0 | Repo setup: workspace (3 packages + app; `pyro_ui` added by *Q83*), CI skeleton, lint rules, Riverpod learning spike | 3 |
-| 1 | App shell: project list, SDK detection, settings, About window with licences (§12), "Add Pyro" flow + pubspec diff, Runtime compatibility check | 6 |
+| 1 | App shell: project list, SDK detection, editor window (scene tabs, new/open/save, recovery prompt), settings, About window with licences (§12), "Add Pyro" flow + pubspec diff, Runtime compatibility check | 7 |
 | 2 | Document model, transactions, history, coalescing, save/load (atomic), recovery file, migrations framework | 5 |
 | 3 | Hierarchy panel (add, delete, rename, reparent drag, duplicate, filter, duplicate-name warning) | 3.5 |
-| 4 | Viewport: preview world, reconciler, pan/zoom, grid, selection, gizmos, snapping | 10 |
+| 4 | Viewport: preview world, reconciler, pan/zoom, grid, selection, gizmos, snapping, reference rectangle (*Q85*) | 10 |
 | 5 | Inspector: transform + field editors for all v1 Field types, Override markers + *Reset to default* | 4.5 |
 | 6 | Built-in Node kinds: entity, sprite, 3 hitbox kinds, placeholders | 2.5 |
 | 7 | Generator: introspection, Type IDs + collisions, supertypes, Registry + Manifest emitters, error reporting, goldens | 6.5 |
@@ -963,25 +969,25 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 | 12 | CI contract test | 1 |
 | 13 | `example/` game | 2 |
 | 14 | Design system in `pyro_ui` (*Q83, Q84*): tokens and theme (done), shared foundations, the 29 components, EditorShell, 60 icons, gallery app, widget tests and goldens ([`ui-components-plan.md`](ui-components-plan.md)) | 23 |
-| 15 | Signing, notarization, release pipeline | 3 |
+| 15 | Signing, notarization, release pipeline, pub.dev publishing of `pyro_annotations`, `pyro_runtime` and `pyro_generator` | 3 |
 | 16 | README, Getting Started (incl. Attach and the CI check, §7.3), demo video, `ARCHITECTURE.md` polish | 3 |
-| | **Total** | **~92** |
+| | **Total** | **~93** |
 
 **Moved to v0.1.1 (*Q65*):** grid slicer and the animated sprite Node kind (~6), rename with
 reference rewriting (~1.5), multi-select "mixed" values (~2).
 
-**Reality check:** ~92 evenings at 3/week ≈ **31 weeks (~7 months)** before overrun, ~9 months
+**Reality check:** ~93 evenings at 3/week ≈ **31 weeks (~7 months)** before overrun, ~9 months
 with a 1.3× overrun, against the original ~4-month target. Item 14 grew from 4 to ~23 when its
 components were estimated one by one (*Q84*); ~2.5 of that can move to v0.1.1 if needed (colour
 picker popover, NumberProperty expressions, goldens, SplitButton; `ui-components-plan.md` §8.1).
 
-**Early preview (*Q82*):** the v0.1 table above is the final scope. A subset of it (~42 evenings)
+**Early preview (*Q82*):** the v0.1 table above is the final scope. A subset of it (~45 evenings)
 ships first as the early preview described in the section above; the previous full-scope
 developer preview (*Q65*, *Q73*) is replaced by it. Feedback from the early preview is folded
-into the remaining ~50 evenings, so the order of the deferred items is open until then.
+into the remaining ~48 evenings, so the order of the deferred items is open until then.
 
-Build order after the early preview: 10 → the deferred parts of items 1, 3, 4, 5, 6, 9 and 11
-→ 15 → 12 → 13 → 14 (goldens, final pass against the design) → 16. Pyro's UI depends on the Pyro components (`Pr` widgets) for everything,
+Build order after the early preview: 10 → the deferred parts of items 1–9 and 11 → 15 → the
+rest of 13 → 14 (final pass against the design; the goldens exist) → 16 (*Q88*). Pyro's UI depends on the Pyro components (`Pr` widgets) for everything,
 the early preview included (*Q87*), so there is no switch onto the design system after it.
 
 ### Roadmap after v0.1
@@ -1006,7 +1012,7 @@ the early preview included (*Q87*), so there is no switch onto the design system
 |---|---|---|---|
 | Hot-swap with an attached IDE depends on private flutter_tools/engine interfaces (`--project-root`, `_flutter.setAssetBundlePath`) | Medium | High (Attach workflow) | Spike #1 settled the mechanism (*Q74*); re-check on each Flutter stable release; fallback: Pyro stops reloading while an IDE is attached |
 | Hot-swap rebuild loses runtime state and leaves stale references in game code | High (by design in v0.1) | Medium | Content-hash check; `onReloaded` + debug warning (*Q71*); node-level patching in v0.4 |
-| Scope/time overrun (solo, evenings) | **High** | Medium | Cuts to v0.1.1; early preview (~42 evenings, *Q82, Q84*); strict non-goals; estimates in §14 |
+| Scope/time overrun (solo, evenings) | **High** | Medium | Cuts to v0.1.1; early preview (~45 evenings, *Q82, Q84, Q88*); strict non-goals; estimates in §14 |
 | `build_runner` too slow on large projects | Medium | Medium | Spike #2; `triggers` so unannotated files are skipped; show "generating" state |
 | Flame / `flame_behaviors` breaking changes | Medium | Medium | Latest-minor-only policy; CI against Flame stable; Runtime kept small |
 | Pyro and project Runtime versions drift | Medium | Medium | `pubspec.lock` compatibility check; never write an unreadable `schemaVersion` (*Q49*) |

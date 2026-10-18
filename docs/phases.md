@@ -4,11 +4,14 @@
 |---|---|
 | **Status** | Phase 2 next (2026-10-18) |
 | **Source of truth** | [`project-plan.md`](project-plan.md) §14 owns scope, estimates and build order; this file only groups that order into phases and tracks progress |
-| **Sync rule** | When §14 changes (an item, an estimate, the order), change this file in the same commit. When an item here is finished, tick it here; §14 changes only if its scope or estimate changed |
+| **Sync rule** | When §14 changes (an item, an estimate, the order), change this file in the same commit. When a step here is finished, tick it here; §14 changes only if its scope or estimate changed |
 
 The road from the spikes to the first public release, in the order §14 builds it. Work-item numbers
-(`#2`, `#7`, …) are §14's v0.1 numbers. Estimates are evenings (~3 hours, ~3 a week) without the
-1.3–1.5× solo overrun §14 warns about.
+(`#2`, `#7`, …) are §14's v0.1 numbers; a number in brackets after an item is its estimate in
+evenings (~3 hours, ~3 a week), without the 1.3–1.5× solo overrun §14 warns about. Each phase
+ends with **Tests** (the §13 layers it must leave green) and **Done when** (the check that closes
+it). A phase starts only when the one before it is done, except for the tasks under
+[Running alongside](#running-alongside).
 
 **Legend:** ✅ done · 🔶 partly done · ⬜ not started · 🚫 canceled
 
@@ -22,34 +25,35 @@ flowchart LR
   P1 --> P2["Phase 2<br/>Data contract ⬜"]
   P2 --> P3["Phase 3<br/>Vertical slice ⬜"]
   P3 --> P4["Phase 4<br/>Editor ⬜"]
-  P4 --> P5["Phase 5<br/>Play and shell ⬜"]
+  P4 --> P5["Phase 5<br/>Play ⬜"]
   P5 --> M1(["Early preview"])
   M1 --> P6["Phase 6<br/>Testers and feedback ⬜"]
-  P6 --> P7["Phase 7<br/>Assets ⬜"]
-  P7 --> P8["Phase 8<br/>Deferred breadth ⬜"]
-  P8 --> P9["Phase 9<br/>Release ⬜"]
-  P9 --> M2(["v0.1"])
+  P6 --> P7["Phase 7<br/>v0.1 breadth ⬜"]
+  P7 --> P8["Phase 8<br/>Release ⬜"]
+  P8 --> M2(["v0.1"])
 ```
 
 | Phase | Contents (§14 items) | Evenings | Left | Status |
 |---|---|---|---|---|
-| 0 — De-risking spikes | v0.0 spikes #1–#3 | ~4 | 0 | ✅ |
+| 0 — De-risking spikes | v0.0 spikes #1–#3 | ~4 (outside the totals) | 0 | ✅ |
 | 1 — Foundations | #0 repo setup, #14 design system (all of it) | 3 + 23 | 0 | ✅ |
 | 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 13 | 13 | ⬜ |
-| 3 — Vertical slice | First slice of #11 | (in #11) | — | ⬜ |
-| 4 — Editor | #6, #4, #3, #5, #9 | 15 | 15 | ⬜ |
-| 5 — Play and shell | Rest of #11 (preview part), #1 (preview part) | 6 | 6 | ⬜ |
-| **Early preview** | | **~42** | **~34** | |
-| 6 — Testers and feedback | 5–8 testers, pivot table | — | — | ⬜ |
-| 7 — Assets | #10 | 2.5 | 2.5 | ⬜ |
-| 8 — Deferred breadth | Deferred parts of #1, #2, #3, #4, #5, #6, #7, #8, #9, #11 | ~20.5 | ~20.5 | ⬜ |
-| 9 — Release | #15, #12, #13, #14 final pass, #16 | 9 | 9 | ⬜ |
-| **v0.1** | | **~92** | **~66** | |
+| 3 — Vertical slice | `example/` skeleton (part of #13), #12 contract test, first slice of #11 | 1.5 + (in #11) | 1.5 | ⬜ |
+| 4 — Editor | #1 preview part with the editor window, #6, #4, #3, #5, #9 | 18 | 18 | ⬜ |
+| 5 — Play | Rest of #11 preview part, README recipe | 4 | 4 | ⬜ |
+| **Early preview** | | **~62.5** | **~36.5** | |
+| 6 — Testers and feedback | 5–8 testers, response table | — | — | ⬜ |
+| 7 — v0.1 breadth | #10, then the deferred parts of #1–#9 and #11 | 23 | 23 | ⬜ |
+| 8 — Release | #15 with pub.dev, rest of #13, #14 final pass, #16 | 7.5 | 7.5 | ⬜ |
+| **v0.1** | | **~93** | **~67** | |
 
-**Left to the early preview:** ~34 evenings ≈ 11 weeks, ~16 weeks with a 1.4× overrun.
-**Left to v0.1:** ~66 evenings ≈ 22 weeks, ~31 weeks with a 1.4× overrun. Of the ~92, the
-~26 already done are the repo setup and the whole design system (the spikes come on top): #14 was
-planned as a ~5.5-evening core in the preview plus ~17.5 after it, and all ~23 are built.
+**Left to the early preview:** ~36.5 evenings ≈ 12 weeks, ~17 weeks with a 1.4× overrun.
+**Left to v0.1:** ~67 evenings ≈ 22 weeks, ~31 weeks with a 1.4× overrun.
+
+§14 counts the early preview as ~45 evenings. The ~62.5 above is larger because Phase 1 holds all
+~23 evenings of #14, while §14 puts only a ~5.5-evening core in the preview. The other ~17.5 were
+built ahead of the preview, so the preview's panels use the Pyro components throughout (*Q84,
+Q87*). The ~26 done are the repo setup and the whole design system. The spikes come on top.
 
 ---
 
@@ -65,14 +69,12 @@ Throwaway code in `spikes/`, findings in [`ARCHITECTURE.md`](ARCHITECTURE.md) (*
 
 ## Phase 1 — Foundations ✅
 
-- [x] **#0 Repo setup:** pub workspace, the four packages and the app, CI skeleton, lint rules
+- [x] **#0 Repo setup:** pub workspace, the four packages and the app (stubs), CI (analyze and test
+  on three OSes, unsigned builds, placeholder contract and release jobs), lint rules
 - [x] **#0 Riverpod learning spike** (Q26, §8.5)
 - [x] **#14 Design system** in `pyro_ui` (*Q83, Q84*): foundations, all 29 components,
   the EditorShell, the 60 icons, the gallery app, widget tests, one golden per gallery page and the
   side-by-side review against `preview.html` ([`ui-components-plan.md`](ui-components-plan.md))
-
-Free tasks §14 lists before building:
-
 - [x] Ask the Flame maintainers about the name (*Q36*): "Flame Studio" is reserved for their
   official package, so the app is now **Pyro** (*Q86*)
 - 🚫 ~~Post the spike #1 loop as a short GIF on the Flame Discord (a demand check)~~: canceled
@@ -83,125 +85,195 @@ Phase 2. ✅
 
 ## Phase 2 — Data contract ⬜
 
-The file formats and the code on both sides of them. Integrity is never cut here (*Q82*).
+The file formats and the code on both sides of them, all headless (no editor UI). Integrity is
+never cut here (*Q82*). The scene model and its JSON live in `pyro_runtime`, so the app and games
+share one format (§5); that comes first, because #2 and #8 both build on it.
 
-- [ ] **#2 Document model** (4.5): `SceneDocument` (freezed, flat `NodeId → Node` map), named
-  transactions, undo/redo with coalescing, dirty flag, atomic save/load, recovery file (*Q55, Q85*),
-  `schemaVersion` gate (*Q49*). *Deferred:* migrations framework. §8.1, §8.2, §7.1
-- [ ] **#7 Generator** (4.5): introspection, Type IDs + collisions (ADR 0002), supertypes (*Q57*),
-  Registry + Manifest emitters into `lib/` (*Q68*), error reporting, goldens, for the preview's
-  Field types. §6.1, §7.3, §9.2
-- [ ] **#8 Runtime** (4, full scope): loader, two-pass references, assets (the *Q78* Tiled loader),
-  lookup API, unknown-type handling (*Q58*), Hot-swap (`onHotReload`, content hash, `onReloaded`;
-  *Q66, Q67, Q71*). §6.2, §9.3
+- [ ] **Scene format** in `pyro_runtime` (part of #8): the Node model for the preview's Node kinds
+  (root, entity, sprite, rectangle and circle hitboxes, custom), JSON with sorted keys, Overrides
+  only (ADR 0003), `childIds`-only persistence with orphan and double-parent repair (*Q47*),
+  `schemaVersion` with refusal of newer files. §7.1, §7.4
+- [ ] **#2 Document model** in the app (4.5): add `freezed` (and Riverpod, for Phase 4);
+  `SceneDocument` (flat `NodeId → Node` map over the shared model), named transactions, undo/redo
+  with coalescing, dirty flag, atomic save/load, recovery file (*Q55*; the interval is a fixed
+  default until Settings arrive in Phase 7, *Q85*), `schemaVersion` gate (*Q49*). *Deferred:*
+  migrations framework. §8.1, §8.2
+- [ ] **#7 Generator** (4.5): the annotations in `pyro_annotations` (`@PyroBehavior`,
+  `@PyroComponent`, `@Editable`), introspection, the build-time rules of §6.1, Type IDs and
+  collisions (ADR 0002), supertypes and parent types (*Q57*), the Registry and Manifest emitters
+  into `lib/` with `build.yaml` (*Q68*), errors in the Manifest, for the preview's Field types.
+  §6.1, §7.3, §9.2
+- [ ] **#8 Runtime** (4, full scope): `PyroScene.load` with the two-pass loading order, building
+  the built-in Node kinds and custom ones through the Registry, `AssetSource` and asset fields
+  (the *Q78* loader), lookup API (`find`, `findAll`, paths), unknown-type handling (*Q58*),
+  Hot-swap (`onHotReload`, content hash, `onReloaded`, the stale-reference warning; *Q66, Q67,
+  Q71*). §6.2, §10
 
-**Done when:** a scene round-trips through the Document model unchanged, the generator's goldens
-pass on annotated fixtures, and the Runtime loads fixture scenes with `flame_test` (§13).
+**Tests:** document and history; serialization (round-trip every preview Node kind, the
+`childIds` repair cases); generator goldens and error cases (Type ID collision, unsupported field,
+bad constructor); Runtime loader with `flame_test`, including unknown Type IDs and the Hot-swap
+hash check. §13
+
+**Done when:** a fixture scene round-trips through the Document model byte for byte, the
+generator's goldens pass on annotated fixtures, and the Runtime loads fixture scenes with a
+hand-written Registry in `flame_test`.
 
 ## Phase 3 — Vertical slice ⬜
 
-- [ ] A hand-written Scene JSON → generator → Runtime → Play → Hot-swap, with no editor UI
-  (the first slice of #11)
+The whole contract end to end, with no editor UI. It removes the integration risk the spikes
+couldn't, and the author becomes the first user. It also retires the open macOS risk early: the
+preview defaults Play to the macOS desktop target, and Hot-swap with Pyro's own daemon client
+hasn't been run there yet.
 
-**Done when:** editing the JSON by hand and saving swaps the scene in the running game. This
-removes the integration risk the spikes couldn't, and the author becomes the first user.
+- [ ] **`example/` skeleton** (part of #13, 0.5): a minimal Flame game in the workspace with one
+  annotated Behavior, one custom component and one hand-written Scene JSON, loaded through
+  `PyroScene` and the generated Registry; macOS target enabled
+- [ ] **#12 CI contract test** (1, *Q59*): fill in the placeholder job; run the generator on
+  `example/`, check the committed Registry and Manifest (the `git diff` variant on Flutter 3.44,
+  §7.3), check the Manifest against its golden, load every `example/` scene with `flame_test`
+  against the real Registry. §13
+- [ ] **First slice of #11:** Pyro's `flutter run --machine` client starts `example/` on macOS,
+  saving the Scene JSON triggers `app.restart`, and the scene hot-swaps; a Dart-only reload leaves
+  it alone (§9.3). This is the "verify Hot-swap on macOS" check
+
+**Tests:** the contract job is green in CI.
+
+**Done when:** editing `example/`'s Scene JSON by hand and saving swaps the scene in the game
+running on macOS, Dart-only reloads don't rebuild it, and the contract job passes. If macOS
+Hot-swap fails, decide the preview's default Play target before Phase 4.
 
 ## Phase 4 — Editor ⬜
 
-In §14's order. The panels are built from the Pyro components (`Pr` widgets) throughout; a
-component that's missing is proposed, and the author decides whether it is built (*Q87*). All 29
-already exist, including the ones these panels lean on most (`PrTreeRow`, `PrPropertyRow`,
-`PrNumberProperty`, `PrVector2Property`).
+The panels are built from the Pyro components (`Pr` widgets) throughout; a component that's
+missing is proposed, and the author decides whether it is built (*Q87*). All 29 already exist,
+including the ones these panels lean on most (`PrTreeRow`, `PrPropertyRow`, `PrNumberProperty`,
+`PrVector2Property`). The order is §14's.
 
-- [ ] **#6 Built-in Node kinds** (2): entity, sprite, rectangle and circle hitboxes, placeholders
-- [ ] **#4 Viewport** (6.5): preview world, reconciler, pan/zoom, selection, move gizmo. §8.3
-- [ ] **#3 Hierarchy** (2): add, delete, rename, reparent by drag
+- [ ] **#1 App shell and editor window, preview part** (3): Riverpod providers (§8.5); project
+  list and open project, basic SDK detection (*Q39*), Runtime compatibility check from
+  `pubspec.lock` (*Q49*); the editor window on `PrEditorShell` with panel slots, scene tabs, new,
+  open and save scene, the dirty marker, a close confirmation and the recovery *Restore* prompt.
+  The window part (~1) had no item before (*Q88*)
+- [ ] **#6 Built-in Node kinds, editor side** (2): the Type catalog (Manifest parser, hand-written
+  descriptors for entity, sprite, rectangle and circle hitboxes, reload when the Manifest file
+  changes, §9.2), preview components for them, placeholders for custom components (*Q6*)
+- [ ] **#4 Viewport** (6.5): preview world, reconciler, pan/zoom, selection, move gizmo, disk
+  assets through `AssetSource` (*Q79*). §8.3
+- [ ] **#3 Hierarchy** (2): add, delete, rename, reparent by drag (on `PrTreeRow`)
 - [ ] **#5 Inspector** (2.5): transform; editors for `int`, `double`, `bool`, `String`, enum,
-  `Vector2` and an asset-path dropdown; Override markers + *Reset to default* (ADR 0003). Other
+  `Vector2` and an asset-path dropdown; Override markers and *Reset to default* (ADR 0003). Other
   Field types show read-only and round-trip untouched. §8.4
-- [ ] **#9 Behaviors in the inspector** (2): add/remove, compatibility filtering, Missing behavior
-  state
+- [ ] **#9 Behaviors in the inspector** (2): add/remove, compatibility filtering by parent type,
+  Missing behavior and Missing component states with values kept (*Q32*)
 
-**Done when:** a scene can be built from scratch in Pyro (entity, sprite, hitbox, custom
-Behavior with edited fields), saved, and reopened unchanged.
+**Tests:** reconciler (document diff → component operations); a few panel widget tests for
+reparenting, Override reset and Missing behavior. §13
 
-## Phase 5 — Play and shell ⬜
+**Done when:** in `example/`, a scene is built from scratch in Pyro (entity, sprite, hitbox, a
+custom Behavior with edited fields), saved, closed and reopened unchanged, and deleting the
+Behavior's class shows it as Missing with its values kept.
 
-- [ ] **#11 Play, rest of the preview part** (4 with the slice): macOS desktop target by default
-  (⚠ verify Hot-swap there first, ~0.5), daemon client, Console, Hot-swap trigger, auto code
-  reload (*Q61*), build_runner lock/external mode (*Q48, Q77*), *Attach debugger* copying the
-  current URI (*Q81*), image-restart toast (*Q72*). §9
-- [ ] **#1 App shell, preview part** (2): project list, open project, basic SDK detection, Runtime
-  compatibility check (*Q49*)
-- [ ] README recipe for adding Pyro to a project (stands in for the "Add Pyro" flow)
+## Phase 5 — Play ⬜
 
-**Done when:** the tester task works end to end in a project other than the author's: open a Flame
-project, place an entity with a sprite and a hitbox, attach a custom Behavior, tweak its fields,
-press Play and see the change in the running game.
+- [ ] **#11 Play, rest of the preview part** (4 with the slice): build_runner watcher with the
+  lock probe, external mode and takeover (*Q48, Q77*); Play/Stop on the macOS desktop target;
+  Console with URI redaction (§9.4, *Q81*); Hot-swap on save with the run link and asset
+  re-point that keep it working with an IDE attached (§9.3, *Q74*); auto code reload after the
+  generator goes idle (*Q61*); *Attach debugger* copying the current URI (*Q81*); the
+  image-restart toast (*Q72*); "Game stopped" handling (*Q63*)
+- [ ] **README recipe** for adding Pyro to a project (stands in for the "Add Pyro" flow): the
+  packages as git dependencies on this repository (they aren't on pub.dev until Phase 8),
+  `build_runner ≥ 2.14`, `build.yaml`, `assets/scenes/` in `pubspec.yaml`, the `PyroScene.load`
+  call, and enabling the macOS target if the game lacks one (the preview's Play has no device
+  list)
+- [ ] **Dry run:** the tester task, following only the README, in a Flame project that isn't
+  `example/`
+
+**Tests:** daemon protocol parsing from recorded transcripts; the lock probe. §13
+
+**Done when:** the dry run passes end to end: open a Flame project, place an entity with a sprite
+and a hitbox, attach a custom Behavior, tweak its fields, press Play and see the change in the
+running game, then attach VS Code with the copied URI and Hot-swap again.
 
 ## 🚩 Early preview
 
-Built from source, no signing, macOS. Everything above is in; nothing below is.
+Built from source, no signing, macOS. A tagged commit with everything above; nothing below is in
+it.
 
 ## Phase 6 — Testers and feedback ⬜
 
-- [ ] 5–8 hand-picked developers on their own games, a few watched on a call (*Q82*)
+- [ ] Send the README and the tester task to the 5–8 developers lined up in Phase 5; watch a
+  few on a call (*Q82*)
 - [ ] Record time from install to the first running scene, where setup failed, and whether they
   would use it over editing Dart
 - [ ] Ask about stale references after Hot-swap (Q-I, *Q71*)
 - [ ] Apply the response table fixed in advance in §14 (fix setup first, pull node-level patching
   forward, re-examine the viewport, reorder v0.1, or continue as planned)
 
-**Done when:** each observation has its response, and the order of Phases 7–8 is confirmed or
-changed in §14 (and here).
+**Done when:** each observation has its response, and Phase 7's order is confirmed or changed in
+§14 (and here).
 
-## Phase 7 — Assets ⬜
+## Phase 7 — v0.1 breadth ⬜
 
-The switch of the preview's panels onto the design system that used to open this phase is gone:
-the panels use the Pyro components from the start (*Q87*).
+The asset browser first, then the parts of each item the preview cut. The order after #10 stays
+open until Phase 6's feedback (*Q82*). Components come from `pyro_ui`, as in Phase 4 (*Q87*).
 
-- [ ] **#10 Asset browser + pubspec sync** (2.5), incl. subfolders and the "Not in pubspec.yaml"
+- [ ] **#10 Asset browser and pubspec sync** (2.5), with subfolders and the "Not in pubspec.yaml"
   mark (*Q53, Q85*). §10
-
-## Phase 8 — Deferred breadth ⬜
-
-The parts of each item the preview cut. Their order stays open until Phase 6's feedback (*Q82*).
-
-- [ ] **#1 App shell** (4): "Add Pyro" flow + pubspec diff, SDK management, settings, About
-  window with licences
+- [ ] **#1 App shell** (4): "Add Pyro" flow with the pubspec diff, SDK management, settings
+  (including the recovery interval, *Q85*), About window with licences (§12)
 - [ ] **#2 Document model** (0.5): migrations framework (§7.4)
 - [ ] **#3 Hierarchy** (1.5): duplicate, filter, duplicate-name warning (*Q51*)
-- [ ] **#4 Viewport** (3.5): grid, snapping, rotate/scale gizmos; the reference rectangle (*Q85*, §8.3),
-  which §14 doesn't place yet
+- [ ] **#4 Viewport** (3.5): grid, snapping, rotate/scale gizmos, the reference rectangle (*Q85*)
 - [ ] **#5 Inspector** (2): editors for `Color`, entity reference, `Sprite`, `SpriteAnimation`
 - [ ] **#6 Built-in Node kinds** (0.5): the third hitbox kind
 - [ ] **#7 Generator** (2): the rest of the v1 Field types
 - [ ] **#8 Runtime** (0.5): the difference between §14's preview and v0.1 estimates
 - [ ] **#9 Behaviors** (1): reorder, Missing behavior polish
-- [ ] **#11 Play** (5): device list + emulator boot (*Q62*), Attach info file, `launch.json`,
+- [ ] **#11 Play** (5): device list and emulator boot (*Q62*), Attach info file, `launch.json`,
   unauthenticated mode (*Q81*), lifecycle (*Q63*)
 
-## Phase 9 — Release ⬜
+**Tests:** one migration fixture per format change since the preview; the contract job covers
+the new Field types. §13
 
-In §14's order:
+**Done when:** every v0.1 item in §14 is in, and the core loop of §3 works in `example/` on the
+iOS simulator and an Android emulator as well as macOS.
 
-- [ ] **#15 Signing, notarization, release pipeline** (3)
-- [ ] **#12 CI contract test** (1) (*Q59*)
-- [ ] **#13 `example/` game** (2)
+## Phase 8 — Release ⬜
+
+- [ ] **#15 Signing, notarization, release pipeline** (3): fill in `release.yml` (Developer ID,
+  hardened runtime, notarize, staple, `.dmg` on GitHub Releases, *Q40*), and publish
+  `pyro_annotations`, `pyro_runtime` and `pyro_generator` to pub.dev
+- [ ] **#13 `example/` game** (rest, 1.5): turn the skeleton into a small sample game
 - [ ] **#14 final pass** against the design (goldens already exist; re-check the panels)
-- [ ] **#16 README, Getting Started** (incl. Attach and the CI check), demo video,
-  `ARCHITECTURE.md` polish (3)
+- [ ] **#16 README, Getting Started** (install, Gatekeeper, setup, Attach, the CI check),
+  demo video, `ARCHITECTURE.md` polish (3)
+- [ ] End-to-end smoke test of `example/` before tagging: Play, Hot-swap, Attach (§13, manual)
+
+**Done when:** a tagged build installs from GitHub Releases on a clean Mac without Gatekeeper
+warnings, and a new project set up from Getting Started and the pub.dev packages passes the
+smoke test.
 
 ## 🏁 v0.1 — First public release (macOS)
 
-Signed and notarized, on GitHub Releases. After it: v0.1.1, v0.2, … as in §14's
-"Roadmap after v0.1".
+Signed and notarized, on GitHub Releases, packages on pub.dev. After it: v0.1.1, v0.2, … as in
+§14's "Roadmap after v0.1".
 
 ---
+
+## Running alongside
+
+Tasks with lead time or a recurring trigger, done next to the phases rather than in them:
+
+- [ ] **Line up testers** during Phase 5: 5–8 developers with their own Flame games, hand-picked
+  (*Q82*). With the Discord GIF canceled, this is the demand check
+- [ ] **Apple Developer Program** enrollment before Phase 8 (identity checks can take days; *Q40*)
+- [ ] **Each new Flutter stable:** re-check `--project-root` and `_flutter.setAssetBundlePath`
+  (§9.3, §15.1), and bump `FLUTTER_VERSION` in CI deliberately
 
 ## Open questions
 
 None right now.
 
-The phase estimates are the per-item figures in §14's two tables. Phase 8's #7 and #8 lines are
+The phase estimates are the per-item figures in §14's two tables. Phase 7's #7 and #8 lines are
 the differences between those tables, so they are rough.

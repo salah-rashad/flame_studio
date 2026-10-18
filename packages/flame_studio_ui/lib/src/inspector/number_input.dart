@@ -364,6 +364,7 @@ class _FsNumberInputState extends State<FsNumberInput> {
               child: IgnorePointer(
                 ignoring: !valueTakesPointer,
                 child: FsEditableText(
+                  enabled: widget.enabled,
                   controller: _controller,
                   focusNode: widget.focusNode,
                   readOnly: !interactive,

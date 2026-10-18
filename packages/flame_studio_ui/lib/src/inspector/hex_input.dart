@@ -227,6 +227,7 @@ class _FsHexInputState extends State<FsHexInput> {
               child: IgnorePointer(
                 ignoring: !widget.enabled,
                 child: FsEditableText(
+                  enabled: widget.enabled,
                   controller: _controller,
                   focusNode: widget.focusNode,
                   readOnly: !widget.enabled,

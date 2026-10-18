@@ -224,6 +224,7 @@ class _FsTextFieldState extends State<FsTextField> {
                 ),
               ),
               FsEditableText(
+                enabled: widget.enabled,
                 controller: _controller,
                 focusNode: _focusNode,
                 autofocus: widget.autofocus,

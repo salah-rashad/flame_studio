@@ -254,6 +254,7 @@ class _FsSearchFieldState extends State<FsSearchField> {
                 ),
               ),
               FsEditableText(
+                enabled: widget.enabled,
                 controller: _controller,
                 focusNode: _focusNode,
                 autofocus: widget.autofocus,

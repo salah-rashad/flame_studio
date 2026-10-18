@@ -130,6 +130,54 @@ void main() {
     expect(tester.widget<EditableText>(_editable).focusNode.hasFocus, isFalse);
   });
 
+  testWidgets('disabled: Tab skips it; disabling drops focus', (tester) async {
+    final node = FocusNode();
+    addTearDown(node.dispose);
+    Widget field({required bool enabled}) => FsTextField(
+      value: 'Hero',
+      focusNode: node,
+      enabled: enabled,
+      selectAllOnFocus: true,
+    );
+    await pumpFs(tester, field(enabled: false));
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(node.hasFocus, isFalse);
+
+    await pumpFs(tester, field(enabled: true));
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(node.hasFocus, isTrue);
+    await pumpFs(tester, field(enabled: false));
+    await tester.pump(); // the focus change settles a frame later
+    expect(node.hasFocus, isFalse);
+    expect(tester.widget<EditableText>(_editable).selectionColor, isNull);
+  });
+
+  testWidgets('the selection shows only while focused', (tester) async {
+    final node = FocusNode();
+    addTearDown(node.dispose);
+    await pumpFs(
+      tester,
+      Column(
+        children: [
+          FsTextField(value: 'Hero', focusNode: node, selectAllOnFocus: true),
+          const FsTextField(value: 'Other'),
+        ],
+      ),
+    );
+    EditableText first() => tester.widget<EditableText>(_editable.first);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(first().controller.selection.textInside('Hero'), 'Hero');
+    expect(first().selectionColor, c.surfaceSelected);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(node.hasFocus, isFalse);
+    expect(first().selectionColor, isNull);
+  });
+
   testWidgets('read-only: flat, text-primary, not editable', (tester) async {
     await pumpFs(tester, const FsTextField(value: 'Hero', readOnly: true));
     expect(fieldFill(tester, _field), c.surfacePanel);

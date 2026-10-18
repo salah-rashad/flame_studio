@@ -1,4 +1,4 @@
-# CI for the Flame Studio workspace (project plan §13, Q33).
+# CI for the Pyro workspace (project plan §13, Q33).
 # Signed macOS releases live in release.yml.
 name: CI
 
@@ -47,32 +47,32 @@ jobs:
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed packages apps
       - name: Analyze pure-Dart packages
-        run: dart analyze --fatal-infos packages/flame_studio_annotations packages/flame_studio_generator
+        run: dart analyze --fatal-infos packages/pyro_annotations packages/pyro_generator
       - name: Analyze Flutter packages and the app
-        run: flutter analyze --fatal-infos packages/flame_studio_runtime packages/flame_studio_ui apps/flame_studio
-      - name: Test flame_studio_annotations
-        working-directory: packages/flame_studio_annotations
+        run: flutter analyze --fatal-infos packages/pyro_runtime packages/pyro_ui apps/pyro
+      - name: Test pyro_annotations
+        working-directory: packages/pyro_annotations
         run: dart test
-      - name: Test flame_studio_generator
-        working-directory: packages/flame_studio_generator
+      - name: Test pyro_generator
+        working-directory: packages/pyro_generator
         run: dart test
-      - name: Test flame_studio_runtime
-        working-directory: packages/flame_studio_runtime
+      - name: Test pyro_runtime
+        working-directory: packages/pyro_runtime
         run: flutter test
-      - name: Test flame_studio_ui
-        working-directory: packages/flame_studio_ui
+      - name: Test pyro_ui
+        working-directory: packages/pyro_ui
         run: flutter test
       # The gallery's smoke test everywhere; its goldens (tag `golden`) skip
       # themselves off macOS, where fonts rasterise differently (Q84).
-      - name: Test the flame_studio_ui gallery
-        working-directory: packages/flame_studio_ui/example
+      - name: Test the pyro_ui gallery
+        working-directory: packages/pyro_ui/example
         run: flutter test
-      - name: Test the Studio app
-        working-directory: apps/flame_studio
+      - name: Test the Pyro app
+        working-directory: apps/pyro
         run: flutter test
 
   build-studio:
-    name: Build the Studio (${{ matrix.platform }})
+    name: Build Pyro (${{ matrix.platform }})
     strategy:
       fail-fast: false
       matrix:
@@ -102,7 +102,7 @@ jobs:
       - name: Resolve the workspace
         run: dart pub get
       - name: Build (unsigned release)
-        working-directory: apps/flame_studio
+        working-directory: apps/pyro
         run: flutter build ${{ matrix.platform }} --release
 
   contract:
@@ -112,7 +112,7 @@ jobs:
     #      (dart run build_runner build in example/).
     #   2. Check the committed Registry and Manifest (§7.3, Q76). On Flutter
     #      3.44 (build_runner <= 2.15.1) that is
-    #        git diff --exit-code lib/flame_studio.g.dart lib/flame_studio.manifest.json
+    #        git diff --exit-code lib/pyro.g.dart lib/pyro.manifest.json
     #      and on Flutter >= 3.47
     #        dart run build_runner build --only-check
     #   3. Check the Manifest against its golden file.

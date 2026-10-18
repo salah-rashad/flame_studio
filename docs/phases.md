@@ -1,4 +1,4 @@
-# Flame Studio — Phases to v0.1
+# Pyro — Phases to v0.1
 
 | | |
 |---|---|
@@ -70,13 +70,14 @@ Throwaway code in `spikes/`, findings in [`ARCHITECTURE.md`](ARCHITECTURE.md) (*
 
 - [x] **#0 Repo setup:** pub workspace, the four packages and the app, CI skeleton, lint rules
 - [ ] **#0 Riverpod learning spike** (Q26, §8.5): Riverpod isn't a dependency yet
-- [x] **#14 Design system** in `flame_studio_ui` (*Q83, Q84*): foundations, all 29 components,
+- [x] **#14 Design system** in `pyro_ui` (*Q83, Q84*): foundations, all 29 components,
   the EditorShell, the 60 icons, the gallery app, widget tests, one golden per gallery page and the
   side-by-side review against `preview.html` ([`ui-components-plan.md`](ui-components-plan.md))
 
 Free tasks §14 lists before building:
 
-- [ ] ❓ Ask the Flame maintainers about the name (*Q36*), the longest lead-time item
+- [x] Ask the Flame maintainers about the name (*Q36*): "Flame Studio" is reserved for their
+  official package, so the app is now **Pyro** (*Q86*)
 - [ ] ❓ Post the spike #1 loop as a short GIF on the Flame Discord (a demand check)
 
 **Done when:** the Riverpod spike has settled the provider layout of §8.5 well enough to start
@@ -109,8 +110,8 @@ removes the integration risk the spikes couldn't, and the author becomes the fir
 
 ## Phase 4 — Editor ⬜
 
-In §14's order. The design-system widgets these panels need (`FsTreeRow`, `FsPropertyRow`,
-`FsNumberProperty`, `FsVector2Property`) are already built.
+In §14's order. The design-system widgets these panels need (`PrTreeRow`, `PrPropertyRow`,
+`PrNumberProperty`, `PrVector2Property`) are already built.
 
 - [ ] **#6 Built-in Node kinds** (2): entity, sprite, rectangle and circle hitboxes, placeholders
 - [ ] **#4 Viewport** (6.5): preview world, reconciler, pan/zoom, selection, move gizmo. §8.3
@@ -121,7 +122,7 @@ In §14's order. The design-system widgets these panels need (`FsTreeRow`, `FsPr
 - [ ] **#9 Behaviors in the inspector** (2): add/remove, compatibility filtering, Missing behavior
   state
 
-**Done when:** a scene can be built from scratch in the Studio (entity, sprite, hitbox, custom
+**Done when:** a scene can be built from scratch in Pyro (entity, sprite, hitbox, custom
 Behavior with edited fields), saved, and reopened unchanged.
 
 ## Phase 5 — Play and shell ⬜
@@ -132,7 +133,7 @@ Behavior with edited fields), saved, and reopened unchanged.
   current URI (*Q81*), image-restart toast (*Q72*). §9
 - [ ] **#1 App shell, preview part** (2): project list, open project, basic SDK detection, Runtime
   compatibility check (*Q49*)
-- [ ] README recipe for adding Flame Studio to a project (stands in for the "Add Flame Studio" flow)
+- [ ] README recipe for adding Pyro to a project (stands in for the "Add Pyro" flow)
 
 **Done when:** the tester task works end to end in a project other than the author's: open a Flame
 project, place an entity with a sprite and a hitbox, attach a custom Behavior, tweak its fields,
@@ -156,7 +157,7 @@ changed in §14 (and here).
 
 ## Phase 7 — Design pass and assets ⬜
 
-- [ ] **#14 Panels onto the design system:** replace the preview's Material widgets with the `Fs`
+- [ ] **#14 Panels onto the design system:** replace the preview's Material widgets with the `Pr`
   widgets, starting with Button, IconButton, Tooltip, TextField, Panel, SectionHeader,
   ContextMenu, Dropdown, BoolProperty, Dialog, Toast, Badge, Banner, Progress, then EditorShell,
   Toolbar, Tabs (`ui-components-plan.md` §8.3). The widgets exist; this is the switch
@@ -167,7 +168,7 @@ changed in §14 (and here).
 
 The parts of each item the preview cut. Their order stays open until Phase 6's feedback (*Q82*).
 
-- [ ] **#1 App shell** (4): "Add Flame Studio" flow + pubspec diff, SDK management, settings, About
+- [ ] **#1 App shell** (4): "Add Pyro" flow + pubspec diff, SDK management, settings, About
   window with licences
 - [ ] **#2 Document model** (0.5): migrations framework (§7.4)
 - [ ] **#3 Hierarchy** (1.5): duplicate, filter, duplicate-name warning (*Q51*)
@@ -203,10 +204,10 @@ Signed and notarized, on GitHub Releases. After it: v0.1.1, v0.2, … as in §14
 
 - **Preview panels on Material or on the design system?** §14 (*Q82, Q84*) has the preview use
   themed Material widgets and move to the design system after it, because only a ~5.5-evening core
-  of #14 was to be built first. All of #14 is now built, so the preview could use the `Fs` widgets
+  of #14 was to be built first. All of #14 is now built, so the preview could use the `Pr` widgets
   from the start and Phase 7's switch would disappear. Not decided; §14 and Phase 7 stay as they
   are until it is.
-- **The two free tasks** in Phase 1 (name, Discord GIF): done or not?
+- **The Discord GIF** in Phase 1: done or not?
 
 The phase estimates are the per-item figures in §14's two tables. Phase 8's #7 and #8 lines are
 the differences between those tables, so they are rough.

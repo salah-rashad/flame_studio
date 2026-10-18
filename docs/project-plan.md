@@ -1,15 +1,15 @@
-# Flame Studio — Project Plan
+# Pyro — Project Plan
 
 | | |
 |---|---|
 | **Status** | Reviewed draft (v2) |
 | **Date** | 2026-10-16 |
 | **Author** | Salah Ahmed |
-| **Companion docs** | [`decisions.md`](decisions.md) (decision log, Q1–Q85) · [`../GLOSSARY.md`](../GLOSSARY.md) (project vocabulary) · [`adr/`](adr/) (architecture decision records) · [`claude-design-prompts.md`](claude-design-prompts.md) (UI design prompts) · [`ui-components-plan.md`](ui-components-plan.md) (design-system widgets) · [`phases.md`](phases.md) (phases and progress to v0.1) |
+| **Companion docs** | [`decisions.md`](decisions.md) (decision log, Q1–Q86) · [`../GLOSSARY.md`](../GLOSSARY.md) (project vocabulary) · [`adr/`](adr/) (architecture decision records) · [`claude-design-prompts.md`](claude-design-prompts.md) (UI design prompts) · [`ui-components-plan.md`](ui-components-plan.md) (design-system widgets) · [`phases.md`](phases.md) (phases and progress to v0.1) |
 
 > **For reviewers.** Everything in sections 1–13 was decided in two structured design sessions;
 > the decision number (e.g. *Q17*) points to the entry in `decisions.md`. Q1–Q42 come from the
-> original design session, Q43–Q73 from the plan review, Q74–Q85 from the spikes and later reviews. Items marked **⚠ verify** are assumptions
+> original design session, Q43–Q73 from the plan review, Q74–Q86 from the spikes and later reviews. Items marked **⚠ verify** are assumptions
 > the v0.0 spike must confirm. Items marked **◇ proposed** are details not explicitly decided yet:
 > review these hardest. Section 15 lists what is still open. Terms in **bold capitals** (Node,
 > Behavior, Override, …) are defined in `GLOSSARY.md`.
@@ -39,7 +39,7 @@
 
 ## 1. Summary
 
-Flame Studio is an **open-source desktop editor for games made with the [Flame](https://flame-engine.org)
+Pyro is an **open-source desktop editor for games made with the [Flame](https://flame-engine.org)
 engine** (Flutter). It gives Flame developers what Unity and Godot users take for granted: a scene
 editor where you compose levels visually, attach behaviors, tweak their fields in an inspector,
 and press Play to run the game on a real device — while all game **logic stays in plain Dart**,
@@ -47,16 +47,16 @@ written in the developer's own IDE.
 
 Key architectural choices:
 
-- **Standalone app** (*Q7*). The Studio never runs user code inside itself. It edits *data* (scene
+- **Standalone app** (*Q7*). Pyro never runs user code inside itself. It edits *data* (scene
   files) and runs the user's game as a child process via the user's own Flutter SDK.
-- **The Studio runs the game; the IDE attaches** (*Q43*, [ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md)).
-  As in Unity, Play lives in the Studio. Developers attach their IDE's debugger to the running game
+- **Pyro runs the game; the IDE attaches** (*Q43*, [ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md)).
+  As in Unity, Play lives in Pyro. Developers attach their IDE's debugger to the running game
   for breakpoints and code hot reload.
 - **Data-driven scenes** (*Q3*). Scenes are JSON files loaded at runtime by a small package,
-  `flame_studio_runtime`, through a non-invasive API.
+  `pyro_runtime`, through a non-invasive API.
 - **Code generation instead of reflection** (*Q12, Q38*). A `source_gen` builder,
-  `flame_studio_generator`, reads annotated user classes and emits (a) the **Registry** used by the
-  game to create scene objects and (b) the **Manifest** the Studio reads to build its inspector.
+  `pyro_generator`, reads annotated user classes and emits (a) the **Registry** used by the
+  game to create scene objects and (b) the **Manifest** Pyro reads to build its inspector.
 - **Behaviors-first scripting** (*Q6, Q13*) on top of `flame_behaviors`.
 
 It is built solo, on evenings and weekends (*Q5*), MIT-licensed (*Q11*), macOS-first (*Q4*).
@@ -69,7 +69,7 @@ It is built solo, on evenings and weekends (*Q5*), MIT-licensed (*Q11*), macOS-f
 
 1. **Compose in the GUI, logic in Dart, see it live on a device.** This loop is the product.
 2. Work with **any existing Flame project** without restructuring it (*Q29, Q30*).
-3. **Never destroy user data**: scene files survive code renames, deletions and Studio upgrades
+3. **Never destroy user data**: scene files survive code renames, deletions and Pyro upgrades
    (*Q32, Q35*).
 4. Be **maintainable by one person**: narrow version support, few moving parts, strong tests on the
    core (*Q18, Q33*).
@@ -81,12 +81,12 @@ It is built solo, on evenings and weekends (*Q5*), MIT-licensed (*Q11*), macOS-f
 |---|---|
 | Code editor, IDE features | VS Code / Android Studio already do this well; they attach to the running game (*Q2, Q43*) |
 | Visual scripting | Logic is Dart (*Q2*) |
-| Tilemap editing | Use Tiled; the Studio *places* Tiled maps as Nodes (*Q10*) |
-| Pixel/image drawing | Use Aseprite etc.; the Studio slices and imports (*Q8*) |
+| Tilemap editing | Use Tiled; Pyro *places* Tiled maps as Nodes (*Q10*) |
+| Pixel/image drawing | Use Aseprite etc.; Pyro slices and imports (*Q8*) |
 | Running user code inside the editor | Isolation and plugin compatibility (*Q7, Q16*); the v0.4 Live bridge covers the need |
 | Forge2D physics editing | Built-in Flame hitboxes first (*Q9*) |
 | Docking/tabbed panel framework | Fixed resizable panels (*Q20*) |
-| Web as a Play target | Hidden in v0.1; best effort from v0.3 (*Q70*). Games can still be built for web outside the Studio |
+| Web as a Play target | Hidden in v0.1; best effort from v0.3 (*Q70*). Games can still be built for web outside Pyro |
 | 3D | Flame is 2D |
 
 ---
@@ -98,17 +98,17 @@ frustrated by placing objects with hard-coded coordinates and restarting the gam
 
 ### The core loop (v0.1)
 
-1. Open the Studio → pick a Flame project from the project list.
-2. First time only: **"Add Flame Studio to this project"** adds the runtime and generator
+1. Open Pyro → pick a Flame project from the project list.
+2. First time only: **"Add Pyro to this project"** adds the runtime and generator
    dependencies (and `build_runner ≥ 2.14`), `build.yaml`, an `assets/scenes/` folder and its
    `pubspec.yaml` asset entry, shows the diff, runs `pub get` (*Q29, Q48, Q53*).
-3. The Studio starts `build_runner watch` in the background, or uses one the user already runs
+3. Pyro starts `build_runner watch` in the background, or uses one the user already runs
    (*Q48*). The user's annotated behaviors and components appear in the "Add Behavior" list (*Q38*).
 4. Create a scene; drag images in from the asset browser; arrange entities with gizmos; add
    hitboxes; attach behaviors and set their fields in the inspector.
-5. In their IDE, the user writes `@StudioBehavior() class Patrol extends Behavior<...>` with
+5. In their IDE, the user writes `@PyroBehavior() class Patrol extends Behavior<...>` with
    `@Editable() double speed = 50;` → saves → seconds later `speed` is editable in the inspector.
-6. In game code: `world.add(await StudioScene.load('assets/scenes/level1.scene.json', registry: studioRegistry))` (*Q30*).
+6. In game code: `world.add(await PyroScene.load('assets/scenes/level1.scene.json', registry: pyroRegistry))` (*Q30*).
 7. Pick a device in the toolbar (iOS simulator, Android emulator, macOS, a phone; emulators boot on
    demand) → **Play** (*Q17, Q41, Q62*).
 8. Optionally **Attach** the IDE debugger to the running game (*Q60*). Saving Dart code hot-reloads
@@ -124,7 +124,7 @@ frustrated by placing objects with hard-coded coordinates and restarting the gam
 
 ```mermaid
 flowchart LR
-  subgraph Studio["Flame Studio (desktop app, release build)"]
+  subgraph Pyro["Pyro (desktop app, release build)"]
     UI["Panels: Hierarchy · Viewport · Inspector · Assets · Console"]
     DOC["Scene document + history"]
     REC["Reconciler → Flame preview world"]
@@ -141,8 +141,8 @@ flowchart LR
     SRC["lib/**/*.dart (user code)"]
     SCN["assets/scenes/**/*.scene.json"]
     ANIM["assets/**/*.anim.json, images, .tmx"]
-    GEN["lib/flame_studio.g.dart (Registry)"]
-    MAN["lib/flame_studio.manifest.json (Manifest)"]
+    GEN["lib/pyro.g.dart (Registry)"]
+    MAN["lib/pyro.manifest.json (Manifest)"]
   end
 
   subgraph Children["Child processes (user's Flutter SDK)"]
@@ -151,7 +151,7 @@ flowchart LR
   end
 
   IDE["User's IDE (debugger)"]
-  GAME["Running game on device<br/>flame_studio_runtime"]
+  GAME["Running game on device<br/>pyro_runtime"]
 
   FS <--> SCN
   FS <--> ANIM
@@ -170,25 +170,25 @@ flowchart LR
 
 | Component | Where it runs | Responsibility |
 |---|---|---|
-| **Studio app** (`flame_studio`) | User's desktop, release build | Project list, editing, preview rendering, running the game, orchestrating child processes. Never imports user code. |
-| **Scene document** | Studio | Immutable model of the open scene; single source of truth (*Q21*). |
-| **Reconciler** | Studio | Turns document changes into minimal changes to a Flame `World` used as the viewport (*Q24*). |
-| **Type catalog** | Studio | Built from the Manifest plus hand-written descriptors for built-in Node kinds; drives inspector field editors and the "Add Behavior/Component" lists (*Q12, Q52*). |
-| **Process manager** | Studio | Spawns and supervises `build_runner watch` and `flutter run --machine`; parses their output into the Console; triggers hot reloads (*Q29, Q61*). |
-| **`flame_studio_annotations`** | User project (via the runtime) and generator | Pure-Dart annotations, no dependencies (*Q44*). |
-| **`flame_studio_generator`** | User project, dev dependency | `source_gen` builder: emits the Registry and the Manifest (*Q38*). |
-| **`flame_studio_runtime`** | Shipped inside the user's game | Scene loader, migrations, lookup API, debug-only Hot-swap through Flame's `onHotReload` (*Q30, Q66*). Re-exports the annotations. |
-| **`flame_studio_ui`** | Studio, as a library | The design system in Flutter: tokens, theme and presentational widgets. Knows nothing about scenes or app state (*Q83*). |
+| **Pyro app** (`pyro`) | User's desktop, release build | Project list, editing, preview rendering, running the game, orchestrating child processes. Never imports user code. |
+| **Scene document** | Pyro | Immutable model of the open scene; single source of truth (*Q21*). |
+| **Reconciler** | Pyro | Turns document changes into minimal changes to a Flame `World` used as the viewport (*Q24*). |
+| **Type catalog** | Pyro | Built from the Manifest plus hand-written descriptors for built-in Node kinds; drives inspector field editors and the "Add Behavior/Component" lists (*Q12, Q52*). |
+| **Process manager** | Pyro | Spawns and supervises `build_runner watch` and `flutter run --machine`; parses their output into the Console; triggers hot reloads (*Q29, Q61*). |
+| **`pyro_annotations`** | User project (via the runtime) and generator | Pure-Dart annotations, no dependencies (*Q44*). |
+| **`pyro_generator`** | User project, dev dependency | `source_gen` builder: emits the Registry and the Manifest (*Q38*). |
+| **`pyro_runtime`** | Shipped inside the user's game | Scene loader, migrations, lookup API, debug-only Hot-swap through Flame's `onHotReload` (*Q30, Q66*). Re-exports the annotations. |
+| **`pyro_ui`** | Pyro, as a library | The design system in Flutter: tokens, theme and presentational widgets. Knows nothing about scenes or app state (*Q83*). |
 
 ### 4.3 Why this shape (short rationale for reviewers)
 
 - **Isolation:** user code can't crash or hang the editor; editor bugs and user bugs stay separate.
 - **Compatibility:** the user's project never has to build for desktop, so mobile-only plugins (ads,
-  some analytics SDKs) don't block the Studio.
-- **Performance:** the Studio is an AOT release build (smooth UI), unlike an editor compiled into
+  some analytics SDKs) don't block Pyro.
+- **Performance:** Pyro is an AOT release build (smooth UI), unlike an editor compiled into
   the user's project, which would have to run in debug/JIT mode for hot reload.
-- **Studio owns Play, IDE attaches** ([ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md)):
-  the Studio controls the whole loop (device, Play/Stop, Console, Hot-swap) regardless of the
+- **Pyro owns Play, IDE attaches** ([ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md)):
+  Pyro controls the whole loop (device, Play/Stop, Console, Hot-swap) regardless of the
   developer's IDE; developers keep breakpoints by attaching.
 - **No reflection in Flutter:** `dart:mirrors` is unavailable, and `reflectable` was evaluated and
   rejected (generic-type limits, per-entry-point generation, runtime cost in shipped games).
@@ -203,7 +203,7 @@ flowchart LR
 One repository, **Dart pub workspaces** (*Q28*).
 
 ```
-flame_studio/                      ← repo root (this folder)
+pyro/                      ← repo root (this folder)
 ├─ pubspec.yaml                    ← workspace root
 ├─ GLOSSARY.md
 ├─ docs/
@@ -213,46 +213,46 @@ flame_studio/                      ← repo root (this folder)
 │  ├─ claude-design-prompts.md
 │  └─ ARCHITECTURE.md              ← written from v0.0 findings + this plan
 ├─ packages/
-│  ├─ flame_studio_annotations/    ← pub.dev; pure Dart, no dependencies
-│  ├─ flame_studio_runtime/        ← pub.dev; shipped in games
+│  ├─ pyro_annotations/    ← pub.dev; pure Dart, no dependencies
+│  ├─ pyro_runtime/        ← pub.dev; shipped in games
 │  │  ├─ lib/src/scene/            ← model, JSON (de)serialization, migrations
-│  │  ├─ lib/src/loader/           ← StudioScene.load, AssetSource, Registry interface
+│  │  ├─ lib/src/loader/           ← PyroScene.load, AssetSource, Registry interface
 │  │  └─ lib/src/debug/            ← Hot-swap (onHotReload, content hash), debug only
-│  ├─ flame_studio_generator/      ← pub.dev; dev dependency
+│  ├─ pyro_generator/      ← pub.dev; dev dependency
 │  │  ├─ lib/builder.dart
 │  │  └─ lib/src/{introspect,registry_emitter,manifest_emitter}.dart
-│  └─ flame_studio_ui/             ← not published; the Studio's design system (Q83)
+│  └─ pyro_ui/             ← not published; Pyro's design system (Q83)
 │     ├─ design/tokens.json        ← copy of the Claude Design tokens; a test checks the Dart side
-│     └─ lib/src/                  ← tokens, FsTheme, widgets (buttons, fields, rows, menus…)
+│     └─ lib/src/                  ← tokens, PrTheme, widgets (buttons, fields, rows, menus…)
 ├─ apps/
-│  └─ flame_studio/                ← the desktop app (released as binaries, not on pub)
+│  └─ pyro/                ← the desktop app (released as binaries, not on pub)
 │     ├─ lib/app/                  ← shell, project list, settings
 │     ├─ lib/document/             ← document model, transactions, history
 │     ├─ lib/viewport/             ← preview world, reconciler, gizmos
-│     ├─ lib/panels/               ← hierarchy, inspector, assets, console (built from flame_studio_ui)
+│     ├─ lib/panels/               ← hierarchy, inspector, assets, console (built from pyro_ui)
 │     ├─ lib/project/              ← SDK detection, setup flow, pubspec sync, version checks
 │     └─ lib/process/              ← build_runner + flutter daemon clients, attach support
-└─ example/                        ← sample Flame game built with the Studio
+└─ example/                        ← sample Flame game built with Pyro
 ```
 
-**Shared code:** the scene model, JSON format and migrations live in `flame_studio_runtime` and are
-imported by the Studio, so the Studio and games can never disagree on the format. When node-level
-Hot-swap arrives (v0.4), the scene diff also lives here so the Studio's reconciler and the
+**Shared code:** the scene model, JSON format and migrations live in `pyro_runtime` and are
+imported by Pyro, so Pyro and games can never disagree on the format. When node-level
+Hot-swap arrives (v0.4), the scene diff also lives here so Pyro's reconciler and the
 Runtime share it (*Q67*).
 
 **Dependency rules**
-- `flame_studio_annotations` is **pure Dart with no dependencies** (*Q44*), like
+- `pyro_annotations` is **pure Dart with no dependencies** (*Q44*), like
   `freezed_annotation` or `json_annotation`. Builders run on the plain Dart VM and must never pull
   in Flutter.
-- `flame_studio_runtime` depends on the annotations (re-exported), `flame ≥ 1.36` (for
+- `pyro_runtime` depends on the annotations (re-exported), `flame ≥ 1.36` (for
   `onHotReload`, *Q66*), `flame_behaviors` and Flutter. Keep it small: it ships in every game.
-- `flame_studio_generator` depends on the annotations, `source_gen`, `build` and `analyzer`, and
+- `pyro_generator` depends on the annotations, `source_gen`, `build` and `analyzer`, and
   matches annotations with `TypeChecker.fromUrl`. It **never** depends on the runtime.
-- `flame_studio_ui` depends on **Flutter only** (plus the Lucide icon font,
+- `pyro_ui` depends on **Flutter only** (plus the Lucide icon font,
   `lucide_icons_flutter`; Inter and JetBrains Mono are bundled), never on
   `flame`, the runtime or the app. Its widgets take plain values and callbacks; nothing in it knows
   about scenes, the document or Riverpod (*Q83*). Only the app depends on it.
-- The app depends on the runtime (format, built-in rendering), `flame_studio_ui`, `flame`,
+- The app depends on the runtime (format, built-in rendering), `pyro_ui`, `flame`,
   `flame_tiled`, Riverpod, freezed. It **never** depends on the generator.
 
 ---
@@ -261,10 +261,10 @@ Runtime share it (*Q67*).
 
 All names are **◇ proposed**; the shape is decided.
 
-### 6.1 Annotations (in `flame_studio_annotations`)
+### 6.1 Annotations (in `pyro_annotations`)
 
 ```dart
-@StudioBehavior(
+@PyroBehavior(
   label: 'Patrol',                 // optional display name
   category: 'Movement',            // groups the Add Behavior list
   // id: 'enemy.patrol',           // optional explicit Type ID (default: class name)
@@ -289,7 +289,7 @@ class Patrol extends Behavior<PositionedEntity> {
   void update(double dt) { /* user logic */ }
 }
 
-@StudioComponent(preview: 'assets/images/boss_preview.png') // drawn in the editor instead of a placeholder
+@PyroComponent(preview: 'assets/images/boss_preview.png') // drawn in the editor instead of a placeholder
 class Boss extends PositionedEntity { ... }
 ```
 
@@ -299,7 +299,7 @@ class Boss extends PositionedEntity { ... }
 - **Type IDs must be unique** across the package: the class name, or the explicit `id:`. Two
   annotated classes with the same Type ID fail the build, naming both (*Q45*,
   [ADR 0002](adr/0002-type-ids-are-class-names.md)).
-- `@StudioComponent` classes must extend **`PositionComponent`** in v1. They accept Behaviors only
+- `@PyroComponent` classes must extend **`PositionComponent`** in v1. They accept Behaviors only
   if they mix in `EntityMixin`; the generator records this (*Q50*).
 - `@Editable` fields must be public, non-final, of a supported Field type: `int`, `double`, `bool`,
   `String`, enums, `Vector2`, `Color`, asset types (`Sprite`, `SpriteAnimation`, image path),
@@ -312,17 +312,17 @@ class Boss extends PositionedEntity { ... }
 ### 6.2 Runtime API (in games)
 
 ```dart
-import 'package:flame_studio_runtime/flame_studio_runtime.dart';
-import 'flame_studio.g.dart'; // generated Registry
+import 'package:pyro_runtime/pyro_runtime.dart';
+import 'pyro.g.dart'; // generated Registry
 
 class MyGame extends FlameGame {
   late Player player;
 
   @override
   Future<void> onLoad() async {
-    final scene = await StudioScene.load(
+    final scene = await PyroScene.load(
       'assets/scenes/level1.scene.json',
-      registry: studioRegistry,              // generated
+      registry: pyroRegistry,              // generated
       // onUnknownType: UnknownType.skip,    // default: throw (Q58)
       onReloaded: _lookUpNodes,              // re-run lookups after a Hot-swap (Q71)
     );
@@ -330,7 +330,7 @@ class MyGame extends FlameGame {
     _lookUpNodes(scene);
   }
 
-  void _lookUpNodes(StudioScene scene) {
+  void _lookUpNodes(PyroScene scene) {
     player = scene.find<Player>('player');          // by Node name; throws if ambiguous
     final enemies = scene.findAll(tag: 'enemy');    // by tag
     final boss = scene.find<Boss>('arena/boss');    // by path when names repeat
@@ -346,7 +346,7 @@ class MyGame extends FlameGame {
   Type ID; `onUnknownType: skip` keeps the game running without that Node (*Q58*).
 - **Loading order:** construct all Nodes → assign Overrides and load asset fields → resolve entity
   references (second pass) → add to the tree, so `onLoad` sees configured fields. ◇ proposed
-- **Debug-only Hot-swap** (*Q66, Q67, Q72*): `StudioScene` overrides Flame's `onHotReload()`
+- **Debug-only Hot-swap** (*Q66, Q67, Q72*): `PyroScene` overrides Flame's `onHotReload()`
   (Flame ≥ 1.36, debug builds only). On each hot reload it re-reads its scene file and every
   `.anim.json` (and, from v0.2, prefab) it uses, and compares a content hash with what it loaded.
   If nothing changed (e.g. a Dart-only reload), it does nothing. If something changed, it clears
@@ -356,9 +356,9 @@ class MyGame extends FlameGame {
   point at removed components. `onReloaded` is the documented way to re-run lookups, and in debug
   builds the Runtime logs a warning the first time a removed Node from an earlier scene version is
   used. ◇ proposed detection mechanism
-- **Running without the Studio** (*Q64*): games launched from the IDE, CI or release builds load
-  scenes normally. In debug, an IDE hot restart picks up saved scene changes; there is no Studio
-  Console. Nothing in the Runtime depends on the Studio.
+- **Running without Pyro** (*Q64*): games launched from the IDE, CI or release builds load
+  scenes normally. In debug, an IDE hot restart picks up saved scene changes; there is no Pyro
+  Console. Nothing in the Runtime depends on Pyro.
 - **Typed accessors** (`Level1Scene.player`) are a later addition (v0.4).
 
 ---
@@ -448,7 +448,7 @@ keeps the image path in one place.
 
 The format is fixed now; the grid slicer that writes it ships in v0.1.1 (*Q65*).
 
-### 7.3 Manifest (generator → Studio) (*Q38, Q68, Q76*)
+### 7.3 Manifest (generator → Pyro) (*Q38, Q68, Q76*)
 
 ```json
 {
@@ -483,14 +483,14 @@ The format is fixed now; the grid slicer that writes it ships in v0.1.1 (*Q65*).
 ```
 
 - Constant defaults are evaluated; non-constant defaults keep their source text for display.
-- Generator errors are written into `errors` too, so the Studio can show them inline even when
+- Generator errors are written into `errors` too, so Pyro can show them inline even when
   the Dart build fails. ◇ proposed
 - **No timestamps or other non-deterministic content:** the file is committed and checked in CI
   (below), so it must be byte-identical for identical input.
-- **Location (*Q68*):** `lib/flame_studio.manifest.json`, next to the Registry
-  `lib/flame_studio.g.dart`. Both are `build_to: source` outputs of one `$lib$` aggregator that
+- **Location (*Q68*):** `lib/pyro.manifest.json`, next to the Registry
+  `lib/pyro.g.dart`. Both are `build_to: source` outputs of one `$lib$` aggregator that
   reads per-file results from the build cache (the pattern source_gen's own combining builder
-  uses). **Both are committed**: a fresh clone compiles and opens in the Studio with no build
+  uses). **Both are committed**: a fresh clone compiles and opens in Pyro with no build
   step, so a Missing behavior always means the code really changed.
 - **CI check (*Q76*).** Getting Started recommends one of two checks, depending on the project's
   Flutter version. Flutter ≤ 3.46 pins `meta` tightly enough that build_runner resolves to at
@@ -499,26 +499,26 @@ The format is fixed now; the grid slicer that writes it ships in v0.1.1 (*Q65*).
   | Project's Flutter | CI step |
   |---|---|
   | ≥ 3.47 (build_runner ≥ 2.16) | `dart run build_runner build --only-check` |
-  | ≤ 3.46 | `dart run build_runner build`, then `git diff --exit-code lib/flame_studio.g.dart lib/flame_studio.manifest.json` |
+  | ≤ 3.46 | `dart run build_runner build`, then `git diff --exit-code lib/pyro.g.dart lib/pyro.manifest.json` |
 
   The `git diff` variant wasn't run in spike #2; the contract job (§13) exercises it first.
-  Either command takes build_runner's lock, so running one locally stops the Studio's watcher
+  Either command takes build_runner's lock, so running one locally stops Pyro's watcher
   (§9.2).
 - The per-file builder uses build_runner's `triggers` / `run_only_if_triggered` so files without
-  Flame Studio annotations cost nearly nothing. ◇ proposed
+  Pyro annotations cost nearly nothing. ◇ proposed
 
 ### 7.4 Versioning, migrations and compatibility (*Q35, Q49*)
 
 - Every file carries `schemaVersion`. The Runtime holds a chain of pure migration functions
-  `v1→v2→v3…`. Loading upgrades in memory; the Studio writes the newest version on save and shows
+  `v1→v2→v3…`. Loading upgrades in memory; Pyro writes the newest version on save and shows
   an info banner the first time.
 - **Guarantee:** any file saved by any earlier release loads in every later release. Files from a
-  *newer* Studio are refused with a clear message (no downgrade support).
+  *newer* Pyro are refused with a clear message (no downgrade support).
 - Each migration ships with a fixture test (old file in, expected new file out).
-- **Studio ↔ Runtime compatibility (*Q49*):** the Studio reads the resolved
-  `flame_studio_runtime` version from the project's `pubspec.lock` and checks it against a
-  compatibility range built into the Studio. Too old → *Upgrade runtime* (same diff + `pub get`
-  flow as setup). Too new → ask the user to update the Studio. The Studio **never writes a
+- **Pyro ↔ Runtime compatibility (*Q49*):** Pyro reads the resolved
+  `pyro_runtime` version from the project's `pubspec.lock` and checks it against a
+  compatibility range built into Pyro. Too old → *Upgrade runtime* (same diff + `pub get`
+  flow as setup). Too new → ask the user to update Pyro. Pyro **never writes a
   `schemaVersion` the project's Runtime can't read**.
 
 ---
@@ -546,7 +546,7 @@ doc.transact('Move 3 nodes', (d) => d.moveNodes(ids, delta), coalesceKey: gestur
 - **Coalescing:** transactions with the same `coalesceKey` (a drag, a slider scrub, typing in one
   field) merge into one history entry.
 - The **dirty flag** = current snapshot ≠ last saved snapshot.
-- **Recovery file only** (*Q55*): the Studio periodically writes a recovery copy outside the
+- **Recovery file only** (*Q55*): Pyro periodically writes a recovery copy outside the
   scene file, at an interval set in Settings (*Q85*); after a crash, the next launch offers *Restore*. It never writes the real scene file
   without the user saving, because the running game would hot-swap half-finished edits. Undo
   history is not persisted across sessions.
@@ -555,18 +555,18 @@ doc.transact('Move 3 nodes', (d) => d.moveNodes(ids, delta), coalesceKey: gestur
 
 ### 8.3 Viewport and reconciler (*Q16, Q24*)
 
-- The viewport is a `FlameGame` embedded in the Studio, **not ticking user logic** (no user code
-  exists in the Studio).
+- The viewport is a `FlameGame` embedded in Pyro, **not ticking user logic** (no user code
+  exists in Pyro).
 - Each document change runs the reconciler: walk old vs new document by `NodeId`; Nodes that are
   the *same object* (`identical`) are skipped; changed Nodes patch their preview component;
   added/removed Nodes create/remove components.
 - Preview components: built-in Node kinds (sprite, hitboxes; animated sprite from v0.1.1; Tiled
-  map from v0.2) render for real using the Studio's Flame; Custom components render as
+  map from v0.2) render for real using Pyro's Flame; Custom components render as
   **placeholders** (box + Type ID, or the `preview:` image) (*Q6*).
 - Gizmos, grid, selection outlines and hover labels are an overlay layer above the preview world.
 - **Reference rectangle (*Q85*):** an optional, labelled rectangle for a target resolution
-  (e.g. 1280×720) helps place content. The Studio can't read the game's camera (it never runs
-  user code), so the size is a per-project setting kept in the Studio's settings, never in the
+  (e.g. 1280×720) helps place content. Pyro can't read the game's camera (it never runs
+  user code), so the size is a per-project setting kept in Pyro's settings, never in the
   project.
 
 ### 8.4 Inspector
@@ -595,9 +595,9 @@ doc.transact('Move 3 nodes', (d) => d.moveNodes(ids, delta), coalesceKey: gestur
 
 Fixed resizable panels: Hierarchy (left), Viewport (centre), Inspector (right), Assets/Console
 (bottom tabs), toolbar and status bar. Visual design comes from Claude Design using
-`claude-design-prompts.md`, then re-implemented in Flutter in `flame_studio_ui` (*Q83*): the
+`claude-design-prompts.md`, then re-implemented in Flutter in `pyro_ui` (*Q83*): the
 tokens and theme, the design system's 29 components and the EditorShell layout, built ahead of
-the panels against a gallery app (`packages/flame_studio_ui/example`) and specified in
+the panels against a gallery app (`packages/pyro_ui/example`) and specified in
 [`ui-components-plan.md`](ui-components-plan.md) (*Q84*). The panels themselves stay in the app
 and compose those widgets. Context menus, dropdown lists and split-button menus are built on
 Flutter's `RawMenuAnchor`, tooltips on `RawTooltip` (*Q84*); no menu package.
@@ -609,8 +609,8 @@ Flutter's `RawMenuAnchor`, tooltips on `RawTooltip` (*Q84*); no menu package.
 ### 9.1 SDK detection (*Q39*)
 
 Order: per-project fvm config (`.fvmrc` / `.fvm/`) → `FLUTTER_ROOT` → `flutter` on `PATH` →
-manual override in Settings. The Studio shows the detected version in the project list and blocks
-Play/setup if none is found. The Studio bundles no SDK.
+manual override in Settings. Pyro shows the detected version in the project list and blocks
+Play/setup if none is found. Pyro bundles no SDK.
 
 ### 9.2 Code generator (*Q48, Q77*)
 
@@ -618,16 +618,16 @@ Play/setup if none is found. The Studio bundles no SDK.
   **any** build_runner command. When another one starts (a second `watch`, a one-off `build`,
   `--only-check`, or `build_runner stop`), the running watcher finishes its build, prints
   `Exiting as requested by another build_runner process.` and exits with code 0.
-- Before starting its own watcher, the Studio **probes the lock**
+- Before starting its own watcher, Pyro **probes the lock**
   (`.dart_tool/build/lock/build_runner.lock`, non-blocking exclusive lock, released straight away;
-  it never creates the `.requested` file). If it is held, the Studio watches the Manifest file and
+  it never creates the `.requested` file). If it is held, Pyro watches the Manifest file and
   shows **"External build_runner"**.
 - Otherwise it runs `dart run build_runner watch` in the project, streams output to the Console,
   and watches the Manifest file.
-- **Takeover (*Q77*).** If its watcher exits with that message, the Studio re-probes the lock
+- **Takeover (*Q77*).** If its watcher exits with that message, Pyro re-probes the lock
   instead of reporting an error:
 
-  | Lock after the exit | What the user ran | Studio |
+  | Lock after the exit | What the user ran | Pyro |
   |---|---|---|
   | Held | `build_runner watch`, or a one-off `build` / `--only-check` | Shows "External build_runner"; when the lock is released, starts its own watcher again |
   | Free | `build_runner stop` | Shows "Generator stopped" with a *Start* button; doesn't restart |
@@ -642,7 +642,7 @@ Play/setup if none is found. The Studio bundles no SDK.
 ```mermaid
 sequenceDiagram
   participant U as User
-  participant S as Studio
+  participant S as Pyro
   participant F as flutter run --machine
   participant G as Game (debug build)
   participant I as IDE (optional)
@@ -650,46 +650,46 @@ sequenceDiagram
   U->>S: Pick device, press Play
   S->>F: spawn flutter run --machine -d <device> --project-root <run link>
   F-->>S: app.started, app.debugPort (authenticated VM service URI, DevFS base URI)
-  S->>S: write the URI to .dart_tool/flame_studio/vm_service.json
-  I-->>G: Attach (optional, with the URI the Studio hands over)
+  S->>S: write the URI to .dart_tool/pyro/vm_service.json
+  I-->>G: Attach (optional, with the URI Pyro hands over)
   U->>S: Edit scene, Save
   S->>S: Write scene file atomically
-  S->>G: _flutter.setAssetBundlePath (point engine at the Studio's DevFS)
+  S->>G: _flutter.setAssetBundlePath (point engine at Pyro's DevFS)
   S->>F: app.restart {fullRestart: false}
   F->>G: sync changed assets to DevFS, evict them from rootBundle
   F->>G: reassemble → Flame onHotReload()
-  G->>G: StudioScene: hash changed? → clear Flame caches, rebuild scene, onReloaded
+  G->>G: PyroScene: hash changed? → clear Flame caches, rebuild scene, onReloaded
   F-->>S: reload finished → toast "Scene reloaded on <device>"
 ```
 
 - **Mechanism:** a hot reload issued through `flutter run` syncs changed asset files and clears
   them from `rootBundle` *before* reassemble; Flame ≥ 1.36 then calls `onHotReload()` on mounted
   components. No custom service extension is needed (*Q66*). A reload sent straight over the VM
-  service would skip the asset sync, so the Studio always reloads through the daemon.
+  service would skip the asset sync, so Pyro always reloads through the daemon.
   Verified in spike #1 on the iOS simulator, an Android emulator and a physical Android phone
   (scene reload 60–250 ms); a Dart-only reload leaves the scene alone.
-- **Code changes (*Q61*):** the Studio watches `lib/` and hot-reloads automatically, waiting until
+- **Code changes (*Q61*):** Pyro watches `lib/` and hot-reloads automatically, waiting until
   `build_runner` reports idle so it never reloads a half-written `.g.dart`. Toggle in settings, on
   by default. If an attached IDE also reloads, the duplicate reload is harmless (the content hash
   stops a scene rebuild).
 - **Image changes (*Q72*):** images are not part of the hash. When an image the running game uses
-  changes on disk, the Studio shows "Image changed: *Restart game*", which does a hot restart
+  changes on disk, Pyro shows "Image changed: *Restart game*", which does a hot restart
   (`fullRestart: true`). Image Hot-swap comes with the Live bridge.
 - **Attach (*Q60, Q81*):** VM service authentication stays on. Each run's URI
   (`ws://127.0.0.1:<port>/<auth code>=/ws`, from `app.debugPort`) is different, so instead of
-  making it stable the Studio hands the current one to the debugger.
+  making it stable Pyro hands the current one to the debugger.
   - The **Attach debugger** button copies the current run's URI, with short guides for VS Code
     ("Flutter: Attach to Process", paste the URI) and Android Studio. The VS Code guide says to
     select the game's device in the status bar first: the adapter runs `flutter attach`, which
     still needs a device and stops with "More than one device connected" otherwise.
-  - On every `app.debugPort`, the Studio writes `{"uri": "<URI>"}` to
-    `.dart_tool/flame_studio/vm_service.json` in the project (atomic write, owner-only
+  - On every `app.debugPort`, Pyro writes `{"uri": "<URI>"}` to
+    `.dart_tool/pyro/vm_service.json` in the project (atomic write, owner-only
     permissions; `.dart_tool/` is already gitignored) and deletes it when the game stops. The
     Dart and Flutter debug adapters wait for a `vmServiceInfoFile` to appear and read `uri` from
     it, so a file left over from an earlier run would send the IDE to a dead URI.
   - An opt-in **"Add VS Code attach config"** writes `.vscode/launch.json` only after showing the
     diff: an attach entry with
-    `"vmServiceInfoFile": "${workspaceFolder}/.dart_tool/flame_studio/vm_service.json"`. It holds
+    `"vmServiceInfoFile": "${workspaceFolder}/.dart_tool/pyro/vm_service.json"`. It holds
     no URI, so it is safe to commit and never needs updating, and it can be started before Play
     (the adapter waits for the file). It is the one change to the user's project beyond setup,
     and only on explicit approval. Verified end to end in VS Code (Dart-Code 3.144.0, flutter
@@ -699,16 +699,16 @@ sequenceDiagram
   - **The URI stays out of logs.** It grants full control of the game process. The Console shows
     "Debugger available" instead of it and strips the auth code from any line that carries one
     (on desktop the engine prints its VM service URI to stdout, which reaches the Console as a raw
-    line). The Studio's own logs, crash reports and settings never contain it; the info file is
+    line). Pyro's own logs, crash reports and settings never contain it; the info file is
     the only place it is written.
   - **Unauthenticated mode** (escape hatch for a tool that only takes a fixed address): a
     per-project setting, *Allow unauthenticated debugger connections (development only)*, off by
-    default and kept in the Studio's settings, never the project. It adds
+    default and kept in Pyro's settings, never the project. It adds
     `--disable-service-auth-codes` and a fixed `--dds-port`, so the address is the same every run.
     It is offered only for devices running on this machine (desktop, iOS simulator, Android
     emulator): on a physical device the flag also turns authentication off in the VM on the
     device, and on a wirelessly connected iOS device that VM listens on all network interfaces.
-    The Studio also checks that the reported URI's host is a loopback address and stops the run
+    Pyro also checks that the reported URI's host is a loopback address and stops the run
     with an explanation if not. While such a run is active, the toolbar shows an
     "Unauthenticated" warning. The URI is still kept out of logs.
 - **Devices (*Q62, Q70*):** the dropdown lists running devices plus available emulators and
@@ -717,27 +717,27 @@ sequenceDiagram
   one). **Web devices are hidden** in v0.1. Devices reported with `isConnected: false` (paired
   but unreachable phones, which `flutter run --machine` also announces mid-run) are ignored.
   Last choice remembered per project.
-- **Lifetime (*Q63*):** one Studio window per project, at most one running game per project.
-  Quitting the Studio or closing the project stops the game (with a confirmation). If the game
-  exits any other way (IDE stop, crash, window closed), the Studio notices from `flutter run`'s
+- **Lifetime (*Q63*):** one Pyro window per project, at most one running game per project.
+  Quitting Pyro or closing the project stops the game (with a confirmation). If the game
+  exits any other way (IDE stop, crash, window closed), Pyro notices from `flutter run`'s
   output, shows "Game stopped" in the Console and re-enables Play.
 - **Stop** = `app.stop`, then kill the process if it doesn't exit.
 - "Play" uses the real `main.dart`; Hot-swap only applies to scenes the game has loaded through
-  `StudioScene`.
-- **With an IDE attached (*Q74*).** Spike #1 confirmed the Studio's `flutter run` and an
+  `PyroScene`.
+- **With an IDE attached (*Q74*).** Spike #1 confirmed Pyro's `flutter run` and an
   attached IDE (VS Code, `flutter attach`) can both hot-reload the same game, and IDE
   breakpoints work. It also found that each flutter_tools client keeps its **own DevFS**, which
-  breaks Hot-swap in two ways unless the Studio works around it:
+  breaks Hot-swap in two ways unless Pyro works around it:
   1. **Name clash.** The DevFS is named after the project folder. The attaching IDE finds that
-     name taken and deletes the Studio's DevFS. On physical devices (files written through the
-     VM service, by name) the Studio's DevFS never comes back: asset re-points fail and the
-     Studio's hot restart fails (`Could not prepare isolate`). **Fix:** the Studio runs with the
+     name taken and deletes Pyro's DevFS. On physical devices (files written through the
+     VM service, by name) Pyro's DevFS never comes back: asset re-points fail and the
+     Pyro's hot restart fails (`Could not prepare isolate`). **Fix:** Pyro runs with the
      hidden `--project-root` pointing at a symlink to the project with a different folder name,
-     `<app support>/run/<project-id>/<name>-studio`, so the two DevFS names differ.
+     `<app support>/run/<project-id>/<name>-pyro`, so the two DevFS names differ.
   2. **Asset shadowing.** Each client points the engine at its own DevFS asset folder once
      (`_flutter.setAssetBundlePath`). After the IDE's first reload, the game reads scenes from the
-     IDE's copy, which only changes when the IDE reloads, so Studio saves are ignored. **Fix:**
-     before every reload, the Studio calls `_flutter.setAssetBundlePath` itself with
+     IDE's copy, which only changes when the IDE reloads, so Pyro saves are ignored. **Fix:**
+     before every reload, Pyro calls `_flutter.setAssetBundlePath` itself with
      `<DevFS base>/build/flutter_assets`. If that fails (folder not created yet), it reloads,
      re-points, evicts the saved scene files (`ext.flutter.evict`) and reloads once more.
 
@@ -746,7 +746,7 @@ sequenceDiagram
   between. Remaining caveats:
   - Both are **private interfaces** (a hidden flutter_tools option and an engine
     `_`-extension). Re-check them on every Flutter stable release (manual end-to-end test in
-    §13). If either breaks, use the fallback: while an IDE is attached, the Studio stops issuing
+    §13). If either breaks, use the fallback: while an IDE is attached, Pyro stops issuing
     reloads and asks the user to reload from the IDE.
   - After any hot restart, VS Code may show a stale **"paused"** state with nonsense frames. The
     new isolate starts paused for the IDE (`pause_isolates_on_start` plus DDS resume
@@ -759,7 +759,7 @@ sequenceDiagram
 
 Merged, filterable log of generator output, game output (`app.log`, `daemon.logMessage`, and raw
 stdout lines, which is how desktop targets report the game's `print` output) and
-Studio events, with clickable `file:line` links that open the user's external editor
+Pyro events, with clickable `file:line` links that open the user's external editor
 (configurable: VS Code, IntelliJ/Android Studio, custom command). VM service URIs are redacted
 before display (§9.3, *Q81*).
 
@@ -767,28 +767,28 @@ before display (§9.3, *Q81*).
 
 ## 10. Asset pipeline
 
-- **Editor loads from disk** through an `AssetSource` interface (disk implementation in the Studio,
+- **Editor loads from disk** through an `AssetSource` interface (disk implementation in Pyro,
   bundle implementation in games), so newly imported files appear instantly (*Q31*). Verified in
-  spike #3: the disk side is an `AssetBundle` over the project folder plus a Studio-owned image
+  spike #3: the disk side is an `AssetBundle` over the project folder plus a Pyro-owned image
   cache that frees an old image only after it's off screen; each Node records the files it read,
   and a file change rebuilds just those Nodes, ~75–200 ms from save to screen (*Q79*).
-- **Scenes live in `assets/scenes/` by default** (*Q53*). The Studio finds scenes by looking for
+- **Scenes live in `assets/scenes/` by default** (*Q53*). Pyro finds scenes by looking for
   `*.scene.json` under the declared asset folders; there is no config file.
 - **`pubspec.yaml` sync (*Q31, Q53*):** Flutter asset folder entries **don't include subfolders**,
-  so whenever the Studio imports an asset or saves a scene into a folder that isn't declared yet
+  so whenever Pyro imports an asset or saves a scene into a folder that isn't declared yet
   (including `assets/scenes/prefabs/`), it appends that folder. It never reorders or reformats;
   the first time it shows a diff. Editing YAML while preserving formatting needs a careful
   approach (e.g. `yaml_edit`). ◇ proposed
 - **Undeclared folders (*Q85*):** the asset browser marks a folder that holds assets but isn't
   declared in `pubspec.yaml` with "Not in pubspec.yaml", because the game can't load from it.
-  The Studio doesn't fix it on its own; importing or saving into the folder declares it as above.
-- **References by path**, with renames/moves done in the Studio rewriting all references across
+  Pyro doesn't fix it on its own; importing or saving into the folder declares it as above.
+- **References by path**, with renames/moves done in Pyro rewriting all references across
   scenes and animations, and a confirmation listing what changes (*Q27*). Ships in v0.1.1 (*Q65*).
 - **Grid slicer** (v0.1.1) writes `.anim.json`. **Aseprite import** (v0.2) reads Aseprite's JSON
   export (frames + tags → animations). TexturePacker atlases later (*Q8*).
 - **Tiled maps** (v0.2): a `tiledMap` Node kind referencing a `.tmx`, rendered in the viewport via
   `flame_tiled` from disk; entities placed on top (*Q10*). Maps load through the Runtime's own
-  loader, which resolves tileset and image paths as Tiled does, in both the Studio and the game
+  loader, which resolves tileset and image paths as Tiled does, in both Pyro and the game
   (*Q78*); verified in spike #3.
 
 ---
@@ -797,7 +797,7 @@ before display (§9.3, *Q81*).
 
 | Situation | Behavior |
 |---|---|
-| Behavior/component class no longer exists | **Studio:** Node/Behavior kept verbatim; inspector shows **"Missing behavior: Patrol"** / **"Missing component"** with preserved values (read-only), actions *Remove* / *Keep* (*Q32*). **Runtime:** `load` throws naming scene, Node and Type ID, unless `onUnknownType: skip` (*Q58*) |
+| Behavior/component class no longer exists | **Pyro:** Node/Behavior kept verbatim; inspector shows **"Missing behavior: Patrol"** / **"Missing component"** with preserved values (read-only), actions *Remove* / *Keep* (*Q32*). **Runtime:** `load` throws naming scene, Node and Type ID, unless `onUnknownType: skip` (*Q58*) |
 | Two annotated classes share a Type ID | Build fails, naming both classes; fix with an explicit `id:` (*Q45*) |
 | Class renamed | Keep its old name as an explicit `id:` and the scene is unaffected (*Q45*) |
 | Dart file moved | No effect: Type IDs don't include the library path (*Q45*) |
@@ -807,19 +807,19 @@ before display (§9.3, *Q81*).
 | Asset missing | Inline error with *Locate…*; scene still opens |
 | Entity reference target deleted | Field shows "missing reference"; deleting a referenced Node warns first ◇ proposed |
 | Scene file changed on disk while open | Banner: *Reload* / *Keep mine* |
-| Scene from a newer Studio | Refused, with the required version |
-| Project's Runtime older/newer than the Studio supports | *Upgrade runtime* / *Update the Studio*; never write an unreadable `schemaVersion` (*Q49*) |
+| Scene from a newer Pyro | Refused, with the required version |
+| Project's Runtime older/newer than Pyro supports | *Upgrade runtime* / *Update Pyro*; never write an unreadable `schemaVersion` (*Q49*) |
 | Generator fails | Last good Manifest stays in use; status bar + Console show the error |
 | Image changed while the game runs | Toast: *Restart game* (*Q72*) |
 | Game crashes / build fails / stopped from the IDE | Console shows "Game stopped" with exit code, *Run again* (*Q63*) |
 
-**Principle:** the Studio never silently deletes or rewrites user data it doesn't understand.
+**Principle:** Pyro never silently deletes or rewrites user data it doesn't understand.
 
 ---
 
 ## 12. Platforms, packaging and distribution
 
-- **Studio platforms (*Q4*):** macOS first-class for v0.1; Windows and Linux built in CI (best
+- **Pyro platforms (*Q4*):** macOS first-class for v0.1; Windows and Linux built in CI (best
   effort) until first-class in v0.3. The user's *game* can target any platform Flutter supports;
   **Play** supports mobile and desktop devices, with web hidden until v0.3 or later (*Q70*).
 - **macOS app:** not sandboxed (it spawns processes and reads arbitrary project folders), hardened
@@ -828,18 +828,18 @@ before display (§9.3, *Q81*).
 - **Distribution:** GitHub Releases (`.dmg`; later `.msix`/`.zip`, AppImage) for the developer
   preview and v0.1; **auto-update** (Sparkle / WinSparkle) in v0.2; Homebrew cask / winget in v0.3
   (*Q40*).
-- **Third-party licences:** the Studio's About window opens Flutter's licence page
+- **Third-party licences:** Pyro's About window opens Flutter's licence page
   (`showLicensePage`). It lists every pub dependency's `LICENSE` on its own; the fonts bundled in
-  `flame_studio_ui` (Inter, JetBrains Mono, SIL OFL 1.1) are not packages, so their
+  `pyro_ui` (Inter, JetBrains Mono, SIL OFL 1.1) are not packages, so their
   `fonts/*-OFL.txt` become package assets and the app registers them with
   `LicenseRegistry.addLicense` at startup. Part of work item 1.
-- **Packages** `flame_studio_annotations`, `flame_studio_runtime` and `flame_studio_generator` on
+- **Packages** `pyro_annotations`, `pyro_runtime` and `pyro_generator` on
   pub.dev. **Name check with the Flame maintainers before the first `pub publish`** — pub names
   can't be released (*Q36, Q44*).
 - **Version policy (*Q18*):** the Runtime supports the latest stable Flame minor (then current +
-  previous after Studio 1.0), with a floor of **Flame 1.36** for `onHotReload` (*Q66*); Flutter
+  previous after Pyro 1.0), with a floor of **Flame 1.36** for `onHotReload` (*Q66*); Flutter
   stable only; **`build_runner ≥ 2.14`** (*Q48*). The scene format never depends on a Flame
-  version. When Flame 2.0 ships, the Runtime and the Studio's bundled Flame move to it
+  version. When Flame 2.0 ships, the Runtime and Pyro's bundled Flame move to it
   together in one release, and the 1.x line gets fixes only (*Q80*).
 
 ---
@@ -855,11 +855,11 @@ before display (§9.3, *Q81*).
 | Runtime loader | load fixture scenes into a `FlameGame` with `flame_test`; reference resolution; asset loading; unknown Type ID; Hot-swap hash check | Heavy |
 | **Contract (*Q59*)** | CI runs the generator on `example/`, checks the Manifest against its golden file, then loads every `example/` scene with `flame_test` against the real generated Registry | Heavy |
 | Process clients | daemon protocol parsing with recorded transcripts (no real Flutter); build_runner lock probe | Medium |
-| Design system (`flame_studio_ui`, *Q84*) | widget tests per component state; one golden per gallery grid (macOS CI only) | Medium |
+| Design system (`pyro_ui`, *Q84*) | widget tests per component state; one golden per gallery grid (macOS CI only) | Medium |
 | Panels | a few widget tests for critical interactions | Light |
 | End-to-end | `example/` game smoke test on a device before each release, incl. Play, Hot-swap, Attach (manual in v0.1) | Manual |
 
-**CI (GitHub Actions):** analyze + test on macOS, Windows, Linux; contract job; build the Studio on
+**CI (GitHub Actions):** analyze + test on macOS, Windows, Linux; contract job; build Pyro on
 all three; on tags, sign + notarize the macOS build and attach artifacts to a GitHub Release
 (*Q33*).
 
@@ -876,21 +876,21 @@ progress; change it in the same commit as this section.
 
 | # | Check | Pass criterion | Est. |
 |---|---|---|---|
-| 1 | Play, Hot-swap and Attach | (a) Studio-style `flutter run --machine` → edit a scene → `app.restart` → `StudioScene.onHotReload` rebuilds it, on the iOS simulator, the Android emulator **and one physical phone**. (b) A Dart-only hot reload does **not** rebuild the scene. (c) **VS Code attaches** via a fixed DDS port: breakpoints hit, and IDE hot reload works while the Studio's `flutter run` is still connected. | 2 |
+| 1 | Play, Hot-swap and Attach | (a) Pyro-style `flutter run --machine` → edit a scene → `app.restart` → `PyroScene.onHotReload` rebuilds it, on the iOS simulator, the Android emulator **and one physical phone**. (b) A Dart-only hot reload does **not** rebuild the scene. (c) **VS Code attaches** via a fixed DDS port: breakpoints hit, and IDE hot reload works while Pyro's `flutter run` is still connected. | 2 |
 | 2 | Generator shape and latency | `$lib$` aggregator writes Registry + Manifest to `lib/`; `build_runner watch` updates them within ~3 s on a mid-size project; lock probe detects an external watcher | 1 |
-| 3 | Disk rendering | Studio renders a sprite, an animation and a Tiled map loaded from an arbitrary folder | 0.5 |
+| 3 | Disk rendering | Pyro renders a sprite, an animation and a Tiled map loaded from an arbitrary folder | 0.5 |
 | | Write findings into `ARCHITECTURE.md` | | 0.5 |
 | | **Total** | | **~4** |
 
 Spike 1(c) is the deciding test for [ADR 0001](adr/0001-studio-runs-the-game-ide-attaches.md).
 **Spike #1 is done:** all three checks pass with two workarounds (*Q74*), and the fallback (the
-Studio stops issuing reloads while an IDE is attached) remains the escape hatch. Findings in
+Pyro stops issuing reloads while an IDE is attached) remains the escape hatch. Findings in
 [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach); code in
 `spikes/01_play_hotswap/`.
 
 ### Early preview — first external feedback (*Q82*)
 
-The goal is to prove, in a developer's own project, that the Studio does a real task more easily
+The goal is to prove, in a developer's own project, that Pyro does a real task more easily
 than editing Dart by hand, as early as possible. **Breadth and polish are cut; document integrity,
 the generator/Runtime contract and data preservation are not.** The final v0.1 scope is unchanged
 (*Q82* amends *Q65* and supersedes *Q73*); the early preview is a subset of it, ~42 of the ~92
@@ -902,17 +902,17 @@ attach a custom Behavior and tweak its fields, press Play and see the change in 
 | # | Work item (v0.1 numbering) | In the early preview | Deferred to v0.1 | Est. |
 |---|---|---|---|---|
 | 0 | Repo setup | As in v0.1 | | 3 |
-| 1 | App shell | Project list, open project, basic SDK detection, Runtime compatibility check | "Add Flame Studio" flow and pubspec diff (a README recipe replaces it), SDK management and settings polish | 2 |
+| 1 | App shell | Project list, open project, basic SDK detection, Runtime compatibility check | "Add Pyro" flow and pubspec diff (a README recipe replaces it), SDK management and settings polish | 2 |
 | 2 | Document model | Transactions, undo/redo with coalescing, atomic save/load, recovery file, `schemaVersion` gate (never write an unreadable version, *Q49*) | Migrations framework, built when the first format change after the preview needs it | 4.5 |
-| 3 | Hierarchy | Add, delete, rename, reparent by drag (on `FsTreeRow`) | Duplicate, filter, duplicate-name warning | 2 |
+| 3 | Hierarchy | Add, delete, rename, reparent by drag (on `PrTreeRow`) | Duplicate, filter, duplicate-name warning | 2 |
 | 4 | Viewport | Preview world, reconciler, pan/zoom, selection, move gizmo | Grid, snapping, rotate/scale gizmos (numeric editing in the inspector covers them) | 6.5 |
-| 5 | Inspector | Transform; editors for `int`, `double`, `bool`, `String`, enum, `Vector2` and an asset-path dropdown; Override markers + *Reset to default* (on `FsPropertyRow`, `FsNumberProperty`, `FsVector2Property`). Other Field types (`Color`, entity reference, `Sprite`, `SpriteAnimation`) show **read-only and round-trip untouched** | Remaining Field type editors, multi-select "mixed" values (v0.1.1) | 2.5 |
+| 5 | Inspector | Transform; editors for `int`, `double`, `bool`, `String`, enum, `Vector2` and an asset-path dropdown; Override markers + *Reset to default* (on `PrPropertyRow`, `PrNumberProperty`, `PrVector2Property`). Other Field types (`Color`, entity reference, `Sprite`, `SpriteAnimation`) show **read-only and round-trip untouched** | Remaining Field type editors, multi-select "mixed" values (v0.1.1) | 2.5 |
 | 6 | Built-in Node kinds | Entity, sprite, rectangle and circle hitboxes, placeholders | The remaining hitbox kind | 2 |
 | 7 | Generator | Introspection, Type IDs + collisions, supertypes, Registry + Manifest emitters, error reporting, goldens, at the field types above | Support for the remaining Field types in the inspector (the generator still records them) | 4.5 |
 | 8 | Runtime | Full: loader, two-pass references, assets, lookup API, unknown-type handling, Hot-swap | | 4 |
 | 9 | Behaviors in the inspector | Add/remove, compatibility filtering, Missing behavior state (so nothing is lost) | Reorder, Missing behavior polish | 2 |
 | 11 | Play | Run on the macOS desktop target by default (⚠ verify Hot-swap there first, ~0.5), daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, *Attach debugger* copying the current URI, image-restart toast | Device list + emulator boot, Attach info file, `launch.json`, unauthenticated mode | 4 |
-| 14 | Design system (core, *Q84*) | Foundations (interaction states, field box, panel focus, icons, gallery skeleton, test config) and the widgets whose behaviour items 3 and 5 would otherwise build in the panels: `FsTreeRow`, `FsPropertyRow`, `FsNumberProperty`, `FsVector2Property` | The other 25 components, the EditorShell, goldens; the rest of the preview uses Material widgets themed by `FsTheme.dark()` | 5.5 |
+| 14 | Design system (core, *Q84*) | Foundations (interaction states, field box, panel focus, icons, gallery skeleton, test config) and the widgets whose behaviour items 3 and 5 would otherwise build in the panels: `PrTreeRow`, `PrPropertyRow`, `PrNumberProperty`, `PrVector2Property` | The other 25 components, the EditorShell, goldens; the rest of the preview uses Material widgets themed by `PrTheme.dark()` | 5.5 |
 | | **Total** | | | **~42** |
 
 Not in the early preview: the asset browser and pubspec sync (10), the CI contract test (12),
@@ -938,7 +938,7 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 
 | Observation | Response |
 |---|---|
-| Several testers fail at setup (pubspec, Flutter/`build_runner` versions, Q76) | Fix setup before any new feature; reconsider the in-app "Add Flame Studio" flow |
+| Several testers fail at setup (pubspec, Flutter/`build_runner` versions, Q76) | Fix setup before any new feature; reconsider the in-app "Add Pyro" flow |
 | Testers hit stale references or lost state after Hot-swap (Q-I, *Q71*) | Pull node-level patching forward from v0.4 |
 | Testers don't reach for the viewport and edit the inspector or JSON | Re-examine the viewport investment (item 4) before polishing it |
 | Testers need Field types or Node kinds that were deferred | Reorder v0.1 by what they asked for |
@@ -948,8 +948,8 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 
 | # | Work item | Est. (evenings) |
 |---|---|---|
-| 0 | Repo setup: workspace (3 packages + app; `flame_studio_ui` added by *Q83*), CI skeleton, lint rules, Riverpod learning spike | 3 |
-| 1 | App shell: project list, SDK detection, settings, About window with licences (§12), "Add Flame Studio" flow + pubspec diff, Runtime compatibility check | 6 |
+| 0 | Repo setup: workspace (3 packages + app; `pyro_ui` added by *Q83*), CI skeleton, lint rules, Riverpod learning spike | 3 |
+| 1 | App shell: project list, SDK detection, settings, About window with licences (§12), "Add Pyro" flow + pubspec diff, Runtime compatibility check | 6 |
 | 2 | Document model, transactions, history, coalescing, save/load (atomic), recovery file, migrations framework | 5 |
 | 3 | Hierarchy panel (add, delete, rename, reparent drag, duplicate, filter, duplicate-name warning) | 3.5 |
 | 4 | Viewport: preview world, reconciler, pan/zoom, grid, selection, gizmos, snapping | 10 |
@@ -962,7 +962,7 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 | 11 | Play: device list + emulator boot, daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, Attach (current URI, info file, launch.json, unauthenticated mode), lifecycle, image-restart toast | 9 |
 | 12 | CI contract test | 1 |
 | 13 | `example/` game | 2 |
-| 14 | Design system in `flame_studio_ui` (*Q83, Q84*): tokens and theme (done), shared foundations, the 29 components, EditorShell, 60 icons, gallery app, widget tests and goldens ([`ui-components-plan.md`](ui-components-plan.md)) | 23 |
+| 14 | Design system in `pyro_ui` (*Q83, Q84*): tokens and theme (done), shared foundations, the 29 components, EditorShell, 60 icons, gallery app, widget tests and goldens ([`ui-components-plan.md`](ui-components-plan.md)) | 23 |
 | 15 | Signing, notarization, release pipeline | 3 |
 | 16 | README, Getting Started (incl. Attach and the CI check, §7.3), demo video, `ARCHITECTURE.md` polish | 3 |
 | | **Total** | **~92** |
@@ -994,7 +994,7 @@ the deferred parts of items 1, 3, 4, 5, 6, 9 and 11, each preceded by the compon
 | **v0.1.1** | Grid slicer → `.anim.json` and the animated sprite Node kind, rename with reference rewriting, multi-select "mixed" values |
 | **v0.2** | Aseprite import, prefab instancing (prefabs included in the Hot-swap hash), Tiled map Nodes, auto-update |
 | **v0.3** | Windows + Linux first-class, Homebrew / winget, web as a best-effort Play target |
-| **v0.4** | Live bridge to the running game (select/tweak live, exact custom rendering), node-level Hot-swap (scene diff shared with the reconciler), image Hot-swap, prefab overrides, typed scene accessors, `@StudioComponent(preview:)` polish |
+| **v0.4** | Live bridge to the running game (select/tweak live, exact custom rendering), node-level Hot-swap (scene diff shared with the reconciler), image Hot-swap, prefab overrides, typed scene accessors, `@PyroComponent(preview:)` polish |
 | **Later** | Forge2D, particle/effects editors, docking panels, light theme |
 
 `@RenamedFrom` is dropped: an explicit `id:` covers renames (*Q45*).
@@ -1007,14 +1007,14 @@ the deferred parts of items 1, 3, 4, 5, 6, 9 and 11, each preceded by the compon
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Hot-swap with an attached IDE depends on private flutter_tools/engine interfaces (`--project-root`, `_flutter.setAssetBundlePath`) | Medium | High (Attach workflow) | Spike #1 settled the mechanism (*Q74*); re-check on each Flutter stable release; fallback: Studio stops reloading while an IDE is attached |
+| Hot-swap with an attached IDE depends on private flutter_tools/engine interfaces (`--project-root`, `_flutter.setAssetBundlePath`) | Medium | High (Attach workflow) | Spike #1 settled the mechanism (*Q74*); re-check on each Flutter stable release; fallback: Pyro stops reloading while an IDE is attached |
 | Hot-swap rebuild loses runtime state and leaves stale references in game code | High (by design in v0.1) | Medium | Content-hash check; `onReloaded` + debug warning (*Q71*); node-level patching in v0.4 |
 | Scope/time overrun (solo, evenings) | **High** | Medium | Cuts to v0.1.1; early preview (~42 evenings, *Q82, Q84*); strict non-goals; estimates in §14 |
 | `build_runner` too slow on large projects | Medium | Medium | Spike #2; `triggers` so unannotated files are skipped; show "generating" state |
 | Flame / `flame_behaviors` breaking changes | Medium | Medium | Latest-minor-only policy; CI against Flame stable; Runtime kept small |
-| Studio and project Runtime versions drift | Medium | Medium | `pubspec.lock` compatibility check; never write an unreadable `schemaVersion` (*Q49*) |
+| Pyro and project Runtime versions drift | Medium | Medium | `pubspec.lock` compatibility check; never write an unreadable `schemaVersion` (*Q49*) |
 | Generic behaviors (`Behavior<Enemy>`) attached to incompatible Nodes | Medium | Low | Parent type + supertypes in the Manifest; filter in inspector; runtime type check with clear error |
-| Placeholders make custom-rendered games feel unfinished in the editor | Medium | Medium | `@StudioComponent(preview:)`; Live bridge in v0.4 |
+| Placeholders make custom-rendered games feel unfinished in the editor | Medium | Medium | `@PyroComponent(preview:)`; Live bridge in v0.4 |
 | Name conflict / perceived as official | Low | Medium | Ask Flame maintainers before publishing (*Q36*) |
 | macOS signing/notarization friction | Medium | Low | One-time CI setup; Developer ID account budgeted |
 | Learning Riverpod while building | Medium | Low | Budgeted spike in item 0; keep provider graph small (§8.5) |
@@ -1033,12 +1033,12 @@ Q-F (→ *Q56*) and Q-G (→ *Q50*), and Q-H, the preview scope (→ *Q73*, sinc
 
 1. ✅ Play → Hot-swap through `app.restart` and `onHotReload` on simulator, emulator and a
    physical phone; Dart-only reloads don't rebuild scenes; an IDE attached via a fixed DDS port
-   can hot-reload alongside the Studio. Done in spike #1, with the workarounds in §9.3 (*Q74;
+   can hot-reload alongside Pyro. Done in spike #1, with the workarounds in §9.3 (*Q74;
    Q75 since superseded by Q81*); findings in [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-1--play-hot-swap-and-attach).
 2. ✅ `$lib$` aggregator output to `lib/`, watch latency, and the build_runner lock probe (§7.3,
    §9.2). Done in spike #2 (~0.9–1.0 s per save on 300- and 1000-file projects; *Q76, Q77*);
    findings in [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-2--generator-shape-and-latency).
-3. ✅ `flame_tiled` and image loading from an arbitrary on-disk folder inside the Studio (§10).
+3. ✅ `flame_tiled` and image loading from an arbitrary on-disk folder inside Pyro (§10).
    Done in spike #3 (*Q78, Q79*); findings in
    [`ARCHITECTURE.md`](ARCHITECTURE.md#spike-3--disk-rendering).
 
@@ -1046,7 +1046,7 @@ Q-F (→ *Q56*) and Q-G (→ *Q50*), and Q-H, the preview scope (→ *Q73*, sinc
 
 ## 16. Glossary
 
-Project vocabulary lives in [`GLOSSARY.md`](../GLOSSARY.md) at the repo root: Studio, Runtime,
+Project vocabulary lives in [`GLOSSARY.md`](../GLOSSARY.md) at the repo root: Pyro, Runtime,
 Generator, Scene, Node, Node kind, Entity, Behavior, Custom component, Prefab, Prefab instance,
 Node name, Type ID, Type role, Editable field, Field type, Override, Registry, Manifest, Type
 catalog, Missing behavior / Missing component, Document, Play, Attach, Hot-swap, Live bridge.

@@ -4,19 +4,19 @@
 #
 # spikes/ is deliberately not a member: the spike projects are throwaway and
 # resolve on their own.
-name: flame_studio_workspace
+name: pyro_workspace
 publish_to: none
 
 environment:
   sdk: ^3.12.0
 
 workspace:
-  - packages/flame_studio_annotations
-  - packages/flame_studio_runtime
-  - packages/flame_studio_generator
-  - packages/flame_studio_ui
-  - packages/flame_studio_ui/example
-  - apps/flame_studio
+  - packages/pyro_annotations
+  - packages/pyro_runtime
+  - packages/pyro_generator
+  - packages/pyro_ui
+  - packages/pyro_ui/example
+  - apps/pyro
 
 dev_dependencies:
   # Provides the base rule set the root analysis_options.yaml includes.

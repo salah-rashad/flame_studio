@@ -1,9 +1,9 @@
-# Flame Studio — Claude Design Prompts
+# Pyro — Claude Design Prompts
 
 | | |
 |---|---|
-| **Last synced** | 2026-10-18, against [`project-plan.md`](project-plan.md) (Q1–Q85), [`ui-components-plan.md`](ui-components-plan.md) and `packages/flame_studio_ui` |
-| **Design system** | Made in Claude Design from Prompt 0. Its `tokens.json` is copied to `packages/flame_studio_ui/design/tokens.json`; its 29 components, the EditorShell and the 60 icons are built in Flutter in `packages/flame_studio_ui` (*Q83, Q84*) |
+| **Last synced** | 2026-10-18, against [`project-plan.md`](project-plan.md) (Q1–Q85), [`ui-components-plan.md`](ui-components-plan.md) and `packages/pyro_ui` |
+| **Design system** | Made in Claude Design from Prompt 0. Its `tokens.json` is copied to `packages/pyro_ui/design/tokens.json`; its 29 components, the EditorShell and the 60 icons are built in Flutter in `packages/pyro_ui` (*Q83, Q84*) |
 
 ## How to use
 
@@ -14,7 +14,7 @@
 2. **Design views in their own documents, never in the design-system document.** That document
    is the source of the package's `tokens.json`; designing views there invites changes to tokens
    and components that the Flutter side never hears about.
-3. **One document per view**, each a new design that uses the Flame Studio design system: paste
+3. **One document per view**, each a new design that uses the Pyro design system: paste
    the **shared preamble** below, then that view's prompt, and ask for every listed state as a
    separate frame. Prompts 2 and 9 may share a document, since both design the toolbar and the
    Play cluster. Run Prompt 2 first (every other view sits inside its shell), then follow the
@@ -24,7 +24,7 @@
    and to `ui-components-plan.md` before the panel is built, rather than letting them live only
    in a view document.
 5. The output is a *reference design*, re-implemented by hand in Flutter: the app's panels compose
-   `flame_studio_ui` widgets. Wording in the prompts uses the project vocabulary
+   `pyro_ui` widgets. Wording in the prompts uses the project vocabulary
    ([`GLOSSARY.md`](../GLOSSARY.md)) so the designs show the words the app will use.
 
 | Prompt | View | Needed for | Run |
@@ -39,7 +39,7 @@
 | 7 | Grid slicer & animation editor | v0.1.1; Aseprite import v0.2 | |
 | 8 | Console | early preview | |
 | 9 | Play, devices, Attach | early preview (macOS target, copy URI); v0.1 rest | |
-| 10 | "Add Flame Studio to this project" | v0.1 (a README recipe in the early preview) | |
+| 10 | "Add Pyro to this project" | v0.1 (a README recipe in the early preview) | |
 | 11 | Settings, About, warnings & empty states | v0.1 | |
 
 ---
@@ -52,7 +52,7 @@ rely on: dark tokens only (ember accent `accent` / `accent-text`, `surface-*` le
 Inter + JetBrains Mono; Lucide icons; 29 components; an EditorShell example.
 
 ```
-Design the design system for "Flame Studio", a desktop game-editor app for the Flame 2D game engine
+Design the design system for "Pyro", a desktop game-editor app for the Flame 2D game engine
 (Flutter). Think of the category of Godot, Unity, Defold and Figma: a professional, dense,
 keyboard-friendly tool used for hours at a time. Users are Dart/Flutter game developers.
 
@@ -118,7 +118,7 @@ Deliver
 Paste this before every view prompt (1–11).
 
 ```
-This design uses the Flame Studio design system. Do not change or restyle the system itself.
+This design uses the Pyro design system. Do not change or restyle the system itself.
 
 Use only its tokens (colours, type styles, spacing, radii, sizes, shadows), its Lucide icons and
 its components: Button, IconButton, ToggleButton, SplitButton, SegmentedControl, Toolbar,
@@ -143,7 +143,7 @@ disabled controls keep a tooltip that says why. Sample content: a pixel-art plat
 called "Platformer" with scenes level_1.scene.json and main_menu.scene.json, a Player custom
 component and Patrol / Health behaviors.
 
-Frames at 1440×900 unless stated, one frame per listed state. The Studio never runs the user's
+Frames at 1440×900 unless stated, one frame per listed state. Pyro never runs the user's
 game code inside itself: anything it can't draw from data is a placeholder.
 
 At the end, list under "New patterns" anything this view needed that the component set doesn't
@@ -156,15 +156,15 @@ have (name, states, tokens used), so it can be added to the Flutter package.
 
 ```
 Design the welcome / project list window shown when the app starts (a smaller window, ~960×640).
-The Studio opens existing Flame projects; there is no "New project" flow.
+Pyro opens existing Flame projects; there is no "New project" flow.
 
 Content
 - App name and version, links to docs and GitHub, and a short "Community project, not affiliated
   with the Flame team" line.
 - Recent projects list: project name, path (monospace, truncated in the middle), detected Flame
   version, Flutter SDK it will use (with an "fvm" Badge when the project pins one), last opened,
-  and one status Badge: "Ready", "Not set up" (no Flame Studio dependencies yet), "Runtime too old"
-  (its flame_studio_runtime is older than this Studio supports), "Needs a newer Studio",
+  and one status Badge: "Ready", "Not set up" (no Pyro dependencies yet), "Runtime too old"
+  (its pyro_runtime is older than this version of Pyro supports), "Needs a newer Pyro",
   "Flame version unsupported" (below Flame 1.36), "Folder missing", "Open" (already open in
   another window; opening it focuses that window).
 - Actions: "Open project…" (folder picker, primary), "Remove from list" (hover action and
@@ -180,7 +180,7 @@ States to show
 4. A project whose folder no longer exists (dimmed, "Folder missing", "Locate…" / "Remove").
 5. A "Runtime too old" project selected: a warning explaining that saving scenes needs an
    upgrade, actions "Upgrade runtime…" (opens the setup flow's diff, Prompt 10) and "Open anyway".
-6. After a crash: Dialog "Flame Studio quit unexpectedly. Restore unsaved changes to
+6. After a crash: Dialog "Pyro quit unexpectedly. Restore unsaved changes to
    level_1.scene.json?" listing the scenes with a recovery copy and when each was written;
    "Restore" (primary) / "Discard" (destructive).
 ```
@@ -247,7 +247,7 @@ current scene, built from TreeRows.
 Content
 - Panel header: "+" add-node IconButton opening a ContextMenu: Entity, Sprite, Animated Sprite,
   Rectangle Hitbox, Circle Hitbox, Polygon Hitbox, Tiled Map, Prefab instance…, then a "Custom
-  components" submenu listing the project's @StudioComponent classes by Type ID (grouped by
+  components" submenu listing the project's @PyroComponent classes by Type ID (grouped by
   category). Search/filter SearchField under the header.
 - Node kind icons: entity → box, sprite → image, animated sprite → film, hitbox → hitbox
   (dashed square), Tiled map → layers, prefab instance → box in the prefab colour, custom
@@ -295,9 +295,9 @@ Content
   labelled; it is not read from the game.
 - Sprites (and, from v0.1.1, animated sprites; from v0.2, Tiled maps) drawn as in the game;
   hitboxes drawn as coloured outlines (toggleable).
-- Custom components can't be drawn (no user code runs in the Studio): a placeholder box sized to
+- Custom components can't be drawn (no user code runs in Pyro): a placeholder box sized to
   the component's size with its Type ID and the circle-dot icon, clearly different from real art.
-  Variant: a component with a @StudioComponent(preview:) image draws that image with a small
+  Variant: a component with a @PyroComponent(preview:) image draws that image with a small
   "preview" Badge. Variant: a Missing component, as an error-toned placeholder.
 - Viewport Toolbar: zoom % Dropdown, Fit selection, Fit scene, ToggleButtons for grid / hitboxes
   / reference rectangle.
@@ -369,7 +369,7 @@ States to show
    Tooltip.
 7. Missing asset in an AssetSlot (error state with the old file name and "Locate…"); missing
    entity reference in an EntitySlot.
-8. A field the Studio can't edit yet (early preview): value shown read-only with a lock icon and
+8. A field Pyro can't edit yet (early preview): value shown read-only with a lock icon and
    "Edit in the scene file for now" Tooltip; it is kept untouched on save.
 9. The Add Behavior list with results, incompatible ones explained, and the empty-result state.
 10. Generator running or failing: a non-blocking info / warning Banner above the Behavior cards
@@ -445,17 +445,17 @@ States to show
 ## Prompt 8 — Console
 
 ```
-Design the Console tab of the bottom dock. It shows output from what the Studio runs: the code
-generator (build_runner watch), the running game (flutter run) and the Studio's own events.
+Design the Console tab of the bottom dock. It shows output from what Pyro runs: the code
+generator (build_runner watch), the running game (flutter run) and Pyro's own events.
 
 Content
-- Source filter: All, Generator, Game, Studio; level filter (info / warning / error) with counts;
+- Source filter: All, Generator, Game, Pyro; level filter (info / warning / error) with counts;
   SearchField; Clear; auto-scroll toggle.
 - Log lines in mono-console with timestamp, source chip, level colour; multi-line stack traces
   collapsible; file:line links that open the user's external editor.
-- Studio's own events styled distinctly ("Scene reloaded on iPhone 16 Simulator", "Game stopped
+- Pyro's own events styled distinctly ("Scene reloaded on iPhone 16 Simulator", "Game stopped
   (exit code 0)").
-- The debugger URI is a secret and never appears: the Studio shows "Debugger available ·
+- The debugger URI is a secret and never appears: Pyro shows "Debugger available ·
   Attach debugger" instead, and any raw line that carries the URI shows it redacted
   (ws://127.0.0.1:53712/••••/ws).
 
@@ -464,7 +464,7 @@ States to show
 2. Generator error with an expanded, clickable stack trace.
 3. Game crashed / exited with an error: Banner "Game exited (code 1)" with "Run again".
 4. Filtered to warnings only, with counts on the filters.
-5. Generator in external mode: an info line "build_runner is running outside the Studio; its
+5. Generator in external mode: an info line "build_runner is running outside Pyro; its
    output appears in that terminal."
 6. A redacted debugger line and the "Debugger available" event.
 7. Empty state before anything has run.
@@ -475,7 +475,7 @@ States to show
 ## Prompt 9 — Play, devices and Attach
 
 ```
-Design the Play flow in the main toolbar. The Studio runs the game on a device with the user's
+Design the Play flow in the main toolbar. Pyro runs the game on a device with the user's
 Flutter SDK; the IDE can attach its debugger to that running game.
 
 Content
@@ -510,7 +510,7 @@ States to show
 4. Running, with the "Image changed — Restart game" toast.
 5. Running with an IDE attached and the Unauthenticated Badge.
 6. Build failed: error state, "Show in Console".
-7. Game stopped from outside the Studio (crash, IDE stop, window closed): "Game stopped", Play
+7. Game stopped from outside Pyro (crash, IDE stop, window closed): "Game stopped", Play
    available again.
 8. Fallback mode: Toast / Banner "Reloads paused while an IDE is attached — reload from your
    IDE".
@@ -524,14 +524,14 @@ States to show
 
 ---
 
-## Prompt 10 — "Add Flame Studio to this project" flow
+## Prompt 10 — "Add Pyro to this project" flow
 
 ```
-Design the setup flow shown when a user opens a Flame project that doesn't use Flame Studio yet.
+Design the setup flow shown when a user opens a Flame project that doesn't use Pyro yet.
 It's a modal Dialog (form width), 3 steps.
 
 Content
-1. Explanation: what will be added — the flame_studio_runtime and flame_studio_generator
+1. Explanation: what will be added — the pyro_runtime and pyro_generator
    dependencies, build_runner (2.14 or later; an existing older one is upgraded), a build.yaml,
    an assets/scenes/ folder and its pubspec.yaml asset entry — and the promise "Nothing else in
    your project is changed. Your main.dart is not edited."
@@ -539,16 +539,16 @@ Content
    "Run flutter pub get and start the code generator".
 3. Progress + result: steps with status dots (Updating pubspec.yaml, flutter pub get, generator
    first run). Success: the one line to add to the game, ready to copy
-   (world.add(await StudioScene.load('assets/scenes/level_1.scene.json', registry: studioRegistry))),
-   a note that lib/flame_studio.g.dart and lib/flame_studio.manifest.json are generated and
+   (world.add(await PyroScene.load('assets/scenes/level_1.scene.json', registry: pyroRegistry))),
+   a note that lib/pyro.g.dart and lib/pyro.manifest.json are generated and
    meant to be committed, and "Create first scene" (primary). Failure: error details and
    "Open Console".
 
 Variants
 - Unsupported Flame version: which version was found, that Hot-swap needs Flame 1.36 or later,
   and "Continue anyway" / "Cancel".
-- Upgrade runtime: the same review + progress steps for a project whose flame_studio_runtime is
-  older than this Studio supports ("Upgrade flame_studio_runtime 0.1.2 → 0.2.0").
+- Upgrade runtime: the same review + progress steps for a project whose pyro_runtime is
+  older than this version of Pyro supports ("Upgrade pyro_runtime 0.1.2 → 0.2.0").
 ```
 
 ---
@@ -559,7 +559,7 @@ Variants
 Design:
 
 A. Settings window (sidebar sections):
-   - General: theme (Dark; Light "coming later", disabled), recovery copy interval (the Studio
+   - General: theme (Dark; Light "coming later", disabled), recovery copy interval (Pyro
      never saves scene files on its own; it keeps a recovery copy for crashes).
    - Flutter SDK: detected path, version and source (.fvmrc / FLUTTER_ROOT / PATH), override path
      picker, "Re-detect".
@@ -577,25 +577,25 @@ B. About window: app version, "Community project, not affiliated with the Flame 
 
 C. A sheet of the global warning / error / empty patterns used across the app:
    - Unsaved changes on closing a scene tab or the window (Save / Don't save / Cancel).
-   - Scene file from a newer Studio: can't open, says which version is needed.
+   - Scene file from a newer Pyro: can't open, says which version is needed.
    - Scene upgraded from an older format: info Banner "Upgraded from format v2 — will be saved as
      v3".
    - Project's Runtime can't read the current format: saving blocked with "Upgrade runtime…";
-     project's Runtime newer than this Studio: "Update Flame Studio".
+     project's Runtime newer than this version of Pyro: "Update Pyro".
    - External change to the open scene file: Banner with Reload / Keep mine.
    - Restore after a crash (recovery copy found).
    - Generated types out of date / generator not running / external build_runner.
    - Missing behavior, Missing component, missing asset, broken entity reference, duplicate
      sibling names, unused values (inline variants).
    - Empty states: no scene open, no Behaviors in the project ("Create a class extending
-     Behavior and annotate it with @StudioBehavior()"), no assets, no devices.
+     Behavior and annotate it with @PyroBehavior()"), no assets, no devices.
 ```
 
 ---
 
 ## Sync log
 
-**2026-10-18** — synced with the plan through Q85 and the built `flame_studio_ui`:
+**2026-10-18** — synced with the plan through Q85 and the built `pyro_ui`:
 
 - Prompt 0 marked done and kept as the record; added the shared preamble (component names,
   EditorShell layout, glossary words, "New patterns" list) and the status table.

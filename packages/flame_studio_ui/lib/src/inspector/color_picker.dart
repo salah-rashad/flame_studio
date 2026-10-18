@@ -39,7 +39,8 @@ abstract final class FsSwatchInk {
 ///   (`surface-overlay`, `border-overlay`, `radius-md`, the popover shadow).
 /// - **SV area** (120px): drag to set saturation (→) and brightness (↑);
 ///   a 10px white ring marks the colour. From the keyboard, ← → step the
-///   saturation and ↑ ↓ the brightness by 1% (Shift: 10%).
+///   saturation and ↑ ↓ the brightness by 1% (Shift: 10%). [autofocus]
+///   focuses it.
 /// - **Hue slider** (8px): drag to set the hue; a 12×14 white thumb. From
 ///   the keyboard, → and ↑ step it up by 1°, ← and ↓ down (Shift: 10°), as
 ///   sliders do.
@@ -54,8 +55,11 @@ abstract final class FsSwatchInk {
 ///   the current alpha.
 /// - **Recent colours:** 20×16 swatches; a click picks one.
 ///
-/// Dragging calls [onChanged] while moving and [onCommit] once on release;
-/// fields, swatches, arrow-key steps and the eyedropper call both. The hue is kept while
+/// Dragging calls [onChanged] while moving and [onCommit] once on release.
+/// Arrow-key steps are treated like a drag: [onChanged] on each press and
+/// one [onCommit] when the run of presses ends (half a second without one,
+/// focus leaving the area or slider, or the picker closing). Fields,
+/// swatches and the eyedropper call both at once. The hue is kept while
 /// saturation or brightness is zero, so dragging back restores it.
 ///
 /// Usually shown by `FsColorProperty`'s swatch; it can be placed directly.
@@ -94,7 +98,7 @@ class FsColorPicker extends StatefulWidget {
   /// The hue slider's semantics label ("Hue").
   final String? hueLabel;
 
-  /// Focus the hex field when shown.
+  /// Focus the SV area when shown.
   final bool autofocus;
 
   /// The popover's width.
@@ -105,9 +109,17 @@ class FsColorPicker extends StatefulWidget {
 }
 
 class _FsColorPickerState extends State<FsColorPicker> {
+  final _svFocus = FocusNode(debugLabel: 'FsColorPicker SV area');
   final _hexFocus = FocusNode(debugLabel: 'hex');
   late HSVColor _hsv = HSVColor.fromColor(widget.value);
   Color? _dragStart;
+
+  /// The colour before the current run of arrow-key steps; null outside one.
+  Color? _stepStart;
+  Timer? _stepIdle;
+
+  /// How long after the last arrow-key step its run ends and commits.
+  static const Duration _stepCommitDelay = Duration(milliseconds: 500);
 
   static const double _padding = 8;
   static const double _svHeight = 120;
@@ -119,7 +131,7 @@ class _FsColorPickerState extends State<FsColorPicker> {
     super.initState();
     if (widget.autofocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _hexFocus.requestFocus();
+        if (mounted) _svFocus.requestFocus();
       });
     }
   }
@@ -139,6 +151,16 @@ class _FsColorPickerState extends State<FsColorPicker> {
 
   @override
   void dispose() {
+    // Closing mid-run still commits it; after this frame, as the tree is
+    // locked now.
+    final start = _stepStart;
+    _stepIdle?.cancel();
+    if (start != null && _color != start) {
+      final color = _color;
+      final onCommit = widget.onCommit;
+      WidgetsBinding.instance.addPostFrameCallback((_) => onCommit(color));
+    }
+    _svFocus.dispose();
     _hexFocus.dispose();
     super.dispose();
   }
@@ -151,11 +173,21 @@ class _FsColorPickerState extends State<FsColorPicker> {
     if (_color != before) widget.onChanged(_color);
   }
 
-  /// An arrow-key step: one change, committed at once.
+  /// An arrow-key step: a change now, committed when the run of steps ends.
   void _step(HSVColor hsv) {
-    final before = _color;
+    _stepStart ??= _color;
     _set(hsv);
-    if (_color != before) widget.onCommit(_color);
+    _stepIdle?.cancel();
+    _stepIdle = Timer(_stepCommitDelay, _endSteps);
+  }
+
+  /// Ends a run of arrow-key steps: one commit if it changed the colour.
+  void _endSteps() {
+    final start = _stepStart;
+    _stepStart = null;
+    _stepIdle?.cancel();
+    _stepIdle = null;
+    if (start != null && _color != start) widget.onCommit(_color);
   }
 
   HSVColor _svStepped(Offset step) => _hsv
@@ -170,7 +202,10 @@ class _FsColorPickerState extends State<FsColorPicker> {
 
   static String _hueText(HSVColor hsv) => '${hsv.hue.round()}°';
 
-  void _dragStarted() => _dragStart = widget.value;
+  void _dragStarted() {
+    _endSteps();
+    _dragStart = widget.value;
+  }
 
   void _dragEnded() {
     final start = _dragStart;
@@ -179,6 +214,7 @@ class _FsColorPickerState extends State<FsColorPicker> {
   }
 
   void _pick(Color color) {
+    _endSteps();
     final next = HSVColor.fromColor(color);
     setState(() {
       _hsv = next.saturation == 0 || next.value == 0
@@ -196,6 +232,7 @@ class _FsColorPickerState extends State<FsColorPicker> {
   }
 
   void _alpha(double percent, {required bool commit}) {
+    _endSteps();
     final color = widget.value.withValues(
       alpha: FsNumberEditing.clamp(percent, min: 0, max: 100) / 100,
     );
@@ -223,10 +260,12 @@ class _FsColorPickerState extends State<FsColorPicker> {
         children: [
           _Pad(
             height: _svHeight,
+            focusNode: _svFocus,
             onStart: _dragStarted,
             onEnd: _dragEnded,
             onMove: (p) => _set(_hsv.withSaturation(p.dx).withValue(1 - p.dy)),
             onStep: (step) => _step(_svStepped(step)),
+            onBlur: _endSteps,
             painter: _SvPainter(_hsv),
             semanticsLabel: widget.areaLabel,
             semanticsValue: _svText(_hsv),
@@ -241,6 +280,7 @@ class _FsColorPickerState extends State<FsColorPicker> {
             onEnd: _dragEnded,
             onMove: (p) => _set(_hsv.withHue(p.dx * 360)),
             onStep: (step) => _step(_hueStepped(step)),
+            onBlur: _endSteps,
             vertical: false,
             painter: _HuePainter(_hsv.hue),
             semanticsLabel: widget.hueLabel,
@@ -379,6 +419,7 @@ class _Pad extends StatefulWidget {
     required this.onMove,
     required this.onEnd,
     required this.onStep,
+    required this.onBlur,
     required this.painter,
     required this.semanticsLabel,
     required this.semanticsValue,
@@ -386,6 +427,7 @@ class _Pad extends StatefulWidget {
     required this.decreasedValue,
     this.vertical = true,
     this.overhang = 0,
+    this.focusNode,
   });
 
   final double height;
@@ -396,6 +438,9 @@ class _Pad extends StatefulWidget {
   /// An arrow key: (±1, 0) for ← →, (0, ±1) for ↑ ↓ (up is +1), ×10 with
   /// Shift.
   final ValueChanged<Offset> onStep;
+
+  /// Focus left it.
+  final VoidCallback onBlur;
   final CustomPainter painter;
   final String? semanticsLabel;
   final String semanticsValue;
@@ -409,16 +454,22 @@ class _Pad extends StatefulWidget {
   /// Extra hit area above and below (the hue bar's thumb sticks out).
   final double overhang;
 
+  /// Its focus node; the pad makes its own if null.
+  final FocusNode? focusNode;
+
   @override
   State<_Pad> createState() => _PadState();
 }
 
 class _PadState extends State<_Pad> {
-  final _focus = FocusNode(debugLabel: 'FsColorPicker pad');
+  FocusNode? _ownFocus;
+  FocusNode get _focus =>
+      widget.focusNode ??
+      (_ownFocus ??= FocusNode(debugLabel: 'FsColorPicker pad'));
 
   @override
   void dispose() {
-    _focus.dispose();
+    _ownFocus?.dispose();
     super.dispose();
   }
 
@@ -470,7 +521,10 @@ class _PadState extends State<_Pad> {
             focusNode: _focus,
             includeSemantics: false,
             onKeyEvent: _onKey,
-            onFocusChange: (_) => setState(() {}),
+            onFocusChange: (focused) {
+              setState(() {});
+              if (!focused) widget.onBlur();
+            },
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onPanDown: (d) {

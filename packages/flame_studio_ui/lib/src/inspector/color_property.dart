@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../foundation/anchored_overlay.dart';
 import '../foundation/debug_states.dart';
@@ -20,9 +21,9 @@ import 'property_row.dart';
 ///   colours stay visible; drawn opaque (no checkerboard), so transparency
 ///   is read from the % field. A click, Enter or Space opens the
 ///   [FsColorPicker] popover below it; a click outside or Esc closes it.
-/// - **Keyboard:** Enter or Space opens the popover with focus in its hex
-///   field, ready to type or paste (a click leaves focus where it was);
-///   ⇧Tab reaches the hue slider and SV area, which step with the arrows. In the Tab order the
+/// - **Keyboard:** Enter or Space opens the popover with focus in its SV
+///   area, ready to step with the arrows (a click leaves focus where it
+///   was); Tab goes on to the hue slider, hex and alpha. In the Tab order the
 ///   popover sits between the swatch and the row's hex field: Tab past its
 ///   last control goes on to the row's hex field, ⇧Tab before its first
 ///   back to the swatch, and either closes it. Focus moving anywhere else
@@ -37,8 +38,9 @@ import 'property_row.dart';
 ///   apply it to), so it is read-only while mixed.
 /// - Default from code, overridden, disabled: as [FsPropertyRow].
 ///
-/// The picker's drags call [onChanged] while moving and [onCommit] once;
-/// the fields commit once per edit. Parts for `FsDebugStates`: `row`,
+/// The picker's drags and arrow-key runs call [onChanged] while moving and
+/// [onCommit] once; the fields commit once per edit. [onPickerClosed]
+/// reports the colour the popover was left on, for the recent colours. Parts for `FsDebugStates`: `row`,
 /// `label`, `hex`, `field` (alpha), and `picker` with
 /// [WidgetState.selected] (exact) to show the popover.
 class FsColorProperty extends StatefulWidget {
@@ -54,6 +56,7 @@ class FsColorProperty extends StatefulWidget {
     this.tooltip,
     required this.onChanged,
     required this.onCommit,
+    this.onPickerClosed,
     this.recentColors = const [],
     this.eyedropperTooltip,
     this.pickerAreaLabel,
@@ -87,6 +90,11 @@ class FsColorProperty extends StatefulWidget {
 
   /// Once per drag, field edit, swatch click or sample.
   final ValueChanged<Color> onCommit;
+
+  /// The popover closed after the colour changed while it was open; with
+  /// the colour it was left on. Where the app adds to [recentColors], so
+  /// they get the colour picked, not each step on the way.
+  final ValueChanged<Color>? onPickerClosed;
 
   /// The picker's recent colours; the app keeps the list.
   final List<Color> recentColors;
@@ -127,6 +135,9 @@ class _FsColorPropertyState extends State<FsColorProperty> {
   /// The popover was opened from the keyboard: it takes focus.
   bool _focusPicker = false;
 
+  /// The colour when the popover opened, for [FsColorProperty.onPickerClosed].
+  Color? _openedWith;
+
   @override
   void initState() {
     super.initState();
@@ -157,12 +168,24 @@ class _FsColorPropertyState extends State<FsColorProperty> {
       _close();
     } else {
       _focusPicker = !_pointerDown;
+      _openedWith = _value;
       setState(_overlay.show);
     }
   }
 
   void _close() {
-    if (_overlay.isShowing) setState(_overlay.hide);
+    if (!_overlay.isShowing) return;
+    setState(_overlay.hide);
+    final onClosed = widget.onPickerClosed;
+    final color = _value;
+    if (onClosed == null || color == null || color == _openedWith) return;
+    // Closed from didUpdateWidget (disabled): report after the build.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => onClosed(color));
+    } else {
+      onClosed(color);
+    }
   }
 
   /// A click outside or Esc: close, and don't strand focus in the popover.

@@ -471,7 +471,8 @@ FsColorProperty({
   required String label, required Color? value, bool mixed = false,
   FsValueSource source = FsValueSource.codeDefault, VoidCallback? onReset,
   required ValueChanged<Color> onChanged, required ValueChanged<Color> onCommit,
-  List<Color> recentColors = const [],   // the app keeps the list
+  ValueChanged<Color>? onPickerClosed,   // the colour the popover closed on, if changed
+  List<Color> recentColors = const [],   // the app keeps the list; add to it in onPickerClosed
   bool enabled = true,
 })
 FsColorPicker({required Color value, required ValueChanged<Color> onChanged,
@@ -483,17 +484,37 @@ Swatch 28×16 with a 1px inner white-15% edge, 6-digit upper-case hex field, sep
 % field. Invalid hex gives an `error` border, and the swatch keeps the last valid colour. The swatch
 opens the picker popover: an SV area, a hue slider, hex + alpha, recent colours, and the eyedropper
 when `FsPlatformHooks.sampleScreenColor` is set (§7.2). The popover isn't modal: Enter or Space
-on the swatch opens it with focus in its hex field (a click leaves focus put); in the Tab order it
+on the swatch opens it with focus in its SV area (a click leaves focus put); in the Tab order it
 sits between the swatch and the row's hex field, so Tab past its end moves on and ⇧Tab before its
 start returns to the swatch, closing it either way; focus moving anywhere else closes it; Esc
 anywhere in it closes it and returns focus to the swatch. Inside it the SV area and hue slider are
 focusable sliders (Tab order: SV, hue, hex, alpha): the SV area steps saturation with ← → and
-brightness with ↑ ↓, the hue slider steps with all four arrows, 1% / 1° per press (Shift ×10), one
-`onCommit` per press; screen readers get slider roles with "40%, 80%" and "210°" values and the
+brightness with ↑ ↓, the hue slider steps with all four arrows, 1% / 1° per press (Shift ×10), `onChanged`
+per press and one `onCommit` per run of presses (it ends after 500ms without one, when focus leaves,
+or when the picker closes), like a drag. `onPickerClosed` fires once when the popover closes, if
+the colour changed while it was open, so recent colours get the colour picked rather than each
+step; screen readers get slider roles with "40%, 80%" and "210°" values and the
 app's `areaLabel` / `hueLabel`.
 States: default, hover, focused hex,
 disabled, error, mixed, overridden; picker open. Uses: `FsPropertyRow`, `FsFieldBox`,
 `FsNumberField` (alpha), `FsAnchoredOverlay`, `FsIconButton`.
+
+Keyboard step size, by decision: the SV area and hue slider step whole percents and degrees, not
+one hex level (1/255). 1% of saturation is 2.55 channel levels at full brightness, so → from
+`#FFFFFF` goes to `#FFFCFC`, then `#FFFAFA`, `#FFF7F7` (−3, −2, −3, … as it rounds). That's kept
+because the screen-reader values are whole percents and degrees (a 1/255 step would announce the
+same value, or change nothing, on many presses), it matches the slider practice in WAI-ARIA and
+Figma's and Photoshop's HSB pickers, and exact colours are typed in the hex field, not stepped.
+
+Possible future updates (not planned yet):
+
+- **Home / End and Page Up / Page Down** on both sliders, the WAI-ARIA slider keys: Home / End go
+  to the ends (saturation 0 / 100% in the SV area, hue 0 / 360°), Page Up / Page Down step 10%
+  or 10° like Shift+arrow (brightness in the SV area). Small, and expected by screen-reader and
+  keyboard users.
+- **HSB or RGB number fields** for exact per-channel entry: `FsNumberField`s for H, S, B or R, G,
+  B, with a colour-model dropdown as in Figma; their arrows step one unit, so RGB steps one hex
+  level. A design addition (layout, picker height, preview.html first), so a separate decision.
 
 #### `FsAssetSlot<D>` and `FsEntitySlot<D>` (on a shared `FsSlot<D>`): 0.75 + 0.25
 

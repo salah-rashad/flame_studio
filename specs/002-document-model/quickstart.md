@@ -22,10 +22,10 @@ cd apps/pyro && flutter test test/document
 | `scene_document_test.dart` | `fromScene`/`toScene`; each edit and each refusal in data-model.md; untouched Nodes stay `identical` (US1 #8, FR-003); invariants hold after random edit sequences |
 | `history_test.dart` | apply, undo, redo, redo tail dropped, no-op edits, coalescing runs and what ends them, first label kept, the 200-entry cap, dirty by identity, `saved` null for repaired and restored (US1, FR-009 to FR-016) |
 | `round_trip_test.dart` | every canonical fixture in `packages/pyro_runtime/test/fixtures/scenes/canonical/` opens and saves byte for byte (US2 #1, SC-001); a non-canonical file opens clean and saves canonical (US2 #6); edit, undo to saved, save is byte-identical |
-| `scene_files_test.dart` | open errors (US2 #8); a repaired Scene opens dirty with its report (US2 #7); the gate's three cases (US4); changed on disk, deleted on disk, identical bytes, forced overwrite (US2 #10); "Save as" onto an existing file; new Scene needs a path (US2 #9); a missing folder |
+| `scene_files_test.dart` | open errors (US2 #8); one test through the real `Isolate.run`; a repaired Scene opens dirty with its report (US2 #7); the gate's three cases (US4); changed on disk, deleted on disk, identical bytes, forced overwrite (US2 #10); "Save as" onto an existing file; new Scene needs a path (US2 #9); a missing folder |
 | `atomic_write_test.dart` | a failing file system that throws at each step of a save: the target is always the whole old or the whole new file, and no temporary file remains (US2 #3, SC-003); one test on the real file system in a temporary folder, run on all three CI OSes (rename replaces on Windows) |
-| `recovery_store_test.dart` | file names and metadata (contracts/recovery-copies.md); find, discard, the 30-day prune, each unreadable case kept and reported (US3 #4, #7, FR-025a) |
-| `document_session_test.dart` | with `fake_async`: a copy every 30 s only while dirty and changed (US3 #1, #2); save and discard remove it (US3 #3); restore opens dirty with empty history and saves to the Scene's path (US3 #5); declining removes it (US3 #6); a simulated crash loses at most 30 s (SC-004); edits during a save stay unsaved (FR-020); saves are queued; `close` refuses a dirty session |
+| `recovery_store_test.dart` | file names and metadata (contracts/recovery-copies.md); find, discard (the store's half of declining *Restore*, US3 #6), the 30-day prune, each unreadable case kept until pruned and reported (US3 #4, #7, FR-025a, FR-029) |
+| `document_session_test.dart` | with `fake_async` and the inline `Offload` (research R9): a copy every 30 s only while dirty and changed (US3 #1, #2); save and discard remove it (US3 #3); restore opens dirty with empty history and saves to the Scene's path (US3 #5); a simulated crash loses at most 30 s (SC-004); a never-saved Scene gets no copy (FR-024); two sessions stay independent; edits during a save stay unsaved (FR-020); saves are queued; `close` refuses a dirty session |
 
 ## 2. Round-trip a Scene by hand
 
@@ -54,9 +54,10 @@ cd apps/pyro && flutter test benchmark/document_benchmark_test.dart
 Prints, for a generated 1,000-Node Scene: the median time of a one-Node transaction, an undo
 and a redo (SC-005: < 1 ms; JIT numbers, so an upper bound for the release build), the time to
 open and to save it, and the time spent on the calling isolate during each (must stay under a
-frame). For memory (SC-006), the benchmark builds a 200-step history and prints the RSS change;
-confirm in profile mode with the DevTools memory view: retained size of the history against
-the Scene alone, < 10% more.
+frame). The benchmark also prints the RSS change from a 200-step history, as a quick signal
+only. SC-006 is decided in profile mode with DevTools heap snapshots: the retained size of the
+`DocumentHistory` after 200 one-Node steps must be less than 10% more than that of the opening
+`SceneDocument` (tasks.md T038).
 
 ## 5. Recover after a crash
 

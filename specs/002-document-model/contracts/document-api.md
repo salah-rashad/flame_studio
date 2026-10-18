@@ -9,7 +9,7 @@ described in [data-model.md](../data-model.md). Signatures are the shape, not fi
 ```dart
 /// Reads and writes Scene files for documents (research R7–R9, R14).
 final class SceneFiles {
-  SceneFiles({FileSystem fileSystem = const LocalFileSystem()});
+  SceneFiles({FileSystem fileSystem = const LocalFileSystem(), Offload offload = Isolate.run});
 
   /// Reads [path] and decodes it off the UI isolate.
   ///
@@ -84,12 +84,17 @@ final class SessionServices {
     required String projectRoot,
     Duration recoveryInterval = const Duration(seconds: 30),
     NodeIdSource newId = uuidNodeIds,
+    Offload offload = Isolate.run,
   });
 }
+
+/// Runs codec and hashing work off the UI isolate (research R9). Tests that
+/// use fake_async pass a runner that does the work in place.
+typedef Offload = Future<R> Function<R>(FutureOr<R> Function() work);
 ```
 
 Time comes from `package:clock`'s zone clock, and the recovery timer from `Timer.periodic`, so
-`fake_async` drives both in tests.
+`fake_async` drives both in tests, together with an inline `Offload`.
 
 ## State and edits
 
@@ -153,7 +158,11 @@ session.transact(
 ```dart
 /// Recovery copies in a folder outside the project (contracts/recovery-copies.md).
 final class RecoveryStore {
-  RecoveryStore({required Directory folder, FileSystem fileSystem = const LocalFileSystem()});
+  RecoveryStore({
+    required Directory folder,
+    FileSystem fileSystem = const LocalFileSystem(),
+    Offload offload = Isolate.run,
+  });
 
   /// Prunes copies older than 30 days (FR-025a), then reports the copy for
   /// [scenePath], if any.

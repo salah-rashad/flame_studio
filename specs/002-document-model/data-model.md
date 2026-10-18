@@ -115,7 +115,8 @@ unsaved (FR-020).
 ## DocumentSession
 
 Mutable holder for one open Scene (R13). Not a model: it owns the current `OpenDocument`, a
-save queue and a `RecoveryTimer`.
+save queue and a `RecoveryTimer`. Sessions share nothing but their services: two open Scenes
+have separate histories, saves and recovery copies.
 
 **State machine:**
 
@@ -136,8 +137,9 @@ stateDiagram-v2
 ```
 
 `close()` on a dirty session throws `StateError`: the caller must save or discard first, so
-unsaved work is never dropped by accident. While dirty, the `RecoveryTimer` writes a copy every
-30 s if the state changed since its last copy (R12).
+unsaved work is never dropped by accident. While dirty, and once the Scene has a file path, the
+`RecoveryTimer` writes a copy every 30 s if the state changed since its last copy (R12, FR-024);
+a never-saved Scene gets no copy.
 
 ## Errors
 

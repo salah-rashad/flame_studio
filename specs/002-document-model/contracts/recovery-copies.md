@@ -50,7 +50,11 @@ and readable, and its `writtenAt` is conservative.
    `RecoveryAvailable(info)`, with the Scene file's own modification time (or null if it's
    gone).
 5. Anything else (one file missing, bad JSON, mismatched paths, a `SceneFormatException`) →
-   `RecoveryUnreadable(location, problem)`; nothing is deleted.
+   `RecoveryUnreadable(location, problem)`; nothing is deleted until step 1 prunes it after
+   30 days.
+
+Only Scenes with a file path have copies: a never-saved Scene has nothing to key one by
+(spec FR-024).
 
 ## Removing
 

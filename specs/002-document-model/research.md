@@ -205,21 +205,35 @@ milliseconds). File watching (#1 or later) narrows it; nothing in this feature c
 
 ## R9. Keeping the UI isolate free
 
-**Decision:** all file access is async. `SceneCodec.decode` and `SceneCodec.encode` run in
-`Isolate.run` (spec 001, R9): decoding a 1,000-Node Scene takes tens of milliseconds, more than a
-frame. Hashing runs in the same isolate call as encoding or decoding. Edits, undo and redo stay
-on the calling isolate (they're microseconds, SC-005).
+**Decision:** all file access is async. `SceneCodec.decode` and `SceneCodec.encode` run off the
+UI isolate (spec 001, R9): decoding a 1,000-Node Scene takes tens of milliseconds, more than a
+frame. Hashing runs in the same call as encoding or decoding. Edits, undo and redo stay on the
+calling isolate (they're microseconds, SC-005).
+
+The work goes through an injected runner, `typedef Offload = Future<R> Function<R>(FutureOr<R>
+Function() work);`, whose default is `Isolate.run`. `SceneFiles`, `RecoveryStore` and
+`SessionServices` each take one. Tests that use `fake_async` pass a runner that does the work in
+place, because an `Isolate.run` reply arrives on the real event loop, which `fake_async` never
+runs, so those futures would never complete. One test in `scene_files_test.dart` keeps the
+default, so the real isolate path (sending a Scene, getting one back) is covered.
 
 **Rationale:** `Isolate.run` returns its result with `Isolate.exit`, so the decoded Scene comes
-back without a copy; sending a Scene to be encoded copies it, which the benchmark measures.
+back without a copy; sending a Scene to be encoded copies it, which the benchmark measures. The
+runner is a documented seam with a test double (constitution I), not a speculative
+abstraction.
 
 ## R10. Injected file system and time
 
 **Decision:** every class that touches files takes a `FileSystem` from `package:file`
-(`LocalFileSystem` in the app, `MemoryFileSystem` in tests, a forwarding file system that fails
-on demand for the interrupted-save tests). Time comes from `package:clock`; the recovery timer
-uses `Timer.periodic`, driven by `fake_async` in tests (constitution V: no real time, no real
-disk).
+(`LocalFileSystem` in the app, `MemoryFileSystem` in tests, and a forwarding file system that can
+fail at a chosen operation or hold a write until the test releases it). Time comes from
+`package:clock`; the recovery timer uses `Timer.periodic`, driven by `fake_async` in tests, with
+the inline runner of R9.
+
+Constitution V asks for the file system and time to be injected or faked. Two places use real
+files on purpose: the fixtures are read from the repository, and one atomic-write test runs on an
+injected `LocalFileSystem` in a temporary folder, so CI checks on each OS that rename replaces the
+target (R7). No test waits on wall-clock time.
 
 ## R11. Recovery copies on disk
 

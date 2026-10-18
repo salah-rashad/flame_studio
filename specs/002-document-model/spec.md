@@ -167,8 +167,9 @@ the copy and restores the expected state.
 6. **Given** the developer declines to restore, **When** the document opens, **Then** it holds
    the Scene file's state and the recovery copy is removed.
 7. **Given** a recovery copy that can't be read (damaged, or from a newer `schemaVersion`),
-   **When** recovery is checked, **Then** the copy is kept, the Scene opens from its file, and
-   the problem is reported with the copy's location rather than silently ignored.
+   **When** recovery is checked, **Then** the copy is kept (until pruned, FR-025a), the Scene
+   opens from its file, and the problem is reported with the copy's location rather than
+   silently ignored.
 
 ---
 
@@ -290,8 +291,8 @@ above the version Pyro writes, and check that only the first is refused and noth
   new Scene closes without a prompt.
 - **FR-016**: A document opened from a file the reader repaired MUST start dirty, with the repair
   report available, and MUST NOT write the repair to disk until the developer saves (spec 001,
-  FR-025). The repaired tree is the document's first state: there is no history entry to undo
-  back to the damaged tree, and no undo makes the document clean before the first save.
+  FR-025). The repaired tree is the document's first state, with no history entry to undo back
+  to the damaged tree; it has no saved state (FR-015).
 
 **Open and save**
 
@@ -343,8 +344,8 @@ above the version Pyro writes, and check that only the first is refused and noth
   (dirty, with empty history, saving to the Scene's own path) or discard the copy. A restored
   document's changed-on-disk check (FR-019a) compares against the Scene file as it was when the
   copy was restored.
-- **FR-029**: A recovery copy that can't be read MUST be kept, and the problem reported with its
-  location; the Scene then opens from its file.
+- **FR-029**: A recovery copy that can't be read MUST be kept until the 30-day prune removes it
+  (FR-025a), and the problem reported with its location; the Scene then opens from its file.
 
 **Errors**
 

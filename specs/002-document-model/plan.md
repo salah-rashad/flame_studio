@@ -31,10 +31,11 @@ choice; R1)
 recovery copies as Scene files plus a small JSON metadata file in a recovery folder outside the
 project ([contracts/recovery-copies.md](contracts/recovery-copies.md))
 
-**Testing**: `flutter test` in `apps/pyro` with `MemoryFileSystem`, a failing forwarding file
-system, `fake_async` and an injected clock; `pyro_runtime`'s canonical fixtures for round trips;
-a benchmark run with `flutter test benchmark/` (JIT, so an upper bound), and the DevTools memory
-view in profile mode for SC-006
+**Testing**: `flutter test` in `apps/pyro` with `MemoryFileSystem`, a forwarding file system
+that fails or pauses on demand, `fake_async`, an injected clock and an inline `Offload` runner
+(R9, R10); `pyro_runtime`'s fixtures for round trips; a benchmark run by hand with
+`flutter test benchmark/` (JIT, so an upper bound), with SC-006 decided by the DevTools heap view
+in profile mode
 
 **Target Platform**: Pyro desktop on macOS (first class), Windows and Linux (built and tested
 in CI, best effort)
@@ -43,10 +44,12 @@ in CI, best effort)
 
 **Performance Goals**: one-Node transaction, undo and redo < 1 ms median on a 1,000-Node Scene
 (SC-005); a 200-step history < 10% extra memory over the Scene (SC-006); open and save never
-block a frame (decode and encode in `Isolate.run`, R9)
+block a frame (decode and encode off the UI isolate through an injected `Offload`, default `Isolate.run`, R9)
 
-**Constraints**: the Scene file is written only on save, atomically (constitution IV); no real
-disk or time in tests (constitution V); no import of `pyro_generator` or user code
+**Constraints**: the Scene file is written only on save, atomically (constitution IV); in tests,
+the file system, clock, timers and isolate runner are injected or faked, and Scenes under test
+live in memory; real files are only the repository's fixtures and one atomic-write test in a
+temporary folder (constitution V, R10); no import of `pyro_generator` or user code
 (constitution II); no editor UI
 
 **Scale/Scope**: about 1,000 Nodes and ~0.5 MB per Scene, a few Scenes open at once, 200 history
@@ -60,9 +63,9 @@ entries per Scene, one recovery copy per dirty Scene
 |---|---|---|---|
 | I. Clean Code | Immutable models; mutation only through named transactions; names from `GLOSSARY.md`; errors name file, transaction, Node and version; public API documented; no speculative abstraction | ✅ | ✅ freezed and hand-written immutable values (R4); `transact` is the only way to change a `SceneDocument` held by a session (R6); every error type names its location (data-model.md); `NodeIdSource`, the file system and the clock are documented seams (test doubles); new glossary terms listed below |
 | II. Modular Boundaries | App doesn't depend on the generator or run user code; feature folder `document/` with a public library; new dependencies stated | ✅ | ✅ `lib/document/document.dart` exports the API, internals under `lib/document/src/`; no change to `pyro_runtime`; every new dependency is listed in R1 and recorded as a decision |
-| III. Performance by Design | Document is a hot path: budget stated and measured; structural sharing; no blocking I/O | ✅ SC-005, SC-006 | ✅ `IMap` sharing (R3), identity equality (R4), codec work in `Isolate.run` (R9); benchmark in quickstart §4 |
+| III. Performance by Design | Document is a hot path: budget stated and measured; structural sharing; no blocking I/O | ✅ SC-005, SC-006 | ✅ `IMap` sharing (R3), identity equality (R4), codec work off the UI isolate through `Offload` (R9); benchmark in quickstart §4 |
 | IV. User Data Integrity | Atomic writes; preserve the unknown; refuse unreadable versions; Scene file written only on save; recovery file | ✅ | ✅ temp file + flush + rename (R7); Nodes are the Runtime's, unknown data passes through untouched; gate before any I/O (R14); changed-on-disk refusal (R8); recovery outside the project (R11) |
-| V. Tested Core | Document and history are Heavy: every behavior has a test; deterministic | ✅ | ✅ test map in quickstart §1 covers every FR; fake file system, clock and timers (R10); byte-for-byte round trip of every canonical fixture (R15) |
+| V. Tested Core | Document and history are Heavy: every behavior has a test; deterministic | ✅ | ✅ test map in quickstart §1 covers every FR; fake file system, clock, timers and isolate runner (R9, R10); byte-for-byte round trip of every canonical fixture (R15) |
 
 Technology constraints: Flutter stable only ✅ (3.44.2). Riverpod and freezed for the app stack
 ✅ (Q26). freezed 3.2.6-dev.1 is a prerelease of a code generator, not of Flutter; it is a risk
@@ -101,6 +104,7 @@ apps/pyro/
 │           ├── scene_document.dart    # SceneDocument (freezed, identity), the four edits
 │           ├── node_children.dart     # childIds on any Node kind (exhaustive switch)
 │           ├── node_ids.dart          # NodeIdSource, UUID v4 default
+│           ├── offload.dart           # Offload (runs codec work off the UI isolate)
 │           ├── history.dart           # DocumentHistory, HistoryEntry
 │           ├── open_document.dart     # OpenDocument, OpenedFrom
 │           ├── scene_files.dart       # SceneFiles: open, save, save as, gate, change check
@@ -113,14 +117,14 @@ apps/pyro/
 │   └── document/                      # tests listed in quickstart §1
 │       └── fixtures/                  # repaired Scene, recovery folders
 └── benchmark/
-    └── document_benchmark_test.dart   # SC-005, SC-006 (run by hand, not in CI)
+    └── document_benchmark_test.dart   # SC-005, SC-006 (run by hand; CI's flutter test runs test/ only)
 ```
 
 **Structure Decision**: one feature folder, `document/`, in the app, as constitution II names
 it; nothing in `packages/` changes. Round-trip tests read `pyro_runtime`'s canonical fixtures in
 place (R15). The generated `*.freezed.dart` files are committed, like the generator's output
 elsewhere in the repo, so a checkout analyzes without running `build_runner`; CI regenerates and
-diffs them (tasks.md).
+diffs them, and they must pass the repo's format check like any file (tasks.md T003, T011).
 
 ### Documentation updates in the same change
 

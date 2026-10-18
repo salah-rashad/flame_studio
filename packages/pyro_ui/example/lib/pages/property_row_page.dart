@@ -45,7 +45,7 @@ class _PropertyRowPageState extends State<PropertyRowPage> {
       title: 'PropertyRow',
       note:
           'A 24px inspector row: label 40% (min 72px), editor, reset slot. '
-          'Inside an PrPropertyList the rows share one label column: drag '
+          'Inside a PrPropertyList the rows share one label column: drag '
           'the boundary between label and editor in any row.',
       children: [
         Row(

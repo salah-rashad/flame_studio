@@ -35,7 +35,7 @@ import '../typography.dart';
 /// [onToggleAll] instead (when set): the app expands or collapses every
 /// section. Animate the properties with `PrCollapsible`.
 ///
-/// States forced by an `PrDebugStates` without a part reach the header only,
+/// States forced by a `PrDebugStates` without a part reach the header only,
 /// not its checkbox and buttons.
 class PrSectionHeader extends StatefulWidget {
   /// Creates a section header.
@@ -246,7 +246,7 @@ class _FsSectionHeaderState extends State<PrSectionHeader> {
 
 /// Shows [child] while [expanded] and animates its height open and closed
 /// in 150ms (`PrMotion.medium`; ease-out opening, ease-in closing): the
-/// properties under an `PrSectionHeader`.
+/// properties under a `PrSectionHeader`.
 ///
 /// The child stays built while collapsed, so its state survives; it takes
 /// no space, no pointer input and no focus then.

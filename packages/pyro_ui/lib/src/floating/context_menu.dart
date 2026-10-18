@@ -94,7 +94,7 @@ class PrMenuHeader<T> extends PrMenuEntry<T> {
 ///
 /// Usually shown by [PrContextMenuRegion], [PrMenuButton] or
 /// [showFsContextMenu]; it can also be placed directly (an inline menu).
-/// For the gallery, an `PrDebugStates` whose part is an item's label forces
+/// For the gallery, a `PrDebugStates` whose part is an item's label forces
 /// that item's states ([WidgetState.selected] draws an open submenu).
 class PrMenuPanel<T> extends StatefulWidget {
   /// Creates a panel.

@@ -22,7 +22,10 @@ env:
   FLUTTER_VERSION: "3.44.2"
 # Linux jobs pin ubuntu-24.04 rather than ubuntu-latest, which moves to
 # Ubuntu 26 from 2026-10-19 (the desktop build's apt packages, e.g.
-# libstdc++-12-dev, are named per release). Move deliberately.
+# libstdc++-12-dev, are named per release). macOS jobs pin macos-26 rather
+# than macos-latest: the pyro_ui goldens are rendered on it, and fonts
+# rasterise differently between macOS releases. Move deliberately, and
+# refresh the goldens on the new image in the same change.
 
 jobs:
   analyze-test:
@@ -30,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-24.04]
+        os: [macos-26, windows-latest, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -67,6 +70,15 @@ jobs:
       - name: Test the pyro_ui gallery
         working-directory: packages/pyro_ui/example
         run: flutter test
+      # A failed golden writes its master, test and diff images to
+      # test/failures/; keep them so the change can be seen without a rerun.
+      - name: Upload golden failures
+        if: failure() && runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-failures
+          path: packages/pyro_ui/example/test/failures/
+          if-no-files-found: ignore
       - name: Test the Pyro app
         working-directory: apps/pyro
         run: flutter test
@@ -77,7 +89,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-26
             platform: macos
           - os: windows-latest
             platform: windows

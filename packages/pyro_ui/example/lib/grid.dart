@@ -23,7 +23,7 @@ class GalleryPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: PrText.title.copyWith(color: c.textPrimary)),
-          if (note != null) ...[
+          if (note != null && !BriefCaptions.of(context)) ...[
             const SizedBox(height: PrSpacing.s2),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 720),
@@ -43,17 +43,33 @@ class GalleryPage extends StatelessWidget {
   }
 }
 
-/// A section heading in the preview.html style (`ds-h`).
+/// Set above a page by the golden test: the page keeps its headings but
+/// drops its prose ([GalleryPage.note], [SectionLabel.detail]). The goldens
+/// check the components, so rewording a caption shouldn't fail one.
+class BriefCaptions extends InheritedWidget {
+  const BriefCaptions({super.key, required super.child});
+
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<BriefCaptions>() != null;
+
+  @override
+  bool updateShouldNotify(BriefCaptions oldWidget) => false;
+}
+
+/// A section heading in the preview.html style (`ds-h`), shown as
+/// "text · detail". Put instructions and explanations in [detail], so the
+/// goldens leave them out.
 class SectionLabel extends StatelessWidget {
-  const SectionLabel(this.text, {super.key});
+  const SectionLabel(this.text, {super.key, this.detail});
 
   final String text;
+  final String? detail;
 
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: PrSpacing.s2),
     child: Text(
-      text,
+      detail == null || BriefCaptions.of(context) ? text : '$text · $detail',
       style: PrText.caption.copyWith(color: PrColors.of(context).textSecondary),
     ),
   );

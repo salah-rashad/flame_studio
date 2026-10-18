@@ -105,7 +105,7 @@ PrInteractive({
   Enter and Space; `onPressed`, `shortcuts` and `actions` stay inactive until it is enabled.
 - **Pressed** comes from a `Listener` (pointer down and up inside), not a `GestureDetector`, so
   the wrapper can sit inside drag sources (TreeRow) without fighting the gesture arena.
-- **Forced states for the gallery and goldens:** an `PrDebugStates` InheritedWidget, read only in
+- **Forced states for the gallery and goldens:** a `PrDebugStates` InheritedWidget, read only in
   debug and profile builds, adds a fixed set of states to every `PrInteractive` below it. This is
   how the gallery shows Hover, Pressed and Focused side by side like `preview.html`.
 - Helpers next to it: `PrFocusRing.outside` (`PrShadows.focus`, the 2px ring outside the edge)
@@ -788,7 +788,7 @@ secondary). Uses: `PrButton`.
 PrEditorShell({
   required Widget titleBar,        // centred document title; the shell reserves the
   double titleBarLeadingInset = 78,//   macOS traffic-light zone on the left
-  required Widget toolbar,         // usually an PrToolbar
+  required Widget toolbar,         // usually a PrToolbar
   required Widget left,            // Scene / Hierarchy panel
   required Widget center,          // document tabs + viewport toolbar + viewport
   required Widget right,           // Inspector
@@ -1032,7 +1032,7 @@ resizable seams, and widget tests per state. v0.1 work item 14's 4 evenings
 covered tokens and the theme (now done) and a restyle, not this. If ~23 is too much for v0.1,
 these can move to v0.1.1 with nothing lost before then: the colour picker popover (hex + alpha
 fields still edit, −0.75), NumberProperty expressions (−0.25), goldens (−0.75), SplitButton (a
-Button next to an `PrMenuButton` caret works, −0.25). That brings it to ~21.
+Button next to a `PrMenuButton` caret works, −0.25). That brings it to ~21.
 
 ### 8.2 The early preview (*Q82*)
 

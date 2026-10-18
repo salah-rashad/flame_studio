@@ -22,13 +22,13 @@ import '../typography.dart';
 ///   `text-primary` and a 2px `accent-text` line on the header's top edge.
 ///   **Unfocused:** `text-secondary`, no line.
 ///
-/// The panel inserts an `PrPanelFocus`, so rows inside choose
+/// The panel inserts a `PrPanelFocus`, so rows inside choose
 /// `surface-selected` or `surface-selected-inactive`. A pointer down
 /// anywhere in the panel gives it focus (back to its last focused widget,
 /// or the panel itself). Panel cycling (⌃Tab, ⌘1–⌘4) is the app's: it
 /// keeps each panel's [focusNode] and requests focus on it.
 ///
-/// [headerProgress] (an `PrProgressBar`) is drawn over the top of the body,
+/// [headerProgress] (a `PrProgressBar`) is drawn over the top of the body,
 /// right under the header, so showing it never moves the body.
 ///
 /// Parts for `PrDebugStates`: `panel` ([WidgetState.focused] draws the

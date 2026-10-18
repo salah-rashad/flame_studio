@@ -48,7 +48,7 @@ abstract final class PrColorText {
 /// and stays until fixed or Esc (the swatch keeps the last valid colour).
 /// Committing reports the new colour with [value]'s alpha.
 ///
-/// Inside an `PrPropertyRow` it follows the row (hover, default values in
+/// Inside a `PrPropertyRow` it follows the row (hover, default values in
 /// `text-secondary`). Internal; the colour property and picker use it.
 class PrHexInput extends StatefulWidget {
   /// Creates the field.

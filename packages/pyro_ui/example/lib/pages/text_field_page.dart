@@ -82,7 +82,10 @@ class TextFieldPage extends StatelessWidget {
             row('Read-only', readOnly: true),
           ],
         ),
-        const SectionLabel('Live · names may only use letters, digits and _'),
+        const SectionLabel(
+          'Live',
+          detail: 'names may only use letters, digits and _',
+        ),
         const SizedBox(
           width: 220,
           child: PrTextField(

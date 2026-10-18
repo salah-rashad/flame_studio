@@ -74,7 +74,10 @@ class _ProgressPageState extends State<ProgressPage> {
       spacing: 40,
       children: [
         column(280, [
-          const SectionLabel('Indeterminate bar · 2px · under a panel header'),
+          const SectionLabel(
+            'Indeterminate bar',
+            detail: '2px · under a panel header',
+          ),
           panel(reduceMotion: false),
           const SizedBox(height: PrSpacing.s1),
           const SectionLabel('Determinate'),
@@ -171,7 +174,8 @@ class _ProgressPageState extends State<ProgressPage> {
         const SectionLabel('Reduce motion · the same loops over 3s'),
         reduced,
         const SectionLabel(
-          'Live · PrDelayedProgress: the quick task shows nothing',
+          'Live',
+          detail: 'PrDelayedProgress: the quick task shows nothing',
         ),
         live,
       ],

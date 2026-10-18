@@ -147,7 +147,9 @@ class TreeRowPage extends StatelessWidget {
           ],
         ),
         const SectionLabel(
-          'Live: click, ⇧/⌘ not handled here; drag rows to reparent; F2 renames',
+          'Live',
+          detail:
+              'click, ⇧/⌘ not handled here; drag rows to reparent; F2 renames',
         ),
         const SampleBox(width: 320, child: _LiveTree()),
       ],

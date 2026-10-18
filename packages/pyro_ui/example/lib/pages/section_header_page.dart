@@ -99,8 +99,10 @@ class SectionHeaderPage extends StatelessWidget {
           ],
         ),
         const SectionLabel(
-          'Live: click to collapse (150ms), Alt-click toggles all, the '
-          'checkbox disables the component',
+          'Live',
+          detail:
+              'click to collapse (150ms), Alt-click toggles all, the checkbox '
+              'disables the component',
         ),
         const SampleBox(width: 320, child: _LiveInspector()),
       ],

@@ -91,7 +91,8 @@ class _EmptyStatePageState extends State<EmptyStatePage> {
           ],
         ),
         const SectionLabel(
-          'Live · search a list; clear it from the empty state',
+          'Live',
+          detail: 'search a list; clear it from the empty state',
         ),
         Builder(
           builder: (context) {

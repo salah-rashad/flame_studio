@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Golden failure images (master, test, diff), written by a failed golden test
+/test/failures/

@@ -40,7 +40,7 @@ class PrSegment<T> {
   /// is set.
   final int? count;
 
-  /// Draws [count] as an `PrBadge` of this kind (without its icon: the
+  /// Draws [count] as a `PrBadge` of this kind (without its icon: the
   /// label says what it counts).
   final PrBadgeKind? countKind;
 

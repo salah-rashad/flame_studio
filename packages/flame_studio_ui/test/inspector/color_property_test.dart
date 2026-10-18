@@ -10,6 +10,7 @@ const _peach = Color(0xFFFFD7A8);
 
 final _changes = <Color>[];
 final _commits = <Color>[];
+final _closes = <Color>[];
 
 class _Harness extends StatefulWidget {
   const _Harness({
@@ -46,6 +47,7 @@ class _HarnessState extends State<_Harness> {
       });
     },
     onCommit: _commits.add,
+    onPickerClosed: _closes.add,
   );
 }
 
@@ -74,6 +76,7 @@ void main() {
   setUp(() {
     _changes.clear();
     _commits.clear();
+    _closes.clear();
   });
 
   testWidgets('swatch, hex and a 52px alpha field', (tester) async {
@@ -211,9 +214,39 @@ void main() {
       expect(picker, findsOneWidget);
     }
 
-    testWidgets('Enter opens the picker with focus in it', (tester) async {
+    testWidgets('Enter opens the picker with focus in its SV area', (
+      tester,
+    ) async {
       await openWithKeyboard(tester);
       expect(focusInPicker(), isTrue);
+      expect(
+        FocusManager.instance.primaryFocus?.debugLabel,
+        'FsColorPicker SV area',
+      );
+    });
+
+    testWidgets('arrow steps: one commit; closing reports the colour once', (
+      tester,
+    ) async {
+      await openWithKeyboard(tester);
+      for (var i = 0; i < 5; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pump();
+      }
+      expect(_changes, hasLength(5));
+      expect(_commits, isEmpty);
+      // Esc closes it mid-run: the run still commits, after the frame.
+      await press(tester, LogicalKeyboardKey.escape);
+      expect(picker, findsNothing);
+      expect(_commits, [_changes.last]);
+      expect(_closes, [_changes.last]);
+    });
+
+    testWidgets('closing without a change reports nothing', (tester) async {
+      await openWithKeyboard(tester);
+      await press(tester, LogicalKeyboardKey.escape);
+      expect(picker, findsNothing);
+      expect(_closes, isEmpty);
     });
 
     testWidgets('a click opens it and leaves focus on the swatch', (
@@ -244,11 +277,7 @@ void main() {
     testWidgets('⇧Tab before its first control closes it, back to the '
         'swatch', (tester) async {
       await openWithKeyboard(tester);
-      // Hex → hue → SV area, then out.
-      for (var i = 0; i < 2; i++) {
-        await press(tester, LogicalKeyboardKey.tab, shift: true);
-        expect(focusInPicker(), isTrue);
-      }
+      // From the SV area, the first control, straight out.
       await press(tester, LogicalKeyboardKey.tab, shift: true);
       expect(picker, findsNothing);
       expect(swatchFocused(tester), isTrue);
@@ -258,7 +287,8 @@ void main() {
       tester,
     ) async {
       await openWithKeyboard(tester);
-      await press(tester, LogicalKeyboardKey.tab); // the alpha field
+      await press(tester, LogicalKeyboardKey.tab);
+      await press(tester, LogicalKeyboardKey.tab); // the hex field
       expect(focusInPicker(), isTrue);
       await press(tester, LogicalKeyboardKey.escape);
       expect(picker, findsNothing);

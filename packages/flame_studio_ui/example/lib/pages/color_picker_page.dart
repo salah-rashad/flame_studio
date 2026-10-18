@@ -34,7 +34,7 @@ class _ColorPickerPageState extends State<ColorPickerPage> {
           'hex + alpha, recent colours. The eyedropper shows only when '
           'FsPlatformHooks.sampleScreenColor is set (here: a stand-in that '
           'returns a fixed green). The SV area and hue slider take focus: '
-          'arrows step 1% / 1° (Shift ×10), one commit per press.',
+          'arrows step 1% / 1° (Shift ×10), one commit per run of presses.',
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,

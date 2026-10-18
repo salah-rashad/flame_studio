@@ -58,8 +58,9 @@ class _ColorPropertyPageState extends State<ColorPropertyPage> {
           'Hex is upper-case, 6 digits; alpha is a separate % field. The '
           'swatch shows the colour as a solid fill (no checkerboard), so a '
           'fully transparent colour also shows "0%". Click the swatch for '
-          'the picker, or Tab to it and press Enter: focus goes into the '
-          'picker, Tab or ⇧Tab past its ends or Esc closes it.',
+          'the picker, or Tab to it and press Enter: focus goes to the '
+          "picker's SV area, Tab or ⇧Tab past its ends or Esc closes it. "
+          'Live: the recent colours take the colour the picker closes on.',
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,7 +125,8 @@ class _ColorPropertyPageState extends State<ColorPropertyPage> {
             pickerAreaLabel: 'Saturation and brightness',
             pickerHueLabel: 'Hue',
             onChanged: (v) => setState(() => _tint = v),
-            onCommit: _remember,
+            onCommit: (v) => setState(() => _tint = v),
+            onPickerClosed: _remember,
           ),
         ),
       ],

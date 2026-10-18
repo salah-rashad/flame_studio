@@ -471,7 +471,8 @@ FsColorProperty({
   required String label, required Color? value, bool mixed = false,
   FsValueSource source = FsValueSource.codeDefault, VoidCallback? onReset,
   required ValueChanged<Color> onChanged, required ValueChanged<Color> onCommit,
-  List<Color> recentColors = const [],   // the app keeps the list
+  ValueChanged<Color>? onPickerClosed,   // the colour the popover closed on, if changed
+  List<Color> recentColors = const [],   // the app keeps the list; add to it in onPickerClosed
   bool enabled = true,
 })
 FsColorPicker({required Color value, required ValueChanged<Color> onChanged,
@@ -483,13 +484,16 @@ Swatch 28×16 with a 1px inner white-15% edge, 6-digit upper-case hex field, sep
 % field. Invalid hex gives an `error` border, and the swatch keeps the last valid colour. The swatch
 opens the picker popover: an SV area, a hue slider, hex + alpha, recent colours, and the eyedropper
 when `FsPlatformHooks.sampleScreenColor` is set (§7.2). The popover isn't modal: Enter or Space
-on the swatch opens it with focus in its hex field (a click leaves focus put); in the Tab order it
+on the swatch opens it with focus in its SV area (a click leaves focus put); in the Tab order it
 sits between the swatch and the row's hex field, so Tab past its end moves on and ⇧Tab before its
 start returns to the swatch, closing it either way; focus moving anywhere else closes it; Esc
 anywhere in it closes it and returns focus to the swatch. Inside it the SV area and hue slider are
 focusable sliders (Tab order: SV, hue, hex, alpha): the SV area steps saturation with ← → and
-brightness with ↑ ↓, the hue slider steps with all four arrows, 1% / 1° per press (Shift ×10), one
-`onCommit` per press; screen readers get slider roles with "40%, 80%" and "210°" values and the
+brightness with ↑ ↓, the hue slider steps with all four arrows, 1% / 1° per press (Shift ×10), `onChanged`
+per press and one `onCommit` per run of presses (it ends after 500ms without one, when focus leaves,
+or when the picker closes), like a drag. `onPickerClosed` fires once when the popover closes, if
+the colour changed while it was open, so recent colours get the colour picked rather than each
+step; screen readers get slider roles with "40%, 80%" and "210°" values and the
 app's `areaLabel` / `hueLabel`.
 States: default, hover, focused hex,
 disabled, error, mixed, overridden; picker open. Uses: `FsPropertyRow`, `FsFieldBox`,

@@ -16,10 +16,15 @@ final _commits = <Color>[];
 
 /// A picker whose value follows its callbacks.
 class _Harness extends StatefulWidget {
-  const _Harness({this.initial = _peach, this.recent = const []});
+  const _Harness({
+    this.initial = _peach,
+    this.recent = const [],
+    this.autofocus = false,
+  });
 
   final Color initial;
   final List<Color> recent;
+  final bool autofocus;
 
   @override
   State<_Harness> createState() => _HarnessState();
@@ -44,6 +49,7 @@ class _HarnessState extends State<_Harness> {
           setState(() => value = v);
         },
         onCommit: _commits.add,
+        autofocus: widget.autofocus,
       ),
     ),
   );
@@ -152,25 +158,64 @@ void main() {
       await tester.pump();
     }
 
+    /// Ends a run of steps by waiting it out.
+    Future<void> idle(WidgetTester tester) =>
+        tester.pump(const Duration(milliseconds: 500));
+
     testWidgets('SV area: Tab reaches it first; arrows step 1%, Shift 10%, '
-        'one commit each', (tester) async {
+        'one commit per run', (tester) async {
       await pumpFs(tester, const _Harness());
       await press(tester, LogicalKeyboardKey.tab);
       expect(_ringOn(tester, _pads().first), isTrue);
 
       await press(tester, LogicalKeyboardKey.arrowRight);
+      expect(_changes, hasLength(1));
+      expect(_commits, isEmpty);
+      await idle(tester);
       expect(_commits, hasLength(1));
       expect(committed().saturation, closeTo(start.saturation + 0.01, 0.005));
 
       await press(tester, LogicalKeyboardKey.arrowDown, shift: true);
+      await idle(tester);
       expect(_commits, hasLength(2));
       expect(committed().value, closeTo(start.value - 0.1, 0.005));
 
       // Already at full brightness? Up clamps; no change, no commit.
       await press(tester, LogicalKeyboardKey.arrowUp, shift: true);
       await press(tester, LogicalKeyboardKey.arrowUp);
+      await idle(tester);
       expect(committed().value, closeTo(1, 0.005));
       expect(_commits, hasLength(3));
+      await press(tester, LogicalKeyboardKey.arrowUp);
+      await idle(tester);
+      expect(_commits, hasLength(3));
+    });
+
+    testWidgets('a run of presses is one commit; it ends early when focus '
+        'leaves', (tester) async {
+      await pumpFs(tester, const _Harness());
+      await press(tester, LogicalKeyboardKey.tab);
+      for (var i = 0; i < 8; i++) {
+        await press(tester, LogicalKeyboardKey.arrowLeft);
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+      expect(_changes, hasLength(8));
+      expect(_commits, isEmpty);
+      // Tab on to the hue slider: the run commits at once.
+      await press(tester, LogicalKeyboardKey.tab);
+      expect(_commits, [_changes.last]);
+      expect(committed().saturation, closeTo(start.saturation - 0.08, 0.005));
+      await idle(tester);
+      expect(_commits, hasLength(1));
+    });
+
+    testWidgets('autofocus focuses the SV area', (tester) async {
+      await pumpFs(tester, const _Harness(autofocus: true));
+      await tester.pump();
+      expect(
+        FocusManager.instance.primaryFocus?.debugLabel,
+        'FsColorPicker SV area',
+      );
     });
 
     testWidgets('hue: → ↑ up 1°, ← ↓ down, Shift 10°', (tester) async {
@@ -180,14 +225,18 @@ void main() {
       expect(_ringOn(tester, _pads().last), isTrue);
 
       await press(tester, LogicalKeyboardKey.arrowRight, shift: true);
+      await idle(tester);
       expect(_commits, hasLength(1));
       expect(committed().hue, closeTo(start.hue + 10, 1));
       await press(tester, LogicalKeyboardKey.arrowLeft);
+      await idle(tester);
       expect(committed().hue, closeTo(start.hue + 9, 1));
 
       await press(tester, LogicalKeyboardKey.arrowUp, shift: true);
+      await idle(tester);
       expect(committed().hue, closeTo(start.hue + 19, 1));
       await press(tester, LogicalKeyboardKey.arrowDown);
+      await idle(tester);
       expect(committed().hue, closeTo(start.hue + 18, 1));
       expect(_commits, hasLength(4));
       // The arrows stay with the slider: focus didn't move.
@@ -203,6 +252,7 @@ void main() {
       expect(_ringOn(tester, _pads().first), isFalse);
       final before = _commits.length;
       await press(tester, LogicalKeyboardKey.arrowRight);
+      await idle(tester);
       expect(_commits, hasLength(before + 1));
     });
 

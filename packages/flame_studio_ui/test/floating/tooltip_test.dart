@@ -172,6 +172,48 @@ void main() {
     expect(find.text(move), findsNothing);
   });
 
+  testWidgets('showWhileFocused: pinned while focused, one copy on hover', (
+    tester,
+  ) async {
+    final node = FocusNode();
+    addTearDown(node.dispose);
+    await pumpFs(
+      tester,
+      Padding(
+        padding: const EdgeInsets.all(40),
+        child: FsTooltip(
+          message: move,
+          error: true,
+          showWhileFocused: true,
+          child: Focus(
+            focusNode: node,
+            child: const SizedBox(key: Key('a'), width: 24, height: 24),
+          ),
+        ),
+      ),
+    );
+    node.requestFocus();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text(move), findsOneWidget);
+
+    final m = await _hoverAt(tester, a);
+    await tester.pump(FsTooltip.delay);
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(find.text(move), findsOneWidget);
+
+    // Leaving with the mouse doesn't hide it; losing focus does.
+    await m.moveTo(const Offset(400, 400));
+    // RawTooltip's own exit: 100ms dismiss delay, then a 100ms fade.
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(find.text(move), findsOneWidget);
+    node.unfocus();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text(move), findsNothing);
+  });
+
   testWidgets('hides on press and on Esc', (tester) async {
     await pumpFs(tester, pair());
     await _hoverAt(tester, a);

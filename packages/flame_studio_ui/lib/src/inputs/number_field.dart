@@ -195,7 +195,12 @@ class _FsNumberFieldState extends State<FsNumberField> {
     );
     final error = _error;
     if (error != null && error.isNotEmpty) {
-      field = FsTooltip(message: error, error: true, child: field);
+      field = FsTooltip(
+        message: error,
+        error: true,
+        showWhileFocused: true,
+        child: field,
+      );
     }
     final width = widget.width;
     return width == null ? field : SizedBox(width: width, child: field);

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
 import '../colors.dart';
@@ -26,6 +27,9 @@ import '../typography.dart';
 ///   it hides when an [FsTooltipGroup] is above.
 /// - Also appears after the same delay when the anchor takes keyboard focus
 ///   (not on a click that moves focus), and hides when focus leaves.
+/// - [showWhileFocused] (a field's error message): shown at once and kept
+///   while the field has focus, by click or keyboard, so the person typing
+///   sees what is wrong; screen readers hear it when it appears or changes.
 /// - Hides on press and on Esc. Shown for disabled controls too, which
 ///   should say why they are disabled; keyboard users reach those only when
 ///   the control sets `focusableWhenDisabled`.
@@ -42,6 +46,8 @@ class FsTooltip extends StatelessWidget {
     this.details = const [],
     this.monoMessage = false,
     this.error = false,
+    this.showWhileFocused = false,
+    this.focusTarget,
     required this.child,
   });
 
@@ -61,6 +67,17 @@ class FsTooltip extends StatelessWidget {
   /// An error tooltip: `error-border` edge, alert icon and message in
   /// `error`.
   final bool error;
+
+  /// Keep the tooltip up while focus is in the anchor (or [focusTarget]),
+  /// shown at once and announced to screen readers when it appears or its
+  /// message changes. For a field's error message, so whoever is typing
+  /// sees it; not for errors the user didn't just cause (a dropdown's,
+  /// whose list opens where the tooltip would be).
+  final bool showWhileFocused;
+
+  /// Where focus counts for [showWhileFocused] when the field isn't inside
+  /// the anchor: a property row's label tooltip names the row.
+  final FocusNode? focusTarget;
 
   /// The anchor.
   final Widget child;
@@ -93,79 +110,175 @@ class FsTooltip extends StatelessWidget {
       );
     }
     final group = FsTooltipGroup._maybeOf(context);
-    final wait = group?.warm ?? false ? Duration.zero : delay;
-    return RawTooltip(
-      semanticsTooltip: message,
-      hoverDelay: wait,
-      positionDelegate: _place,
-      animationStyle: const AnimationStyle(
-        curve: FsMotion.enter,
-        duration: FsMotion.fast,
-        reverseDuration: FsMotion.fast,
-      ),
-      ignorePointer: true,
-      tooltipBuilder: (context, animation) => FadeTransition(
-        opacity: animation,
-        child: _Visible(
-          group: group,
-          child: _TooltipBody(tooltip: this),
-        ),
-      ),
-      child: _ShowOnKeyboardFocus(delay: wait, child: child),
+    return _TooltipAnchor(
+      tooltip: this,
+      group: group,
+      wait: group?.warm ?? false ? Duration.zero : delay,
     );
   }
 }
 
-/// Shows the [RawTooltip] above it [delay] after keyboard focus lands in
-/// [child], and hides it when focus leaves.
-class _ShowOnKeyboardFocus extends StatefulWidget {
-  const _ShowOnKeyboardFocus({required this.delay, required this.child});
+/// The live tooltip: a [RawTooltip] for hover, plus focus handling.
+///
+/// - Keyboard focus in [FsTooltip.child] shows the tooltip after [wait];
+///   leaving hides it.
+/// - With [FsTooltip.showWhileFocused] it is shown at once, and kept, while
+///   focus is in the anchor or [FsTooltip.focusTarget], and announced when
+///   it appears or changes. That's a separate layer, not the [RawTooltip],
+///   which hides on any press, on Esc and when the mouse leaves; meanwhile
+///   the hover tooltip draws nothing, so there is never a second copy.
+class _TooltipAnchor extends StatefulWidget {
+  const _TooltipAnchor({
+    required this.tooltip,
+    required this.group,
+    required this.wait,
+  });
 
-  final Duration delay;
-  final Widget child;
+  final FsTooltip tooltip;
+  final _FsTooltipGroupState? group;
+  final Duration wait;
 
   @override
-  State<_ShowOnKeyboardFocus> createState() => _ShowOnKeyboardFocusState();
+  State<_TooltipAnchor> createState() => _TooltipAnchorState();
 }
 
-class _ShowOnKeyboardFocusState extends State<_ShowOnKeyboardFocus> {
+class _TooltipAnchorState extends State<_TooltipAnchor> {
+  final _raw = GlobalKey<RawTooltipState>();
+  final _focus = FocusNode(
+    debugLabel: 'FsTooltip',
+    canRequestFocus: false,
+    skipTraversal: true,
+  );
+  final _pinned = OverlayPortalController();
   Timer? _timer;
-  bool _shown = false;
+  bool _shownByFocus = false;
 
-  void _onFocusChange(bool focused) {
-    _timer?.cancel();
-    if (focused) {
-      // Checked when the timer fires: the Tab that moved focus reaches
-      // FsInputModality after the focus change.
-      _timer = Timer(widget.delay, () {
-        if (!mounted || !FsInputModality.instance.showsFocusRing) return;
-        _shown =
-            context
-                .findAncestorStateOfType<RawTooltipState>()
-                ?.ensureTooltipVisible() ??
-            false;
+  FocusNode get _pinSource => widget.tooltip.focusTarget ?? _focus;
+
+  bool get _pin => widget.tooltip.showWhileFocused && _pinSource.hasFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(_onFocus);
+    widget.tooltip.focusTarget?.addListener(_onTargetFocus);
+    // An error tooltip often wraps a field that already has focus (the
+    // message appears while typing); the new node learns that only once it
+    // is in the tree.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _sync(announce: true);
+    });
+  }
+
+  @override
+  void didUpdateWidget(_TooltipAnchor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final old = oldWidget.tooltip;
+    final tooltip = widget.tooltip;
+    if (old.focusTarget != tooltip.focusTarget) {
+      old.focusTarget?.removeListener(_onTargetFocus);
+      tooltip.focusTarget?.addListener(_onTargetFocus);
+    }
+    final changed = old.message != tooltip.message;
+    if (changed ||
+        old.showWhileFocused != tooltip.showWhileFocused ||
+        old.focusTarget != tooltip.focusTarget) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _sync(announce: changed);
       });
-    } else if (_shown) {
-      _shown = false;
-      // A tooltip shown this way stays up until dismissed.
-      RawTooltip.dismissAllToolTips();
     }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _focus.removeListener(_onFocus);
+    widget.tooltip.focusTarget?.removeListener(_onTargetFocus);
+    _focus.dispose();
     super.dispose();
   }
 
+  void _onTargetFocus() => _sync(announce: true);
+
+  void _onFocus() {
+    _sync(announce: true);
+    _timer?.cancel();
+    if (_focus.hasFocus) {
+      if (widget.tooltip.showWhileFocused) return;
+      // Checked when the timer fires: the Tab that moved focus reaches
+      // FsInputModality after the focus change.
+      _timer = Timer(widget.wait, () {
+        if (!mounted || !FsInputModality.instance.showsFocusRing) return;
+        _shownByFocus = _raw.currentState?.ensureTooltipVisible() ?? false;
+      });
+    } else if (_shownByFocus) {
+      _shownByFocus = false;
+      // A tooltip shown this way stays up until dismissed.
+      RawTooltip.dismissAllToolTips();
+    }
+  }
+
+  /// Shows or hides the pinned layer to match focus.
+  void _sync({required bool announce}) {
+    final pin = _pin;
+    if (pin == _pinned.isShowing) {
+      if (pin && announce) _announce();
+      return;
+    }
+    if (pin) {
+      _pinned.show();
+      if (announce) _announce();
+    } else {
+      _pinned.hide();
+    }
+    setState(() {}); // the hover tooltip steps aside while pinned
+  }
+
+  void _announce() {
+    unawaited(
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        widget.tooltip.message,
+        Directionality.of(context),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) => Focus(
-    canRequestFocus: false,
-    skipTraversal: true,
-    includeSemantics: false,
-    onFocusChange: _onFocusChange,
-    child: widget.child,
-  );
+  Widget build(BuildContext context) {
+    final tooltip = widget.tooltip;
+    return FsAnchoredOverlay(
+      controller: _pinned,
+      overlayBuilder: (context) =>
+          IgnorePointer(child: _TooltipBody(tooltip: widget.tooltip)),
+      child: RawTooltip(
+        key: _raw,
+        semanticsTooltip: tooltip.message,
+        hoverDelay: widget.wait,
+        positionDelegate: FsTooltip._place,
+        animationStyle: const AnimationStyle(
+          curve: FsMotion.enter,
+          duration: FsMotion.fast,
+          reverseDuration: FsMotion.fast,
+        ),
+        ignorePointer: true,
+        tooltipBuilder: (context, animation) => _pinned.isShowing
+            ? const SizedBox.shrink()
+            : FadeTransition(
+                opacity: animation,
+                child: _Visible(
+                  group: widget.group,
+                  child: _TooltipBody(tooltip: widget.tooltip),
+                ),
+              ),
+        child: Focus(
+          focusNode: _focus,
+          includeSemantics: false,
+          child: tooltip.child,
+        ),
+      ),
+    );
+  }
 }
 
 /// The tooltip's box.

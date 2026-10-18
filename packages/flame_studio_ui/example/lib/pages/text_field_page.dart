@@ -65,7 +65,9 @@ class TextFieldPage extends StatelessWidget {
       title: 'TextField',
       note:
           'Built on EditableText inside FsFieldBox. Errors show a trailing '
-          'alert icon and a message below, or in a tooltip in dense rows.',
+          'alert icon and a message below, or in a tooltip in dense rows. '
+          'The tooltip stays up while the field has focus, so type a space '
+          'in the dense field to see the message without hovering.',
       children: [
         StateGrid(
           columns: const ['Filled', 'Empty · placeholder', 'Path (mono)'],

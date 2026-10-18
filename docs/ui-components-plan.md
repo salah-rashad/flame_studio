@@ -304,8 +304,10 @@ FsTextField({
 
 States: filled, empty + placeholder, path (mono); default, hover, focused, disabled, error,
 read-only. Built on `EditableText` inside `FsFieldBox`, not Material `TextField` (whose
-`InputDecoration` fights the 20/24px heights). Text selection colours come from `FsTheme`. Uses:
-`FsFieldBox`, `FsTooltip` (error in dense rows).
+`InputDecoration` fights the 20/24px heights). Text selection colours come from `FsTheme`. The
+dense error tooltip stays up while the field has focus, so the message is visible while typing
+(not behind hover); either form is announced to screen readers when it appears or changes (WCAG
+3.3.1, 4.1.3). Uses: `FsFieldBox`, `FsTooltip` (error in dense rows).
 
 #### `FsSearchField`: 0.25
 
@@ -417,7 +419,8 @@ FsNumberProperty({
 - **Range variant:** a slider (track `border-control`, fill `accent`, 12px thumb) plus a 56px
   number field.
 - States: int, double + unit, range slider; default, hover on the label, scrubbing,
-  focused/editing, disabled, error (with its tooltip), mixed, overridden.
+  focused/editing, disabled, error (with its tooltip, on the label: kept up while the row's field
+  has focus), mixed, overridden.
 - Uses: `FsPropertyRow`, `FsNumberEditing` (internal: parse, format, expression, step,
   scrub), `FsFieldBox`, `FsTooltip`.
 
@@ -654,7 +657,10 @@ FsTooltipGroup({required Widget child}) // optional; one at the app root is enou
 tooltipped controls** (§7.4), hides on press or Esc, placed below with a 4px gap and flips or
 shifts to stay inside the window. Also shown after the same delay when the anchor takes keyboard
 focus (not on a click that moves focus) and hidden when focus leaves. Shown for disabled controls
-too; keyboard users reach those only with `focusableWhenDisabled`. States in the gallery: property
+too; keyboard users reach those only with `focusableWhenDisabled`. `showWhileFocused` (a field's
+error: dense TextField, NumberField, a PropertyRow's label via `focusTarget`) pins it while focus is
+in the field, at once and announced; a separate anchored layer, since `RawTooltip` hides on any press
+and on mouse exit. Not for errors the user didn't just cause (Dropdown). States in the gallery: property
 label, truncated name, disabled control. Uses: `RawTooltip`, `FsAnchoredOverlay` (positioner).
 
 #### `FsDialog`: 0.5

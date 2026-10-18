@@ -245,6 +245,25 @@ void main() {
       expect(textColor(tester, 'priority'), c.textSecondary);
     });
 
+    testWidgets('the label shows the error while the field has focus', (
+      tester,
+    ) async {
+      await pumpFs(tester, const _Harness());
+      await tester.tap(find.byType(EditableText));
+      await tester.pump();
+      await tester.enterText(find.byType(EditableText), '12x');
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Expected a number'), findsOneWidget);
+
+      FocusManager.instance.primaryFocus!.unfocus();
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Expected a number'), findsNothing);
+      expect(textColor(tester, 'priority'), c.error); // still marked
+    });
+
     testWidgets('out of range and validator failures are errors', (
       tester,
     ) async {

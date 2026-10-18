@@ -120,6 +120,62 @@ void main() {
     );
   });
 
+  testWidgets('dense rows: the message shows while typing, and is announced', (
+    tester,
+  ) async {
+    const message = 'Names may only use letters, digits and _';
+    final said = announcements(tester);
+    await pumpFs(
+      tester,
+      const Column(
+        children: [
+          FsTextField(
+            value: 'Hero',
+            validator: _names,
+            errorDisplay: FsErrorDisplay.tooltip,
+          ),
+          FsTextField(value: 'Other'),
+        ],
+      ),
+    );
+    await tester.tap(_editable.first);
+    await tester.pump();
+    await tester.enterText(_editable.first, 'He ro');
+    await tester.pump();
+    await tester.pump();
+    // No hover needed: the field has focus.
+    expect(find.text(message), findsOneWidget);
+    expect(said, [message]);
+
+    await tester.enterText(_editable.first, 'Hero');
+    await tester.pump();
+    await tester.pump();
+    expect(find.text(message), findsNothing);
+
+    await tester.enterText(_editable.first, 'He ro');
+    await tester.pump();
+    await tester.pump();
+    expect(find.text(message), findsOneWidget);
+    // Focus moves on: the tooltip goes back to hover only.
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text(message), findsNothing);
+    expect(said, [message, message]);
+  });
+
+  testWidgets('the message below is announced while typing', (tester) async {
+    final said = announcements(tester);
+    await pumpFs(tester, const FsTextField(value: 'Hero', validator: _names));
+    await tester.tap(_editable);
+    await tester.pump();
+    await tester.enterText(_editable, 'He ro');
+    await tester.pump();
+    await tester.enterText(_editable, 'He  ro');
+    await tester.pump();
+    expect(said, ['Names may only use letters, digits and _']);
+  });
+
   testWidgets('disabled: flat, text-disabled, no focus', (tester) async {
     await pumpFs(tester, const FsTextField(value: 'Hero', enabled: false));
     expect(fieldFill(tester, _field), c.surfacePanel);

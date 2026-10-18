@@ -96,6 +96,20 @@ class _FsPropertyRowState extends State<FsPropertyRow> {
   bool _rowHovered = false;
   bool _labelHovered = false;
 
+  /// In the focus path while the row's field is focused: the label's error
+  /// tooltip stays up meanwhile (`FsTooltip.focusTarget`).
+  final _rowFocus = FocusNode(
+    debugLabel: 'FsPropertyRow',
+    canRequestFocus: false,
+    skipTraversal: true,
+  );
+
+  @override
+  void dispose() {
+    _rowFocus.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = FsColors.of(context);
@@ -158,88 +172,101 @@ class _FsPropertyRowState extends State<FsPropertyRow> {
         ? widget.error
         : widget.tooltip;
     if (tip != null && tip.isNotEmpty) {
-      label = FsTooltip(message: tip, error: tip == widget.error, child: label);
+      final isError = tip == widget.error;
+      label = FsTooltip(
+        message: tip,
+        error: isError,
+        showWhileFocused: isError,
+        focusTarget: _rowFocus,
+        child: label,
+      );
     }
 
     final showReset = overridden && widget.onReset != null;
     return MouseRegion(
       onEnter: (_) => setState(() => _rowHovered = true),
       onExit: (_) => setState(() => _rowHovered = false),
-      // A ColoredBox even when not hovered: a Container adds one only with a
-      // colour, and the changed subtree would cancel a running scrub.
-      child: ColoredBox(
-        color: hovered ? c.surfaceHover : Colors.transparent,
-        child: SizedBox(
-          height: FsSizes.rowProperty,
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsetsDirectional.only(
-                  start: FsSpacing.s4,
-                  end: FsSpacing.s1,
-                ),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final list = _PropertyListScope.maybeOf(context);
-                    final width = constraints.maxWidth;
-                    final labelWidth = math.max(
-                      _minLabelWidth,
-                      width * (list?.fraction ?? _labelFraction),
-                    );
-                    return Row(
-                      children: [
-                        SizedBox(width: labelWidth, child: label),
-                        if (list == null)
-                          const SizedBox(width: FsSpacing.s1)
-                        else
-                          _ColumnHandle(list: list, contentWidth: width),
-                        Expanded(
-                          child: FsPropertyRowScope(
-                            hovered: hovered,
-                            source: widget.source,
-                            mixed: widget.mixed,
-                            readOnly: widget.readOnly,
-                            enabled: widget.enabled,
-                            error: error,
-                            child: widget.editor,
+      child: Focus(
+        focusNode: _rowFocus,
+        includeSemantics: false,
+        // A ColoredBox even when not hovered: a Container adds one only with a
+        // colour, and the changed subtree would cancel a running scrub.
+        child: ColoredBox(
+          color: hovered ? c.surfaceHover : Colors.transparent,
+          child: SizedBox(
+            height: FsSizes.rowProperty,
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(
+                    start: FsSpacing.s4,
+                    end: FsSpacing.s1,
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final list = _PropertyListScope.maybeOf(context);
+                      final width = constraints.maxWidth;
+                      final labelWidth = math.max(
+                        _minLabelWidth,
+                        width * (list?.fraction ?? _labelFraction),
+                      );
+                      return Row(
+                        children: [
+                          SizedBox(width: labelWidth, child: label),
+                          if (list == null)
+                            const SizedBox(width: FsSpacing.s1)
+                          else
+                            _ColumnHandle(list: list, contentWidth: width),
+                          Expanded(
+                            child: FsPropertyRowScope(
+                              hovered: hovered,
+                              source: widget.source,
+                              mixed: widget.mixed,
+                              readOnly: widget.readOnly,
+                              enabled: widget.enabled,
+                              error: error,
+                              child: widget.editor,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: FsSpacing.s1),
-                        SizedBox(
-                          width: FsSizes.controlSm,
-                          child: showReset
-                              ? FsIconButton(
-                                  icon: FsIcons.reset,
-                                  size: FsIconButtonSize.small,
-                                  iconSize: FsSizes.iconSm,
-                                  tooltip: widget.resetTooltip ?? '',
-                                  onPressed: widget.enabled
-                                      ? widget.onReset
-                                      : null,
-                                )
-                              : null,
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              // The override bar, after the content so adding it never
-              // moves the content's place in the Stack.
-              if (overridden)
-                PositionedDirectional(
-                  start: 6,
-                  top: 6,
-                  bottom: 6,
-                  width: 2,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: c.accentText,
-                      borderRadius: const BorderRadius.all(Radius.circular(1)),
-                    ),
+                          const SizedBox(width: FsSpacing.s1),
+                          SizedBox(
+                            width: FsSizes.controlSm,
+                            child: showReset
+                                ? FsIconButton(
+                                    icon: FsIcons.reset,
+                                    size: FsIconButtonSize.small,
+                                    iconSize: FsSizes.iconSm,
+                                    tooltip: widget.resetTooltip ?? '',
+                                    onPressed: widget.enabled
+                                        ? widget.onReset
+                                        : null,
+                                  )
+                                : null,
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
-            ],
+                // The override bar, after the content so adding it never
+                // moves the content's place in the Stack.
+                if (overridden)
+                  PositionedDirectional(
+                    start: 6,
+                    top: 6,
+                    bottom: 6,
+                    width: 2,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: c.accentText,
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(1),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

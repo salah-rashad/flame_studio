@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
 import '../colors.dart';
@@ -15,7 +18,8 @@ enum FsErrorDisplay {
   /// One line of `small` `error` text below the field.
   below,
 
-  /// In the field's tooltip (dense rows, where there's no room below).
+  /// In the field's tooltip (dense rows, where there's no room below):
+  /// shown while the field has focus, and on hover otherwise.
   tooltip,
 }
 
@@ -27,6 +31,9 @@ enum FsErrorDisplay {
 ///   (for clicks too: fields show where typing goes).
 /// - Error (the [validator] returns a message): `error` border, a trailing
 ///   alert icon, and the message below or in a tooltip ([errorDisplay]).
+///   The tooltip stays up while the field has focus, so the message is
+///   visible while typing; either way screen readers hear it when it
+///   appears or changes.
 /// - Disabled: flat and `text-disabled`. Read-only: flat, text stays
 ///   `text-primary` and can still be selected.
 /// - [placeholder] in `text-placeholder`; [mono] for paths.
@@ -167,6 +174,20 @@ class _FsTextFieldState extends State<FsTextField> {
     _lastText = text;
     final error = widget.validator?.call(text);
     if (error != _error || placeholderChanges) {
+      // The tooltip form announces itself (FsTooltip); the message below
+      // is announced here, while the user is typing.
+      if (error != null &&
+          error != _error &&
+          _focusNode.hasFocus &&
+          widget.errorDisplay == FsErrorDisplay.below) {
+        unawaited(
+          SemanticsService.sendAnnouncement(
+            View.of(context),
+            error,
+            Directionality.of(context),
+          ),
+        );
+      }
       setState(() => _error = error);
     }
     // The user's edits are reported, not a new [value] from the caller.
@@ -251,7 +272,12 @@ class _FsTextFieldState extends State<FsTextField> {
 
     if (error == null || error.isEmpty) return field;
     if (widget.errorDisplay == FsErrorDisplay.tooltip) {
-      return FsTooltip(message: error, error: true, child: field);
+      return FsTooltip(
+        message: error,
+        error: true,
+        showWhileFocused: true,
+        child: field,
+      );
     }
     return Column(
       mainAxisSize: MainAxisSize.min,

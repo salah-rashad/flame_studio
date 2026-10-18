@@ -1,6 +1,7 @@
 import 'package:flame_studio_ui/flame_studio_ui.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// The dark colours, for expectations.
@@ -120,3 +121,26 @@ bool hasPainter<P extends CustomPainter>(WidgetTester tester, Finder of) =>
           find.descendant(of: of, matching: find.byType(CustomPaint)),
         )
         .any((p) => p.foregroundPainter is P || p.painter is P);
+
+/// Records screen-reader announcements (`SemanticsService`) until the test
+/// ends.
+List<String> announcements(WidgetTester tester) {
+  final log = <String>[];
+  tester.binding.defaultBinaryMessenger.setMockDecodedMessageHandler<dynamic>(
+    SystemChannels.accessibility,
+    (message) async {
+      final map = message as Map<Object?, Object?>;
+      if (map['type'] == 'announce') {
+        log.add((map['data']! as Map<Object?, Object?>)['message']! as String);
+      }
+    },
+  );
+  addTearDown(
+    () => tester.binding.defaultBinaryMessenger
+        .setMockDecodedMessageHandler<dynamic>(
+          SystemChannels.accessibility,
+          null,
+        ),
+  );
+  return log;
+}

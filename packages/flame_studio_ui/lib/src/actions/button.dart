@@ -44,7 +44,8 @@ enum FsButtonSize {
 ///
 /// Disabled: `surface-raised`, `border-subtle`, `text-disabled` (ghost:
 /// no fill or edge), never opacity; the tooltip still shows and says why
-/// with [disabledReason]. Keyboard focus draws the ring outside. Buttons
+/// with [disabledReason]. Disabled buttons are skipped by Tab unless
+/// [focusableWhenDisabled]. Keyboard focus draws the ring outside. Buttons
 /// have no selected or error state: use `FsToggleButton`, and put errors
 /// on the field.
 class FsButton extends StatelessWidget {
@@ -62,6 +63,7 @@ class FsButton extends StatelessWidget {
     this.disabledReason,
     this.focusNode,
     this.autofocus = false,
+    this.focusableWhenDisabled = false,
   });
 
   /// A verb, sentence case: "Add component", "Don't save".
@@ -98,6 +100,11 @@ class FsButton extends StatelessWidget {
   /// Take focus when first built.
   final bool autofocus;
 
+  /// Keep the Tab stop while disabled, so keyboard users reach the tooltip
+  /// and [disabledReason]. Off by default; see
+  /// `FsInteractive.focusableWhenDisabled` for when to use it.
+  final bool focusableWhenDisabled;
+
   @override
   Widget build(BuildContext context) {
     final c = FsColors.of(context);
@@ -105,6 +112,7 @@ class FsButton extends StatelessWidget {
       onPressed: onPressed,
       focusNode: focusNode,
       autofocus: autofocus,
+      focusableWhenDisabled: focusableWhenDisabled,
       semanticsLabel: label,
       builder: (context, states) {
         final (fill, edge, ink) = _colors(

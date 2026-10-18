@@ -171,6 +171,69 @@ void main() {
       expect(_last, isNot(contains(WidgetState.focused)));
     });
 
+    testWidgets('disabled controls are skipped by Tab', (tester) async {
+      final node = FocusNode();
+      addTearDown(node.dispose);
+      await pumpFs(
+        tester,
+        FsInteractive(
+          focusNode: node,
+          builder: (context, states) => const SizedBox(width: 40, height: 24),
+        ),
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(node.hasFocus, isFalse);
+    });
+
+    testWidgets('focusableWhenDisabled: Tab reaches it, the keys do nothing', (
+      tester,
+    ) async {
+      var activated = 0;
+      final node = FocusNode();
+      addTearDown(node.dispose);
+      final semantics = tester.ensureSemantics();
+      await pumpFs(
+        tester,
+        FsInteractive(
+          focusNode: node,
+          focusableWhenDisabled: true,
+          shortcuts: const {
+            SingleActivator(LogicalKeyboardKey.keyR): ActivateIntent(),
+          },
+          actions: {
+            ActivateIntent: CallbackAction<ActivateIntent>(
+              onInvoke: (_) => activated++,
+            ),
+          },
+          semanticsLabel: 'Run game',
+          builder: (context, states) {
+            _last = states;
+            return const SizedBox(width: 40, height: 24);
+          },
+        ),
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(node.hasFocus, isTrue);
+      expect(_last, containsAll({WidgetState.focused, WidgetState.disabled}));
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      expect(activated, 0);
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('Run game')),
+        isSemantics(
+          label: 'Run game',
+          hasEnabledState: true,
+          isEnabled: false,
+          isFocusable: true,
+          isFocused: true,
+        ),
+      );
+      semantics.dispose();
+    });
+
     testWidgets('FsDebugStates forces states, optionally per part', (
       tester,
     ) async {

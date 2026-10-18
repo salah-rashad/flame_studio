@@ -22,7 +22,8 @@ enum FsIconButtonSize {
 /// - Rest: no fill, `text-secondary` icon. Hover `surface-hover` and
 ///   `text-primary`; pressed `surface-pressed`; keyboard focus ring outside.
 /// - Disabled: no fill, `text-disabled`; the tooltip still shows, with
-///   [disabledReason] as its second line.
+///   [disabledReason] as its second line. Skipped by Tab unless
+///   [focusableWhenDisabled].
 /// - [selected] latches it: `accent-subtle` fill, `accent-text` icon
 ///   (`surface-selected` on hover). For a real on/off state use
 ///   `FsToggleButton`.
@@ -43,6 +44,7 @@ class FsIconButton extends StatelessWidget {
     this.focusable = true,
     this.focusNode,
     this.autofocus = false,
+    this.focusableWhenDisabled = false,
   });
 
   /// The glyph.
@@ -79,6 +81,11 @@ class FsIconButton extends StatelessWidget {
   /// Take focus when first built.
   final bool autofocus;
 
+  /// Keep the Tab stop while disabled, so keyboard users reach the tooltip
+  /// and [disabledReason]. Off by default; see
+  /// `FsInteractive.focusableWhenDisabled` for when to use it.
+  final bool focusableWhenDisabled;
+
   @override
   Widget build(BuildContext context) {
     final c = FsColors.of(context);
@@ -91,6 +98,7 @@ class FsIconButton extends StatelessWidget {
       focusable: focusable,
       focusNode: focusNode,
       autofocus: autofocus,
+      focusableWhenDisabled: focusableWhenDisabled,
       semanticsLabel: tooltip,
       builder: (context, states) {
         final disabled = states.contains(WidgetState.disabled);

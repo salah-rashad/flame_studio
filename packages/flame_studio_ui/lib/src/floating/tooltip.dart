@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../colors.dart';
 import '../foundation/anchored_overlay.dart';
 import '../foundation/debug_states.dart';
+import '../foundation/focus_ring.dart';
 import '../foundation/shortcut_label.dart';
 import '../icons.dart';
 import '../metrics.dart';
@@ -23,8 +24,11 @@ import '../typography.dart';
 ///   an adjacent tooltipped control shows its tooltip at once: right away
 ///   while the previous one is still up (`RawTooltip`), and for 300ms after
 ///   it hides when an [FsTooltipGroup] is above.
+/// - Also appears after the same delay when the anchor takes keyboard focus
+///   (not on a click that moves focus), and hides when focus leaves.
 /// - Hides on press and on Esc. Shown for disabled controls too, which
-///   should say why they are disabled.
+///   should say why they are disabled; keyboard users reach those only when
+///   the control sets `focusableWhenDisabled`.
 ///
 /// Built on [RawTooltip]. For the gallery and goldens, an `FsDebugStates`
 /// with part `tooltip` (any state) draws the tooltip below its anchor
@@ -89,9 +93,10 @@ class FsTooltip extends StatelessWidget {
       );
     }
     final group = FsTooltipGroup._maybeOf(context);
+    final wait = group?.warm ?? false ? Duration.zero : delay;
     return RawTooltip(
       semanticsTooltip: message,
-      hoverDelay: group?.warm ?? false ? Duration.zero : delay,
+      hoverDelay: wait,
       positionDelegate: _place,
       animationStyle: const AnimationStyle(
         curve: FsMotion.enter,
@@ -106,9 +111,61 @@ class FsTooltip extends StatelessWidget {
           child: _TooltipBody(tooltip: this),
         ),
       ),
-      child: child,
+      child: _ShowOnKeyboardFocus(delay: wait, child: child),
     );
   }
+}
+
+/// Shows the [RawTooltip] above it [delay] after keyboard focus lands in
+/// [child], and hides it when focus leaves.
+class _ShowOnKeyboardFocus extends StatefulWidget {
+  const _ShowOnKeyboardFocus({required this.delay, required this.child});
+
+  final Duration delay;
+  final Widget child;
+
+  @override
+  State<_ShowOnKeyboardFocus> createState() => _ShowOnKeyboardFocusState();
+}
+
+class _ShowOnKeyboardFocusState extends State<_ShowOnKeyboardFocus> {
+  Timer? _timer;
+  bool _shown = false;
+
+  void _onFocusChange(bool focused) {
+    _timer?.cancel();
+    if (focused) {
+      // Checked when the timer fires: the Tab that moved focus reaches
+      // FsInputModality after the focus change.
+      _timer = Timer(widget.delay, () {
+        if (!mounted || !FsInputModality.instance.showsFocusRing) return;
+        _shown =
+            context
+                .findAncestorStateOfType<RawTooltipState>()
+                ?.ensureTooltipVisible() ??
+            false;
+      });
+    } else if (_shown) {
+      _shown = false;
+      // A tooltip shown this way stays up until dismissed.
+      RawTooltip.dismissAllToolTips();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Focus(
+    canRequestFocus: false,
+    skipTraversal: true,
+    includeSemantics: false,
+    onFocusChange: _onFocusChange,
+    child: widget.child,
+  );
 }
 
 /// The tooltip's box.

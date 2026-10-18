@@ -196,6 +196,38 @@ void main() {
     expect(find.text('Select a node first'), findsOneWidget);
   });
 
+  testWidgets('focusableWhenDisabled: Tab reaches it and shows the reason', (
+    tester,
+  ) async {
+    await pumpFs(
+      tester,
+      const Padding(
+        padding: EdgeInsets.all(40),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FsButton(
+              label: 'Add component',
+              onPressed: null,
+              disabledReason: 'Select a node first',
+            ),
+            FsButton(
+              label: 'Run game',
+              onPressed: null,
+              disabledReason: 'No device connected',
+              focusableWhenDisabled: true,
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump(FsTooltip.delay);
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(find.text('Select a node first'), findsNothing);
+    expect(find.text('No device connected'), findsOneWidget);
+  });
+
   testWidgets('small: 20px, 8px padding, a 12px medium label', (tester) async {
     await pumpFs(
       tester,

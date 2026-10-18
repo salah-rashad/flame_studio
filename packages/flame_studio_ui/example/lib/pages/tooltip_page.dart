@@ -47,7 +47,8 @@ class TooltipPage extends StatelessWidget {
       note:
           'Appears after 500ms hover (0ms when moving between adjacent '
           'tooltipped controls), below the anchor with a 4px gap, flips to '
-          'stay on screen; hides on press or Esc. The grid draws them '
+          'stay on screen; hides on press or Esc. Keyboard focus shows it '
+          'too, after the same delay. The grid draws them '
           'without hover; try the live row below.',
       children: [
         StateGrid(

@@ -137,6 +137,41 @@ void main() {
     expect(find.text('Rotate tool'), findsOneWidget);
   });
 
+  testWidgets('keyboard focus shows it after the delay; leaving hides it', (
+    tester,
+  ) async {
+    await pumpFs(
+      tester,
+      Padding(
+        padding: const EdgeInsets.all(40),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FsTooltip(
+              message: move,
+              child: FsIconButton(
+                icon: FsIcons.move,
+                tooltip: '',
+                onPressed: () {},
+              ),
+            ),
+            FsIconButton(icon: FsIcons.rotate, tooltip: '', onPressed: () {}),
+          ],
+        ),
+      ),
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text(move), findsNothing);
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(find.text(move), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pumpAndSettle();
+    expect(find.text(move), findsNothing);
+  });
+
   testWidgets('hides on press and on Esc', (tester) async {
     await pumpFs(tester, pair());
     await _hoverAt(tester, a);

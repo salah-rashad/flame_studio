@@ -45,6 +45,13 @@ it depends on, in what order to build it and how long it takes. It contains no w
   states look and behave the same everywhere.
 - **`onX == null` means disabled**, as in Flutter. A disabled control still shows its tooltip
   (the design: "say why").
+- **Disabled controls are out of the Tab order**, as in native toolkits: a focused control that
+  ignores Enter feels broken, and dead stops slow keyboard use down. The exception is opt-in,
+  per control: `focusableWhenDisabled: true` (on `FsInteractive`, `FsButton` and
+  `FsIconButton`) keeps the Tab stop so keyboard users can reach the tooltip's disabled reason
+  ("Run game" with no device connected). Use it only for the few commands whose reason lives in
+  the tooltip; prefer showing the reason where it can always be read (a banner, the empty
+  state, the status bar). Menus and roving groups keep skipping disabled items, as macOS does.
 - **Fixed heights** from `FsSizes`; rows never grow with content.
 - **Value conventions shared by the Inspector widgets:**
   - `FsValueSource { codeDefault, overridden }`: how the PropertyRow draws the label and whether
@@ -79,6 +86,7 @@ FsInteractive({
   FocusNode? focusNode,
   bool autofocus = false,
   bool focusable = true,             // false inside roving-focus groups (Toolbar, SegmentedControl)
+  bool focusableWhenDisabled = false, // keep the Tab stop while disabled (§1, disabled controls)
   MouseCursor cursor = SystemMouseCursors.basic,
   Map<ShortcutActivator, Intent>? shortcuts,
   Map<Type, Action<Intent>>? actions,
@@ -92,6 +100,9 @@ FsInteractive({
 - **Keyboard-only focus ring:** `focused` is added only while
   `FocusManager.instance.highlightMode == FocusHighlightMode.traditional`; it listens to
   `addHighlightModeListener`, so a mouse click never shows the ring.
+- **Disabled** controls drop out of the Tab order unless `focusableWhenDisabled`. With it, a
+  disabled control takes focus and shows the ring, is still announced as disabled, and swallows
+  Enter and Space; `onPressed`, `shortcuts` and `actions` stay inactive until it is enabled.
 - **Pressed** comes from a `Listener` (pointer down and up inside), not a `GestureDetector`, so
   the wrapper can sit inside drag sources (TreeRow) without fighting the gesture arena.
 - **Forced states for the gallery and goldens:** an `FsDebugStates` InheritedWidget, read only in
@@ -641,7 +652,9 @@ FsTooltipGroup({required Widget child}) // optional; one at the app root is enou
 `surface-overlay`, 1px `border-overlay`, `radius-sm`, `shadow-tooltip`, 4×8 padding, max
 240px, `small` text, shortcut in a 16px key cap. 500ms delay, **0ms when moving between adjacent
 tooltipped controls** (§7.4), hides on press or Esc, placed below with a 4px gap and flips or
-shifts to stay inside the window. Shown for disabled controls too. States in the gallery: property
+shifts to stay inside the window. Also shown after the same delay when the anchor takes keyboard
+focus (not on a click that moves focus) and hidden when focus leaves. Shown for disabled controls
+too; keyboard users reach those only with `focusableWhenDisabled`. States in the gallery: property
 label, truncated name, disabled control. Uses: `RawTooltip`, `FsAnchoredOverlay` (positioner).
 
 #### `FsDialog`: 0.5

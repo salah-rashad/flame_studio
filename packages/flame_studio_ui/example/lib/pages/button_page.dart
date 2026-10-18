@@ -49,7 +49,10 @@ class ButtonPage extends StatelessWidget {
       note:
           'Selected and Error do not apply to buttons: a button that stays '
           'on is a Toggle; validation errors belong to the field, not the '
-          'submit button.',
+          'submit button. Disabled buttons are skipped by Tab; "Run game" '
+          'below opts in with focusableWhenDisabled, so Tab reaches it and '
+          'its tooltip says why it is disabled (Enter does nothing). Use '
+          'that only when the reason lives in the tooltip.',
       children: [
         StateGrid(
           columns: const ['Default', 'Hover', 'Pressed', 'Focused', 'Disabled'],
@@ -99,6 +102,14 @@ class ButtonPage extends StatelessWidget {
                 label: 'Add component',
                 onPressed: null,
                 disabledReason: 'Select a node first',
+              ),
+              const FsButton(
+                label: 'Run game',
+                variant: FsButtonVariant.primary,
+                leading: FsPlayGlyph(),
+                onPressed: null,
+                disabledReason: 'No device connected',
+                focusableWhenDisabled: true,
               ),
             ],
           ),

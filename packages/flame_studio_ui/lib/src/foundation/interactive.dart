@@ -17,6 +17,9 @@ import 'focus_ring.dart';
 ///   cancelled, so a drag never ends in a click.
 /// - [WidgetState.focused] only for keyboard focus: a mouse click never shows
 ///   the ring (see `FsInputModality`).
+/// - Disabled controls are out of the Tab order, unless
+///   [focusableWhenDisabled]: then they take focus and show the ring, so a
+///   tooltip can say why they are disabled, but Enter and Space do nothing.
 /// - [WidgetState.selected] and [WidgetState.error] from [selected] and
 ///   [error].
 ///
@@ -34,6 +37,7 @@ class FsInteractive extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.focusable = true,
+    this.focusableWhenDisabled = false,
     this.requestFocusOnPress = false,
     this.cursor = SystemMouseCursors.basic,
     this.shortcuts,
@@ -76,6 +80,20 @@ class FsInteractive extends StatefulWidget {
   /// (Toolbar, SegmentedControl), where the group is the Tab stop, and for
   /// rows whose list owns focus.
   final bool focusable;
+
+  /// Whether the control keeps its Tab stop while disabled.
+  ///
+  /// Off by default: disabled controls are skipped, as in native toolkits,
+  /// and a focused control that ignores Enter feels broken. Turn it on only
+  /// for the few commands whose disabled reason lives in their tooltip
+  /// ("Run game" with no device connected), so keyboard users can reach that
+  /// reason. While disabled the control is still announced as disabled,
+  /// [onPressed], [shortcuts] and [actions] stay inactive, and Enter and
+  /// Space are swallowed. Has no effect when [focusable] is false.
+  ///
+  /// Prefer showing the reason where it can always be read (a banner, the
+  /// empty state, the status bar); this is the fallback.
+  final bool focusableWhenDisabled;
 
   /// Whether a pointer down moves focus here (rows); buttons leave focus
   /// where it was.
@@ -121,6 +139,9 @@ class _FsInteractiveState extends State<FsInteractive> {
       (_ownFocusNode ??= FocusNode(debugLabel: 'FsInteractive'));
 
   bool get _enabled => widget.enabled ?? widget.onPressed != null;
+
+  bool get _takesFocus =>
+      widget.focusable && (_enabled || widget.focusableWhenDisabled);
 
   @override
   void initState() {
@@ -175,7 +196,7 @@ class _FsInteractiveState extends State<FsInteractive> {
     if (!widget.focusable) return;
     _controller.update(
       WidgetState.focused,
-      _enabled &&
+      _takesFocus &&
           _focusNode.hasFocus &&
           FsInputModality.instance.showsFocusRing,
     );
@@ -235,19 +256,23 @@ class _FsInteractiveState extends State<FsInteractive> {
             return null;
           },
         ),
-        ...?widget.actions,
+        if (_enabled) ...?widget.actions,
       },
       child: Focus(
         focusNode: _focusNode,
         autofocus: widget.autofocus,
-        canRequestFocus: widget.focusable && _enabled,
+        canRequestFocus: _takesFocus,
         skipTraversal: !widget.focusable,
         includeSemantics: false,
         child: child,
       ),
     );
     if (widget.shortcuts != null) {
-      child = Shortcuts(shortcuts: widget.shortcuts!, child: child);
+      // Kept (empty) while disabled, so the tree and focus survive toggling.
+      child = Shortcuts(
+        shortcuts: _enabled ? widget.shortcuts! : const {},
+        child: child,
+      );
     }
     return Semantics(
       container: true,
@@ -257,7 +282,7 @@ class _FsInteractiveState extends State<FsInteractive> {
       toggled: widget.semanticsToggled,
       checked: widget.semanticsChecked,
       mixed: widget.semanticsMixed ? true : null,
-      focusable: widget.focusable && _enabled,
+      focusable: _takesFocus,
       focused: widget.focusable && _focusNode.hasFocus,
       label: widget.semanticsLabel,
       onTap: onPressed,

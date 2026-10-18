@@ -499,6 +499,23 @@ States: default, hover, focused hex,
 disabled, error, mixed, overridden; picker open. Uses: `FsPropertyRow`, `FsFieldBox`,
 `FsNumberField` (alpha), `FsAnchoredOverlay`, `FsIconButton`.
 
+Keyboard step size, by decision: the SV area and hue slider step whole percents and degrees, not
+one hex level (1/255). 1% of saturation is 2.55 channel levels at full brightness, so → from
+`#FFFFFF` goes to `#FFFCFC`, then `#FFFAFA`, `#FFF7F7` (−3, −2, −3, … as it rounds). That's kept
+because the screen-reader values are whole percents and degrees (a 1/255 step would announce the
+same value, or change nothing, on many presses), it matches the slider practice in WAI-ARIA and
+Figma's and Photoshop's HSB pickers, and exact colours are typed in the hex field, not stepped.
+
+Possible future updates (not planned yet):
+
+- **Home / End and Page Up / Page Down** on both sliders, the WAI-ARIA slider keys: Home / End go
+  to the ends (saturation 0 / 100% in the SV area, hue 0 / 360°), Page Up / Page Down step 10%
+  or 10° like Shift+arrow (brightness in the SV area). Small, and expected by screen-reader and
+  keyboard users.
+- **HSB or RGB number fields** for exact per-channel entry: `FsNumberField`s for H, S, B or R, G,
+  B, with a colour-model dropdown as in Figma; their arrows step one unit, so RGB steps one hex
+  level. A design addition (layout, picker height, preview.html first), so a separate decision.
+
 #### `FsAssetSlot<D>` and `FsEntitySlot<D>` (on a shared `FsSlot<D>`): 0.75 + 0.25
 
 Both are a 20px reference slot that is also a drop target. They differ in their icon and their actions,

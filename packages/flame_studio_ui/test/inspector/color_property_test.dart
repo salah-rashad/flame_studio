@@ -174,6 +174,114 @@ void main() {
     expect(find.byType(FsColorPicker), findsNothing);
   });
 
+  group('keyboard', () {
+    final picker = find.byType(FsColorPicker);
+    bool focusInPicker() =>
+        FocusManager.instance.primaryFocus?.context
+            ?.findAncestorWidgetOfExactType<FsColorPicker>() !=
+        null;
+    bool swatchFocused(WidgetTester tester) =>
+        Focus.of(tester.element(_swatch)).hasPrimaryFocus;
+    bool rowHexFocused(WidgetTester tester) => tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .firstWhere(
+          (e) =>
+              e.focusNode.context
+                  ?.findAncestorWidgetOfExactType<FsColorPicker>() ==
+              null,
+        )
+        .focusNode
+        .hasPrimaryFocus;
+    Future<void> press(
+      WidgetTester tester,
+      LogicalKeyboardKey key, {
+      bool shift = false,
+    }) async {
+      if (shift) await tester.sendKeyDownEvent(LogicalKeyboardKey.shift);
+      await tester.sendKeyEvent(key);
+      if (shift) await tester.sendKeyUpEvent(LogicalKeyboardKey.shift);
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> openWithKeyboard(WidgetTester tester) async {
+      await pumpFs(tester, const _Harness(), width: 400);
+      await press(tester, LogicalKeyboardKey.tab);
+      expect(swatchFocused(tester), isTrue);
+      await press(tester, LogicalKeyboardKey.enter);
+      expect(picker, findsOneWidget);
+    }
+
+    testWidgets('Enter opens the picker with focus in it', (tester) async {
+      await openWithKeyboard(tester);
+      expect(focusInPicker(), isTrue);
+    });
+
+    testWidgets('a click opens it and leaves focus on the swatch', (
+      tester,
+    ) async {
+      await pumpFs(tester, const _Harness(), width: 400);
+      await _click(tester, _swatch);
+      expect(picker, findsOneWidget);
+      expect(focusInPicker(), isFalse);
+      // Focus moving on from the swatch closes it.
+      await press(tester, LogicalKeyboardKey.tab);
+      expect(picker, findsNothing);
+      expect(rowHexFocused(tester), isTrue);
+    });
+
+    testWidgets('Tab past its last control closes it, on to the row hex', (
+      tester,
+    ) async {
+      await openWithKeyboard(tester);
+      for (var i = 0; i < 6 && picker.evaluate().isNotEmpty; i++) {
+        expect(focusInPicker(), isTrue);
+        await press(tester, LogicalKeyboardKey.tab);
+      }
+      expect(picker, findsNothing);
+      expect(rowHexFocused(tester), isTrue);
+    });
+
+    testWidgets('⇧Tab before its first control closes it, back to the '
+        'swatch', (tester) async {
+      await openWithKeyboard(tester);
+      await press(tester, LogicalKeyboardKey.tab, shift: true);
+      expect(picker, findsNothing);
+      expect(swatchFocused(tester), isTrue);
+    });
+
+    testWidgets('Esc in a picker field closes it, back to the swatch', (
+      tester,
+    ) async {
+      await openWithKeyboard(tester);
+      await press(tester, LogicalKeyboardKey.tab); // the alpha field
+      expect(focusInPicker(), isTrue);
+      await press(tester, LogicalKeyboardKey.escape);
+      expect(picker, findsNothing);
+      expect(swatchFocused(tester), isTrue);
+    });
+
+    testWidgets('focus moved elsewhere closes it', (tester) async {
+      final other = FocusNode();
+      addTearDown(other.dispose);
+      await pumpFs(
+        tester,
+        Column(
+          children: [
+            const _Harness(),
+            Focus(focusNode: other, child: const SizedBox(height: 10)),
+          ],
+        ),
+        width: 400,
+      );
+      await press(tester, LogicalKeyboardKey.tab);
+      await press(tester, LogicalKeyboardKey.enter);
+      expect(focusInPicker(), isTrue);
+      other.requestFocus();
+      await tester.pumpAndSettle();
+      expect(picker, findsNothing);
+    });
+  });
+
   testWidgets('a pick in the popover reaches the row', (tester) async {
     await pumpFs(tester, const _Harness(), width: 400);
     await _click(tester, _swatch);

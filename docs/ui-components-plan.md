@@ -481,7 +481,13 @@ FsColorPicker({required Color value, required ValueChanged<Color> onChanged,
 Swatch 28×16 with a 1px inner white-15% edge, 6-digit upper-case hex field, separate 52px alpha
 % field. Invalid hex gives an `error` border, and the swatch keeps the last valid colour. The swatch
 opens the picker popover: an SV area, a hue slider, hex + alpha, recent colours, and the eyedropper
-when `FsPlatformHooks.sampleScreenColor` is set (§7.2). States: default, hover, focused hex,
+when `FsPlatformHooks.sampleScreenColor` is set (§7.2). The popover isn't modal: Enter or Space
+on the swatch opens it with focus in its hex field (a click leaves focus put); in the Tab order it
+sits between the swatch and the row's hex field, so Tab past its end moves on and ⇧Tab before its
+start returns to the swatch, closing it either way; focus moving anywhere else closes it; Esc
+anywhere in it closes it and returns focus to the swatch. *Known gap:* the SV area and hue slider
+take no keyboard focus, so from the keyboard the colour is set through the hex and alpha fields.
+States: default, hover, focused hex,
 disabled, error, mixed, overridden; picker open. Uses: `FsPropertyRow`, `FsFieldBox`,
 `FsNumberField` (alpha), `FsAnchoredOverlay`, `FsIconButton`.
 

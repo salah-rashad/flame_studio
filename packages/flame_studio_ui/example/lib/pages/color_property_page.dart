@@ -58,7 +58,8 @@ class _ColorPropertyPageState extends State<ColorPropertyPage> {
           'Hex is upper-case, 6 digits; alpha is a separate % field. The '
           'swatch shows the colour as a solid fill (no checkerboard), so a '
           'fully transparent colour also shows "0%". Click the swatch for '
-          'the picker.',
+          'the picker, or Tab to it and press Enter: focus goes into the '
+          'picker, Tab or ⇧Tab past its ends or Esc closes it.',
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,

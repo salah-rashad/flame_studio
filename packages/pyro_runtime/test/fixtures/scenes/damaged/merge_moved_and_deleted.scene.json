@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "root": {
+      "childIds": [
+        "a",
+        "b",
+        "ghost"
+      ],
+      "kind": "root"
+    },
+    "a": {
+      "childIds": [
+        "c"
+      ],
+      "kind": "entity",
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [1, 1]
+      }
+    },
+    "b": {
+      "childIds": [
+        "c"
+      ],
+      "kind": "entity",
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [1, 1]
+      }
+    },
+    "c": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [1, 1]
+      }
+    },
+    "e": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [1, 1]
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "c1": {
+      "kind": "circleHitbox",
+      "name": "sensor",
+      "props": {
+        "anchor": "center",
+        "collisionType": "inactive",
+        "isSolid": false,
+        "position": [16, 16],
+        "radius": 40.5
+      }
+    },
+    "e1": {
+      "childIds": [
+        "c1"
+      ],
+      "kind": "entity",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [64, 64],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
+    },
+    "root": {
+      "childIds": [
+        "e1"
+      ],
+      "kind": "root"
+    }
+  }
+}

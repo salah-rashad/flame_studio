@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "e1": {
+      "childIds": [],
+      "kind": "entity",
+      "name": "goblin",
+      "tags": [],
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [80, 128],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
+    },
+    "root": {
+      "childIds": [
+        "e1"
+      ],
+      "kind": "root"
+    }
+  }
+}

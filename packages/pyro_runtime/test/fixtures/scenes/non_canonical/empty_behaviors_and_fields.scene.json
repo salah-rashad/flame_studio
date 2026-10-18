@@ -1,0 +1,5 @@
+{"schemaVersion": 1, "rootId": "root", "nodes": {
+  "root": {"kind": "root", "childIds": ["e1", "p1"]},
+  "e1": {"kind": "entity", "behaviors": [], "transform": {"anchor": "center", "angle": 0, "position": [0, 0], "scale": [1, 1], "size": [8, 8]}},
+  "p1": {"kind": "custom", "type": "Player", "fields": {}, "behaviors": [{"type": "Blink", "fields": {}}], "transform": {"anchor": "center", "angle": 0, "position": [0, 0], "scale": [1, 1], "size": [8, 8]}}
+}}

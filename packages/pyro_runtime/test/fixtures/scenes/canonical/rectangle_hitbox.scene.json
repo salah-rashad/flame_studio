@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "e1": {
+      "childIds": [
+        "h1",
+        "h2"
+      ],
+      "kind": "entity",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [64, 64],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
+    },
+    "h1": {
+      "kind": "rectangleHitbox",
+      "name": "body",
+      "props": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "collisionType": "active",
+        "isSolid": false,
+        "position": [4, 2],
+        "size": [24, 30]
+      }
+    },
+    "h2": {
+      "kind": "rectangleHitbox",
+      "name": "feet",
+      "props": {
+        "anchor": "bottomCenter",
+        "angle": 0.25,
+        "collisionType": "passive",
+        "isSolid": true,
+        "position": [16, 32],
+        "size": [12, 4]
+      }
+    },
+    "root": {
+      "childIds": [
+        "e1"
+      ],
+      "kind": "root"
+    }
+  }
+}

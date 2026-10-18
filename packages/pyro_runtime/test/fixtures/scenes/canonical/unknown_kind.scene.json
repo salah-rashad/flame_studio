@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "e1": {
+      "childIds": [
+        "h1"
+      ],
+      "kind": "entity",
+      "locked": true,
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [10, 20],
+        "scale": [1, 1],
+        "size": [32, 32],
+        "skew": [0, 0.5]
+      }
+    },
+    "h1": {
+      "kind": "rectangleHitbox",
+      "props": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "collisionType": "active",
+        "debugColor": "#FFFF0000",
+        "isSolid": false,
+        "position": [0, 0],
+        "size": [32, 32]
+      }
+    },
+    "root": {
+      "childIds": [
+        "e1",
+        "u1"
+      ],
+      "kind": "root"
+    },
+    "u1": {
+      "kind": "prefabInstance",
+      "name": "goblin_2",
+      "overrides": {},
+      "prefab": "assets/scenes/prefabs/goblin.scene.json",
+      "variants": [
+        {
+          "id": "red",
+          "weight": 0.5
+        }
+      ]
+    }
+  },
+  "editor": {
+    "camera": [120, -40],
+    "zoom": 1.5
+  }
+}

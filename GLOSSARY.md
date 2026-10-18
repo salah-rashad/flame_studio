@@ -28,7 +28,7 @@ One element of a Scene's tree, such as an Entity, a sprite, a hitbox or a Prefab
 _Avoid_: Object, game object, element
 
 **Node kind**:
-What sort of thing a Node is: a built-in sort (entity, sprite, hitbox, prefab instance) or a Custom component.
+What sort of thing a Node is: a built-in sort (root, entity, sprite, hitbox, prefab instance) or a Custom component.
 _Avoid_: Kind (unqualified), node type
 
 **Entity**:
@@ -49,6 +49,17 @@ A Node that places a Prefab inside another Scene.
 
 **Node name**:
 A human-chosen label on a Node, used to look it up from game code; not required to be unique.
+
+**Node ID**:
+The stable identifier of a Node within its Scene; it never changes when the Node is renamed, moved or edited.
+_Avoid_: UUID (as a term)
+
+**Canonical form**:
+The one exact way Pyro writes a Scene file, so saving an unchanged Scene changes no bytes.
+
+**Repair report**:
+The list of inconsistencies in a Scene's tree that reading found and fixed (an orphan, a Node under two parents, a missing child…), each naming the Nodes involved.
+_Avoid_: Fix log, migration
 
 ### User types and their fields
 

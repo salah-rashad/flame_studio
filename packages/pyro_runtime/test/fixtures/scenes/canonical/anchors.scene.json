@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "n1": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [10, 10]
+      }
+    },
+    "n2": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "topCenter",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [10, 10]
+      }
+    },
+    "n3": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "topRight",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [10, 10]
+      }
+    },
+    "n4": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "centerLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [10, 10]
+      }
+    },
+    "n5": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [10, 10]
+      }
+    },
+    "n6": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "centerRight",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [10, 10]
+      }
+    },
+    "n7": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "bottomLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [10, 10]
+      }
+    },
+    "n8": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "bottomCenter",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [10, 10]
+      }
+    },
+    "n9": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "bottomRight",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [10, 10]
+      }
+    },
+    "nc": {
+      "kind": "entity",
+      "transform": {
+        "anchor": [0.25, 0.75],
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [10, 10]
+      }
+    },
+    "root": {
+      "childIds": [
+        "n1",
+        "n2",
+        "n3",
+        "n4",
+        "n5",
+        "n6",
+        "n7",
+        "n8",
+        "n9",
+        "nc"
+      ],
+      "kind": "root"
+    }
+  }
+}

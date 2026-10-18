@@ -1,0 +1,1 @@
+{"schemaVersion": 1, "rootId": "root", "nodes": {"root": {"kind": "root", "childIds": ["c1"]}, "c1": {"kind": "circleHitbox", "name": "sensor", "props": {"anchor": "center", "collisionType": "active", "isSolid": false, "position": [0, 0], "radius": -1}}}}

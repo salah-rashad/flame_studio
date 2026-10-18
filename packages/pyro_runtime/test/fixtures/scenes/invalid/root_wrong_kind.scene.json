@@ -1,0 +1,1 @@
+{"schemaVersion": 1, "rootId": "e1", "nodes": {"root": {"kind": "root", "childIds": ["e1"]}, "e1": {"kind": "entity", "name": "goblin", "transform": {"anchor": "center", "angle": 0, "position": [0, 0], "scale": [1, 1], "size": [8, 8]}}}}

@@ -1,0 +1,1 @@
+{"schemaVersion": 1, "rootId": "root", "nodes": {"root": {"kind": "root", "childIds": ["h1"]}, "h1": {"kind": "rectangleHitbox", "name": "body", "props": {"anchor": "topLeft", "angle": 0, "collisionType": "sometimes", "isSolid": false, "position": [0, 0], "size": [1, 1]}}}}

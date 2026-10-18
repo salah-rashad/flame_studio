@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "e1": {
+      "kind": "entity",
+      "transform": {
+        "anchor": [0.1, 0.333],
+        "angle": -3.14159,
+        "position": [-12.75, 1e-7],
+        "scale": [1e+21, 0.001],
+        "size": [100000000000000000000, 9007199254740992]
+      }
+    },
+    "root": {
+      "childIds": [
+        "e1"
+      ],
+      "kind": "root"
+    }
+  }
+}

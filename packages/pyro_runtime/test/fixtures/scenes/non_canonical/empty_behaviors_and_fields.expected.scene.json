@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "e1": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [8, 8]
+      }
+    },
+    "p1": {
+      "behaviors": [
+        {
+          "type": "Blink"
+        }
+      ],
+      "kind": "custom",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [8, 8]
+      },
+      "type": "Player"
+    },
+    "root": {
+      "childIds": [
+        "e1",
+        "p1"
+      ],
+      "kind": "root"
+    }
+  }
+}

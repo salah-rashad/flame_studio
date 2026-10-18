@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "root": {
+      "childIds": [
+        "s1",
+        "s2"
+      ],
+      "kind": "root"
+    },
+    "s1": {
+      "kind": "sprite",
+      "name": "goblin_frame",
+      "props": {
+        "image": "assets/images/goblin_sheet.png",
+        "srcPosition": [32, 0],
+        "srcSize": [32, 32]
+      },
+      "transform": {
+        "anchor": "bottomCenter",
+        "angle": 0,
+        "position": [100, 200],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
+    },
+    "s2": {
+      "kind": "sprite",
+      "props": {
+        "image": "assets/images/background.png"
+      },
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [2, 2],
+        "size": [640, 360]
+      }
+    }
+  }
+}

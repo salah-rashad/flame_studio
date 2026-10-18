@@ -1,4 +1,4 @@
-# Flame Studio
+# Pyro
 
 A desktop editor for games made with the Flame engine: developers compose scenes visually while all
 game logic stays in plain Dart in their own IDE.
@@ -7,9 +7,9 @@ game logic stays in plain Dart in their own IDE.
 
 ### Tools and packages
 
-**Studio**:
-The Flame Studio desktop app.
-_Avoid_: Editor (as a product name), IDE
+**Pyro**:
+The desktop app (*Q86*).
+_Avoid_: Flame Studio (reserved by the Flame team), Studio, Editor (as a product name), IDE
 
 **Runtime**:
 The package shipped inside the user's game that loads scenes into Flame.
@@ -61,7 +61,7 @@ Whether a user type is a Behavior or a Custom component.
 _Avoid_: Kind (for types)
 
 **Editable field**:
-A field of a user type that the Studio lets the developer set per Node.
+A field of a user type that Pyro lets the developer set per Node.
 
 **Field type**:
 The value type of an Editable field (number, text, enum, vector, colour, asset reference, entity reference).
@@ -76,12 +76,12 @@ Generated code shipped in the game that lets the Runtime create user types and s
 _Avoid_: Type registry
 
 **Manifest**:
-Generated data describing the user's annotated types and their Editable fields, read by the Studio.
+Generated data describing the user's annotated types and their Editable fields, read by Pyro.
 _Avoid_: types.json
 
 **Type catalog**:
-The Studio's complete list of types it can offer: the user's types from the Manifest plus Flame's built-in Node kinds.
-_Avoid_: Type registry, Registry (in the Studio)
+Pyro's complete list of types it can offer: the user's types from the Manifest plus Flame's built-in Node kinds.
+_Avoid_: Type registry, Registry (in Pyro)
 
 **Missing behavior** / **Missing component**:
 A Behavior or Custom component referenced by a Scene whose Type ID no longer exists in the code; its data is kept untouched.
@@ -90,18 +90,18 @@ _Avoid_: Missing script
 ### Editing and running
 
 **Document**:
-The Studio's in-memory, undoable model of one open Scene.
+Pyro's in-memory, undoable model of one open Scene.
 
 **Play**:
-Running the developer's game from the Studio on a chosen device; the Studio owns that running game.
+Running the developer's game from Pyro on a chosen device; Pyro owns that running game.
 _Avoid_: Run game, launch
 
 **Attach**:
-Connecting the developer's IDE debugger to a game the Studio is already running.
+Connecting the developer's IDE debugger to a game Pyro is already running.
 
 **Hot-swap**:
 Replacing a Scene inside a running game with its newly saved version, without restarting the game.
 _Avoid_: Scene reload, live reload
 
 **Live bridge**:
-A future two-way connection between the Studio and a running game for selecting and tweaking Nodes live.
+A future two-way connection between Pyro and a running game for selecting and tweaking Nodes live.

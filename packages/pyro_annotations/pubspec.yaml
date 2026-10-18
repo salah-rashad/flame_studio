@@ -1,0 +1,18 @@
+name: pyro_annotations
+description: >-
+  Annotations that mark Flame components and behaviors for Pyro.
+  Pure Dart, no dependencies.
+version: 0.0.1
+publish_to: none # Until the package names are cleared with the Flame maintainers (Q36).
+issue_tracker: https://github.com/salah-rashad/pyro/issues
+repository: https://github.com/salah-rashad/pyro/tree/main/packages/pyro_annotations
+
+environment:
+  sdk: ^3.12.0
+
+resolution: workspace
+
+# No dependencies, by design (Q44): the generator runs on the plain Dart VM.
+
+dev_dependencies:
+  test: ^1.25.0

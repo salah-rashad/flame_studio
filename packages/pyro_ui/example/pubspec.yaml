@@ -1,0 +1,26 @@
+name: pyro_ui_gallery
+description: >-
+  The pyro_ui gallery: every component in every state, laid out like
+  the design system's preview.html pages. Never released.
+publish_to: none
+version: 0.0.1
+
+environment:
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
+
+resolution: workspace
+
+# Only the UI package (plan §6.1).
+dependencies:
+  flutter:
+    sdk: flutter
+  pyro_ui: ^0.0.1
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

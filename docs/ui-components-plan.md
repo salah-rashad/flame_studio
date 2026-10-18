@@ -1,12 +1,12 @@
-# Flame Studio — UI components plan
+# Pyro — UI components plan
 
 | | |
 |---|---|
 | **Status** | Built (2026-10-18): every component, the EditorShell, the icons, the gallery with one golden per page, and a side-by-side review against `preview.html` |
 | **Date** | 2026-10-17 |
-| **Scope** | `packages/flame_studio_ui`: the 29 components and the EditorShell of the Claude Design design system, their shared foundations, the icon set, a gallery app and the tests |
+| **Scope** | `packages/pyro_ui`: the 29 components and the EditorShell of the Claude Design design system, their shared foundations, the icon set, a gallery app and the tests |
 | **Decisions** | *Q83* (package boundary), *Q84* (this plan) |
-| **Sources** | The design system in Claude Design (`project/README.md`, `components/<Name>/README.md` and `preview.html`, `design-system.json`); `packages/flame_studio_ui/`; [`project-plan.md`](project-plan.md) §8.6, §14 |
+| **Sources** | The design system in Claude Design (`project/README.md`, `components/<Name>/README.md` and `preview.html`, `design-system.json`); `packages/pyro_ui/`; [`project-plan.md`](project-plan.md) §8.6, §14 |
 
 The design system's component guidelines already give each widget's inputs ("Consumer provides")
 and every state (`preview.html`). So the widgets can be built ahead of the panels, against a gallery,
@@ -35,26 +35,26 @@ it depends on, in what order to build it and how long it takes. It contains no w
   `IconData`, `Widget`) and callbacks. No Node, asset, device, scene or Type catalog types. Where
   the design names a domain thing, the API takes what is drawn: a label, an icon, a flag. Payloads
   that pass through a widget untouched (drag data, dropdown values, menu results) are a generic `T`.
-- **One widget per component, `Fs` prefix**, one file per component under `lib/src/<group>/`,
-  exported from `flame_studio_ui.dart`. A component that has variants takes an enum
-  (`FsButtonVariant.primary`), not separate classes.
-- **Colours from tokens only.** `FsColors.of(context)` and `FsShadows`; no hex literals, no
+- **One widget per component, `Pr` prefix**, one file per component under `lib/src/<group>/`,
+  exported from `pyro_ui.dart`. A component that has variants takes an enum
+  (`PrButtonVariant.primary`), not separate classes.
+- **Colours from tokens only.** `PrColors.of(context)` and `PrShadows`; no hex literals, no
   opacity for disabled (the design says never), no Material `InkWell`, no ripples.
 - **States through one wrapper** (§2.1). Every interactive widget reports `hovered`, `pressed`,
-  `focused` (keyboard only), `disabled`, `selected` and `error` through `FsInteractive`, so
+  `focused` (keyboard only), `disabled`, `selected` and `error` through `PrInteractive`, so
   states look and behave the same everywhere.
 - **`onX == null` means disabled**, as in Flutter. A disabled control still shows its tooltip
   (the design: "say why").
 - **Disabled controls are out of the Tab order**, as in native toolkits: a focused control that
   ignores Enter feels broken, and dead stops slow keyboard use down. The exception is opt-in,
-  per control: `focusableWhenDisabled: true` (on `FsInteractive`, `FsButton` and
-  `FsIconButton`) keeps the Tab stop so keyboard users can reach the tooltip's disabled reason
+  per control: `focusableWhenDisabled: true` (on `PrInteractive`, `PrButton` and
+  `PrIconButton`) keeps the Tab stop so keyboard users can reach the tooltip's disabled reason
   ("Run game" with no device connected). Use it only for the few commands whose reason lives in
   the tooltip; prefer showing the reason where it can always be read (a banner, the empty
   state, the status bar). Menus and roving groups keep skipping disabled items, as macOS does.
-- **Fixed heights** from `FsSizes`; rows never grow with content.
+- **Fixed heights** from `PrSizes`; rows never grow with content.
 - **Value conventions shared by the Inspector widgets:**
-  - `FsValueSource { codeDefault, overridden }`: how the PropertyRow draws the label and whether
+  - `PrValueSource { codeDefault, overridden }`: how the PropertyRow draws the label and whether
     it shows the reset button. The words are the design's ("default from code", "overridden"); the
     widget doesn't know what an Override is.
   - Mixed values: the value parameter is nullable and `mixed: true` draws "—". For `Vector2Property`
@@ -71,13 +71,13 @@ it depends on, in what order to build it and how long it takes. It contains no w
 
 Built first. Every component below uses one or more of them.
 
-### 2.1 `FsInteractive`: the interaction-state wrapper
+### 2.1 `PrInteractive`: the interaction-state wrapper
 
 A widget that turns pointer and keyboard input into a `Set<WidgetState>` and hands it to a
 builder. Every button, field box, row, tab, segment, slot and menu item is built on it.
 
 ```dart
-FsInteractive({
+PrInteractive({
   required Widget Function(BuildContext, Set<WidgetState> states) builder,
   VoidCallback? onPressed,           // null = disabled
   bool selected = false,
@@ -105,36 +105,36 @@ FsInteractive({
   Enter and Space; `onPressed`, `shortcuts` and `actions` stay inactive until it is enabled.
 - **Pressed** comes from a `Listener` (pointer down and up inside), not a `GestureDetector`, so
   the wrapper can sit inside drag sources (TreeRow) without fighting the gesture arena.
-- **Forced states for the gallery and goldens:** an `FsDebugStates` InheritedWidget, read only in
-  debug and profile builds, adds a fixed set of states to every `FsInteractive` below it. This is
+- **Forced states for the gallery and goldens:** an `PrDebugStates` InheritedWidget, read only in
+  debug and profile builds, adds a fixed set of states to every `PrInteractive` below it. This is
   how the gallery shows Hover, Pressed and Focused side by side like `preview.html`.
-- Helpers next to it: `FsFocusRing.outside` (`FsShadows.focus`, the 2px ring outside the edge)
-  and `FsFocusRing.inset` (`focusInset`, for rows in scrolling lists), and
-  `FsStateColor.resolve(states, {...})`, a small map-to-colour helper.
+- Helpers next to it: `PrFocusRing.outside` (`PrShadows.focus`, the 2px ring outside the edge)
+  and `PrFocusRing.inset` (`focusInset`, for rows in scrolling lists), and
+  `PrStateColor.resolve(states, {...})`, a small map-to-colour helper.
 
-### 2.2 `FsFieldBox`: the shared field chrome
+### 2.2 `PrFieldBox`: the shared field chrome
 
 The box drawn by TextField, SearchField, NumberField, Dropdown and the inspector fields: fill
 `surface-input`, 1px border `border-control` → hover `border-strong` → focus `focus-ring` border
 plus a 1px outer ring, `error` border, disabled `surface-panel` and `border-subtle`, read-only
-flat. Two heights: `FsFieldSize.regular` (24) and `.dense` (20, inside property rows). It takes
+flat. Two heights: `PrFieldSize.regular` (24) and `.dense` (20, inside property rows). It takes
 `leading`, `child` and `trailing` slots and an `accentEdge` flag (scrubbing: `accent-text`
 border). It has no text logic of its own.
 
-### 2.3 `FsPanelFocus`: panel-focus propagation
+### 2.3 `PrPanelFocus`: panel-focus propagation
 
 ```dart
-FsPanelFocus({required Widget child})   // inserted by FsPanel; also usable alone
-static bool FsPanelFocus.of(BuildContext context) // true outside any panel
+PrPanelFocus({required Widget child})   // inserted by PrPanel; also usable alone
+static bool PrPanelFocus.of(BuildContext context) // true outside any panel
 ```
 
 A `FocusScope` plus an `InheritedNotifier` that exposes `hasFocus` (the scope's
 `hasFocus`, so focus anywhere inside the panel counts). TreeRow, Tabs and list rows read it to
 choose `surface-selected` or `surface-selected-inactive`, and Panel uses it for the header
 (title colour and the 2px `accent-text` top edge). Panel cycling (⌃Tab, ⌘1–⌘4) is the app's
-business: it owns the panel order, and `FsPanel` takes a `focusNode` it can request focus on.
+business: it owns the panel order, and `PrPanel` takes a `focusNode` it can request focus on.
 
-### 2.4 Overlay plumbing: `FsAnchoredOverlay`
+### 2.4 Overlay plumbing: `PrAnchoredOverlay`
 
 One positioner for everything that floats next to an anchor: tooltips, Dropdown lists,
 ContextMenu and SplitButton menus, the colour picker popover.
@@ -146,12 +146,12 @@ ContextMenu and SplitButton menus, the colour picker popover.
 - Menus use `RawMenuAnchor` for focus and submenus (§7.3) and only borrow the positioner;
   tooltips use `RawTooltip` (§7.4) with the same positioner as its `positionDelegate`.
 
-### 2.5 `FsToastHost`
+### 2.5 `PrToastHost`
 
 ```dart
-FsToastHost({required Widget child})            // once, above the EditorShell
-FsToastController FsToastHost.of(BuildContext)
-FsToastHandle controller.show(FsToastData data) // .update(...) for progress, .dismiss()
+PrToastHost({required Widget child})            // once, above the EditorShell
+PrToastController PrToastHost.of(BuildContext)
+PrToastHandle controller.show(PrToastData data) // .update(...) for progress, .dismiss()
 ```
 
 A host `Stack` at the bottom right with a 16px inset: newest on top, at most 3 visible (older ones
@@ -159,15 +159,15 @@ wait in a queue), 200ms enter and exit, and success/info dismissed after 4s with
 while hovered. Logging every toast to the Console is the app's job (the design says the toast
 is "never the only record"), so `show` stays a plain call.
 
-### 2.6 Platform hooks: `FsPlatformHooks`
+### 2.6 Platform hooks: `PrPlatformHooks`
 
 An InheritedWidget with optional callbacks that need native code, which the app supplies from its
 macOS runner (the package stays Flutter-only, *Q83*):
 
 ```dart
-FsPlatformHooks({
+PrPlatformHooks({
   Future<Color?> Function()? sampleScreenColor, // ColorProperty eyedropper (§7.2)
-  FsPointerLock? pointerLock,                    // NumberProperty cursor hide + wrap (§7.1)
+  PrPointerLock? pointerLock,                    // NumberProperty cursor hide + wrap (§7.1)
   required Widget child,
 })
 ```
@@ -184,13 +184,13 @@ Estimates are in evenings (~3 h) and include the widget, its gallery page and it
 
 ### 3.1 Actions
 
-#### `FsButton`: 0.5
+#### `PrButton`: 0.5
 
 ```dart
-FsButton({
+PrButton({
   required String label,
   required VoidCallback? onPressed,
-  FsButtonVariant variant = FsButtonVariant.secondary, // primary, secondary, ghost, danger
+  PrButtonVariant variant = PrButtonVariant.secondary, // primary, secondary, ghost, danger
   IconData? icon,
   String? tooltip, String? shortcut,
   FocusNode? focusNode, bool autofocus = false,
@@ -199,29 +199,29 @@ FsButton({
 
 States: default, hover, pressed, focused, disabled, per variant (4 × 5 in `preview.html`), plus
 with-icon. No selected or error state (the design: use ToggleButton, or put the error on the
-field). Uses: `FsInteractive`, `FsTooltip`.
+field). Uses: `PrInteractive`, `PrTooltip`.
 
-#### `FsIconButton`: 0.25
+#### `PrIconButton`: 0.25
 
 ```dart
-FsIconButton({
+PrIconButton({
   required IconData icon,
   required String tooltip,          // required; also the semantics label
   required VoidCallback? onPressed,
   String? shortcut,
   bool selected = false,            // latched look
-  FsIconButtonSize size = FsIconButtonSize.regular, // regular 24 (toolbar), small 20 (header, row)
+  PrIconButtonSize size = PrIconButtonSize.regular, // regular 24 (toolbar), small 20 (header, row)
 })
 ```
 
 States: default, hover, pressed, focused, disabled, selected; 24 and 20 sizes. Uses:
-`FsInteractive`, `FsTooltip`.
+`PrInteractive`, `PrTooltip`.
 
-#### `FsToggleButton`: 0.25
+#### `PrToggleButton`: 0.25
 
 ```dart
-FsToggleButton({
-  IconData? icon, String? label,    // at least one; icon-only draws like FsIconButton
+PrToggleButton({
+  IconData? icon, String? label,    // at least one; icon-only draws like PrIconButton
   required bool value,
   required ValueChanged<bool>? onChanged,
   required String tooltip, String? shortcut,
@@ -230,17 +230,17 @@ FsToggleButton({
 
 States: off, hover, pressed, focused, disabled, on, on + hover (`surface-selected`), on +
 focused; icon form and text form (on adds an `accent-text` border). Exposes
-`Semantics(toggled:)`. Uses: `FsInteractive`, `FsTooltip`.
+`Semantics(toggled:)`. Uses: `PrInteractive`, `PrTooltip`.
 
-#### `FsSplitButton<T>`: 0.5
+#### `PrSplitButton<T>`: 0.5
 
 ```dart
-FsSplitButton<T>({
+PrSplitButton<T>({
   required String label, IconData? icon,
   required VoidCallback? onPressed,             // main action
-  required List<FsMenuEntry<T>> menuItems,      // caret menu; a check marks the current default
+  required List<PrMenuEntry<T>> menuItems,      // caret menu; a check marks the current default
   ValueChanged<T>? onSelected,
-  FsButtonVariant variant = FsButtonVariant.primary, // primary or secondary
+  PrButtonVariant variant = PrButtonVariant.primary, // primary or secondary
   String? tooltip,
 })
 ```
@@ -248,14 +248,14 @@ FsSplitButton<T>({
 Two hit targets with their own hover and pressed states. States: default, hover main, hover
 caret, pressed, focused, open, disabled; primary and secondary. Enter/Space runs the main action;
 ↓ or Alt+↓ opens the menu. "The main action always repeats the last choice" is the app's rule: it
-passes the matching `label` and `onPressed`. Uses: `FsInteractive`, `FsContextMenu` (menu
-building), `FsTooltip`.
+passes the matching `label` and `onPressed`. Uses: `PrInteractive`, `PrContextMenu` (menu
+building), `PrTooltip`.
 
-#### `FsSegmentedControl<T>`: 0.5
+#### `PrSegmentedControl<T>`: 0.5
 
 ```dart
-FsSegmentedControl<T>({
-  required List<FsSegment<T>> segments, // FsSegment(value:, icon:, label:, count:, tooltip:, shortcut:)
+PrSegmentedControl<T>({
+  required List<PrSegment<T>> segments, // PrSegment(value:, icon:, label:, count:, tooltip:, shortcut:)
   required T selected,
   required ValueChanged<T>? onChanged,
 })
@@ -264,16 +264,16 @@ FsSegmentedControl<T>({
 States per segment: default, hover, pressed, focused (inset ring), selected, disabled; icon form
 (tools) and text form (filters, with count badges). One Tab stop; ← → move and select. The single-key
 tool shortcuts (Q W E R) are app shortcuts; the control only shows them in tooltips. Uses:
-`FsInteractive` (with `focusable: false` per segment), `FsTooltip`, `FsBadge`.
+`PrInteractive` (with `focusable: false` per segment), `PrTooltip`, `PrBadge`.
 
-#### `FsToolbar`: 0.5
+#### `PrToolbar`: 0.5
 
 ```dart
-FsToolbar({
-  required List<FsToolbarGroup> leading,  // FsToolbarGroup(children: [...])
-  List<FsToolbarGroup> center = const [],  // the Play cluster in the main toolbar
-  List<FsToolbarGroup> trailing = const [],
-  FsToolbarStyle style = FsToolbarStyle.main, // main (surface-raised) or viewport (surface-panel)
+PrToolbar({
+  required List<PrToolbarGroup> leading,  // PrToolbarGroup(children: [...])
+  List<PrToolbarGroup> center = const [],  // the Play cluster in the main toolbar
+  List<PrToolbarGroup> trailing = const [],
+  PrToolbarStyle style = PrToolbarStyle.main, // main (surface-raised) or viewport (surface-panel)
 })
 ```
 
@@ -285,10 +285,10 @@ any of them.
 
 ### 3.2 Inputs
 
-#### `FsTextField`: 0.75
+#### `PrTextField`: 0.75
 
 ```dart
-FsTextField({
+PrTextField({
   TextEditingController? controller, String? value, // one or the other
   String? placeholder,
   String? Function(String)? validator,  // non-null result = error state + message
@@ -296,23 +296,23 @@ FsTextField({
   ValueChanged<String>? onSubmitted,
   bool mono = false,                     // paths
   bool readOnly = false, bool enabled = true,
-  FsFieldSize size = FsFieldSize.regular,
-  FsErrorDisplay errorDisplay = FsErrorDisplay.below, // below (one line) or tooltip (dense rows)
+  PrFieldSize size = PrFieldSize.regular,
+  PrErrorDisplay errorDisplay = PrErrorDisplay.below, // below (one line) or tooltip (dense rows)
   FocusNode? focusNode, bool autofocus = false, bool selectAllOnFocus = false,
 })
 ```
 
 States: filled, empty + placeholder, path (mono); default, hover, focused, disabled, error,
-read-only. Built on `EditableText` inside `FsFieldBox`, not Material `TextField` (whose
-`InputDecoration` fights the 20/24px heights). Text selection colours come from `FsTheme`. The
+read-only. Built on `EditableText` inside `PrFieldBox`, not Material `TextField` (whose
+`InputDecoration` fights the 20/24px heights). Text selection colours come from `PrTheme`. The
 dense error tooltip stays up while the field has focus, so the message is visible while typing
 (not behind hover); either form is announced to screen readers when it appears or changes (WCAG
-3.3.1, 4.1.3). Uses: `FsFieldBox`, `FsTooltip` (error in dense rows).
+3.3.1, 4.1.3). Uses: `PrFieldBox`, `PrTooltip` (error in dense rows).
 
-#### `FsSearchField`: 0.25
+#### `PrSearchField`: 0.25
 
 ```dart
-FsSearchField({
+PrSearchField({
   required String query,
   required ValueChanged<String> onChanged,  // live, no Enter
   String? resultLabel,      // "3 of 12"; the app formats it
@@ -324,36 +324,36 @@ FsSearchField({
 })
 ```
 
-States: empty, with query; default, hover, focused, disabled, no results. Uses: `FsTextField`
-internals, `FsFieldBox`.
+States: empty, with query; default, hover, focused, disabled, no results. Uses: `PrTextField`
+internals, `PrFieldBox`.
 
-#### `FsNumberField`: 0.5
+#### `PrNumberField`: 0.5
 
 ```dart
-FsNumberField({
+PrNumberField({
   required double? value, bool mixed = false,
-  FsNumberKind kind = FsNumberKind.double, // int or double
+  PrNumberKind kind = PrNumberKind.double, // int or double
   double? min, double? max, double step = 1,
   String? unit,
   bool stepper = true,
   ValueChanged<double>? onChanged, ValueChanged<double>? onCommit,
-  FsFieldSize size = FsFieldSize.regular,
+  PrFieldSize size = PrFieldSize.regular,
   double? width,
 })
 ```
 
 States: plain, with unit; default, hover, scrubbing (drag the field itself), focused, disabled,
 error, mixed. Shares the number-editing core with NumberProperty (parsing, expressions, ↑/↓
-steps, scrub maths). Uses: `FsFieldBox`, `FsNumberEditing` (internal, see 3.3).
+steps, scrub maths). Uses: `PrFieldBox`, `PrNumberEditing` (internal, see 3.3).
 
-#### `FsDropdown<T>`: 0.75
+#### `PrDropdown<T>`: 0.75
 
 ```dart
-FsDropdown<T>({
-  required List<FsDropdownOption<T>> options, // FsDropdownOption(value:, label:, icon:, detail:)
+PrDropdown<T>({
+  required List<PrDropdownOption<T>> options, // PrDropdownOption(value:, label:, icon:, detail:)
   required T? value, bool mixed = false,
   required ValueChanged<T>? onChanged,
-  FsFieldSize size = FsFieldSize.regular,
+  PrFieldSize size = PrFieldSize.regular,
   bool monoOptions = false,   // enum values in the list show their Dart name in mono
   String? errorText,
 })
@@ -362,46 +362,46 @@ FsDropdown<T>({
 States: default, hover, pressed, focused, disabled, error, mixed, open. Space, Enter and ↓
 open it; type-ahead jumps to a match; the list opens on the current value; Esc closes it
 without a change. The field shows `label` and the list shows `detail` (the Dart name, e.g.
-`Anchor.center`) in mono. Uses: `FsFieldBox`, `FsAnchoredOverlay`, the `FsContextMenu` item
+`Anchor.center`) in mono. Uses: `PrFieldBox`, `PrAnchoredOverlay`, the `PrContextMenu` item
 row (for consistent list items).
 
 ### 3.3 Inspector
 
-#### `FsPropertyRow` (+ `FsPropertyList`): 0.75
+#### `PrPropertyRow` (+ `PrPropertyList`): 0.75
 
 ```dart
-FsPropertyList({required List<Widget> children, double initialLabelFraction = 0.4,
+PrPropertyList({required List<Widget> children, double initialLabelFraction = 0.4,
                 ValueChanged<double>? onLabelFractionChanged}) // shares one label column
-FsPropertyRow({
+PrPropertyRow({
   required String label,           // the Dart name, verbatim
   required Widget editor,
-  FsValueSource source = FsValueSource.codeDefault,
+  PrValueSource source = PrValueSource.codeDefault,
   VoidCallback? onReset,           // shown when overridden
   String? resetTooltip,
   bool mixed = false, bool readOnly = false, bool enabled = true,
   String? error,
   String? tooltip,                 // type + default value, formatted by the app
-  FsScrubHandle? labelScrub,       // set by NumberProperty / Vector2Property
+  PrScrubHandle? labelScrub,       // set by NumberProperty / Vector2Property
 })
 ```
 
-24px; label 40% (min 72px), resizable by dragging the column boundary. `FsPropertyList` holds
+24px; label 40% (min 72px), resizable by dragging the column boundary. `PrPropertyList` holds
 the shared width so every row's boundary moves together, and reports the new width so the app
 can persist it. States: default from code, overridden (2px `accent-text` bar, label
 `text-primary` 500, ↺ reset), mixed, error, disabled/read-only, hover (whole row
-`surface-hover`). Uses: `FsInteractive`, `FsIconButton` (reset), `FsTooltip`.
+`surface-hover`). Uses: `PrInteractive`, `PrIconButton` (reset), `PrTooltip`.
 
-#### `FsNumberProperty`: 1.25
+#### `PrNumberProperty`: 1.25
 
 ```dart
-FsNumberProperty({
+PrNumberProperty({
   required String label,
   required double? value, bool mixed = false,
-  FsNumberKind kind = FsNumberKind.double,
+  PrNumberKind kind = PrNumberKind.double,
   double? min, double? max, double? step,
   bool slider = false,            // range variant; needs min and max
   String? unit,                   // "px", "°", "px/s"
-  FsValueSource source = FsValueSource.codeDefault, VoidCallback? onReset,
+  PrValueSource source = PrValueSource.codeDefault, VoidCallback? onReset,
   required ValueChanged<double> onChanged,  // continuous while scrubbing
   required ValueChanged<double> onCommit,   // once per gesture or edit
   String? Function(double)? validator,      // "Expected a number between 0 and 1"
@@ -421,34 +421,34 @@ FsNumberProperty({
 - States: int, double + unit, range slider; default, hover on the label, scrubbing,
   focused/editing, disabled, error (with its tooltip, on the label: kept up while the row's field
   has focus), mixed, overridden.
-- Uses: `FsPropertyRow`, `FsNumberEditing` (internal: parse, format, expression, step,
-  scrub), `FsFieldBox`, `FsTooltip`.
+- Uses: `PrPropertyRow`, `PrNumberEditing` (internal: parse, format, expression, step,
+  scrub), `PrFieldBox`, `PrTooltip`.
 
-#### `FsBoolProperty` (+ `FsCheckbox`, `FsSwitch`): 0.5
+#### `PrBoolProperty` (+ `PrCheckbox`, `PrSwitch`): 0.5
 
 ```dart
-FsCheckbox({required bool? value, required ValueChanged<bool>? onChanged}) // null = mixed
-FsSwitch({required bool value, required ValueChanged<bool>? onChanged})
-FsBoolProperty({
+PrCheckbox({required bool? value, required ValueChanged<bool>? onChanged}) // null = mixed
+PrSwitch({required bool value, required ValueChanged<bool>? onChanged})
+PrBoolProperty({
   required String label, required bool? value, bool mixed = false,
-  FsValueSource source = FsValueSource.codeDefault, VoidCallback? onReset,
+  PrValueSource source = PrValueSource.codeDefault, VoidCallback? onReset,
   required ValueChanged<bool>? onChanged,
-  FsBoolStyle style = FsBoolStyle.checkbox, // switch only for live, unsaved toggles
+  PrBoolStyle style = PrBoolStyle.checkbox, // switch only for live, unsaved toggles
 })
 ```
 
 States: off, on, hover, pressed, focused, disabled off, disabled on, mixed (checkbox only),
-overridden. Clicking the label toggles; Space toggles. `FsCheckbox` is exported on its own:
-SectionHeader and Dialog use it. Uses: `FsInteractive`, `FsPropertyRow`.
+overridden. Clicking the label toggles; Space toggles. `PrCheckbox` is exported on its own:
+SectionHeader and Dialog use it. Uses: `PrInteractive`, `PrPropertyRow`.
 
-#### `FsVector2Property`: 0.5
+#### `PrVector2Property`: 0.5
 
 ```dart
-FsVector2Property({
+PrVector2Property({
   required String label,
   required double? x, required double? y,
   bool mixedX = false, bool mixedY = false,
-  FsValueSource source = FsValueSource.codeDefault, VoidCallback? onReset,
+  PrValueSource source = PrValueSource.codeDefault, VoidCallback? onReset,
   bool? aspectLocked,                          // null = no lock button
   ValueChanged<bool>? onAspectLockChanged,
   required void Function(double x, double y) onChanged,
@@ -461,21 +461,21 @@ Two 20px fields with a 16px axis cell ("X" `axis-x`, "Y" `axis-y`); drag a lette
 axis, drag the label to scrub both. Keeping the aspect ratio while locked is done inside the widget
 (it only has the two numbers), so `onChanged` already gets the locked pair. States:
 default, hover, scrubbing Y, focused X, disabled, error Y, mixed X, overridden; with and without
-the aspect lock. Tab order X → Y → next row. Uses: `FsPropertyRow`, `FsNumberEditing`,
-`FsFieldBox`, `FsToggleButton` (lock).
+the aspect lock. Tab order X → Y → next row. Uses: `PrPropertyRow`, `PrNumberEditing`,
+`PrFieldBox`, `PrToggleButton` (lock).
 
-#### `FsColorProperty` (+ `FsColorPicker`): 0.75 + 0.75
+#### `PrColorProperty` (+ `PrColorPicker`): 0.75 + 0.75
 
 ```dart
-FsColorProperty({
+PrColorProperty({
   required String label, required Color? value, bool mixed = false,
-  FsValueSource source = FsValueSource.codeDefault, VoidCallback? onReset,
+  PrValueSource source = PrValueSource.codeDefault, VoidCallback? onReset,
   required ValueChanged<Color> onChanged, required ValueChanged<Color> onCommit,
   ValueChanged<Color>? onPickerClosed,   // the colour the popover closed on, if changed
   List<Color> recentColors = const [],   // the app keeps the list; add to it in onPickerClosed
   bool enabled = true,
 })
-FsColorPicker({required Color value, required ValueChanged<Color> onChanged,
+PrColorPicker({required Color value, required ValueChanged<Color> onChanged,
                required ValueChanged<Color> onCommit, List<Color> recentColors = const [],
                String? areaLabel, String? hueLabel}) // the sliders' semantics labels
 ```
@@ -483,7 +483,7 @@ FsColorPicker({required Color value, required ValueChanged<Color> onChanged,
 Swatch 28×16 with a 1px inner white-15% edge, 6-digit upper-case hex field, separate 52px alpha
 % field. Invalid hex gives an `error` border, and the swatch keeps the last valid colour. The swatch
 opens the picker popover: an SV area, a hue slider, hex + alpha, recent colours, and the eyedropper
-when `FsPlatformHooks.sampleScreenColor` is set (§7.2). The popover isn't modal: Enter or Space
+when `PrPlatformHooks.sampleScreenColor` is set (§7.2). The popover isn't modal: Enter or Space
 on the swatch opens it with focus in its SV area (a click leaves focus put); in the Tab order it
 sits between the swatch and the row's hex field, so Tab past its end moves on and ⇧Tab before its
 start returns to the swatch, closing it either way; focus moving anywhere else closes it; Esc
@@ -496,8 +496,8 @@ the colour changed while it was open, so recent colours get the colour picked ra
 step; screen readers get slider roles with "40%, 80%" and "210°" values and the
 app's `areaLabel` / `hueLabel`.
 States: default, hover, focused hex,
-disabled, error, mixed, overridden; picker open. Uses: `FsPropertyRow`, `FsFieldBox`,
-`FsNumberField` (alpha), `FsAnchoredOverlay`, `FsIconButton`.
+disabled, error, mixed, overridden; picker open. Uses: `PrPropertyRow`, `PrFieldBox`,
+`PrNumberField` (alpha), `PrAnchoredOverlay`, `PrIconButton`.
 
 Keyboard step size, by decision: the SV area and hue slider step whole percents and degrees, not
 one hex level (1/255). 1% of saturation is 2.55 channel levels at full brightness, so → from
@@ -512,37 +512,37 @@ Possible future updates (not planned yet):
   to the ends (saturation 0 / 100% in the SV area, hue 0 / 360°), Page Up / Page Down step 10%
   or 10° like Shift+arrow (brightness in the SV area). Small, and expected by screen-reader and
   keyboard users.
-- **HSB or RGB number fields** for exact per-channel entry: `FsNumberField`s for H, S, B or R, G,
+- **HSB or RGB number fields** for exact per-channel entry: `PrNumberField`s for H, S, B or R, G,
   B, with a colour-model dropdown as in Figma; their arrows step one unit, so RGB steps one hex
   level. A design addition (layout, picker height, preview.html first), so a separate decision.
 
-#### `FsAssetSlot<D>` and `FsEntitySlot<D>` (on a shared `FsSlot<D>`): 0.75 + 0.25
+#### `PrAssetSlot<D>` and `PrEntitySlot<D>` (on a shared `PrSlot<D>`): 0.75 + 0.25
 
 Both are a 20px reference slot that is also a drop target. They differ in their icon and their actions,
-so they share one internal `FsSlot<D>` (`D` = the drag payload type the app uses):
+so they share one internal `PrSlot<D>` (`D` = the drag payload type the app uses):
 
 ```dart
-FsAssetSlot<D>({
+PrAssetSlot<D>({
   required String? fileName,        // null = empty
   required String placeholder,      // "None (Sprite)"
-  Widget? thumbnail, IconData typeIcon = FsIcons.image, // thumbnail wins when set
+  Widget? thumbnail, IconData typeIcon = PrIcons.image, // thumbnail wins when set
   bool missing = false, String? missingLabel,           // keeps the old name visible
   bool mixed = false, String? mixedLabel,               // "— (2 different)"
   VoidCallback? onBrowse, VoidCallback? onClear,
   VoidCallback? onReveal, VoidCallback? onOpen,         // click / double-click on the name
-  FsDropAcceptance Function(D data)? willAccept,        // accept, reject, ignore
+  PrDropAcceptance Function(D data)? willAccept,        // accept, reject, ignore
   ValueChanged<D>? onDrop,
   String Function(D data)? dropHint,                    // "Drop coin.png here"
   bool enabled = true,
 })
-FsEntitySlot<D>({
+PrEntitySlot<D>({
   required String? name, required String placeholder, // "None (CameraComponent)"
   IconData? typeIcon,
   bool missing = false, bool picking = false,          // picking: crosshair latched
   String? pickingHint,                                 // "Click a node in the scene…"
   VoidCallback? onPick, VoidCallback? onCancelPick, VoidCallback? onClear,
   VoidCallback? onReveal,                              // select and frame the node
-  FsDropAcceptance Function(D data)? willAccept, ValueChanged<D>? onDrop,
+  PrDropAcceptance Function(D data)? willAccept, ValueChanged<D>? onDrop,
   String Function(D data)? dropHint, bool enabled = true,
 })
 ```
@@ -553,87 +553,87 @@ fits. States (both): empty, filled, hover, focused, drop target accepts, drop wr
 (`error` border, not-allowed cursor), missing, disabled, mixed, overridden; EntitySlot adds
 picking. ⌫ clears when focused; Esc cancels picking. The "every compatible slot lights up while a
 drag is in flight" behaviour comes from Flutter's `DragTarget.onWillAcceptWithDetails`, which runs
-only under the pointer. So `FsSlot` also takes an optional `FsDragInFlight<D>`
+only under the pointer. So `PrSlot` also takes an optional `PrDragInFlight<D>`
 (a `ValueListenable<D?>`), which the app sets while a drag runs, to show the quiet accept state
-everywhere. Uses: `FsInteractive`, `FsIconButton`, `FsBadge` ("Missing"), `FsPropertyRow`.
+everywhere. Uses: `PrInteractive`, `PrIconButton`, `PrBadge` ("Missing"), `PrPropertyRow`.
 
 ### 3.4 Structure
 
-#### `FsPanel`: 0.5
+#### `PrPanel`: 0.5
 
 ```dart
-FsPanel({
+PrPanel({
   required String title, IconData? icon,
-  List<Widget> actions = const [],          // ≤ 3 FsIconButtons
-  List<FsMenuEntry<void>> overflow = const [], // the ⋯ menu
+  List<Widget> actions = const [],          // ≤ 3 PrIconButtons
+  List<PrMenuEntry<void>> overflow = const [], // the ⋯ menu
   required Widget body,
-  Widget? headerProgress,                    // FsProgressBar under the header
+  Widget? headerProgress,                    // PrProgressBar under the header
   FocusNode? focusNode,                      // the app's panel cycling targets it
 })
 ```
 
 28px header (`surface-raised`, title `heading`), body `surface-panel`. Focused: title
 `text-primary` plus the 2px `accent-text` top edge; unfocused: `text-secondary`. Inserts
-`FsPanelFocus`. States: focused, unfocused, header action latched and hovered. Uses:
-`FsPanelFocus`, `FsIconButton`, `FsContextMenu` (overflow).
+`PrPanelFocus`. States: focused, unfocused, header action latched and hovered. Uses:
+`PrPanelFocus`, `PrIconButton`, `PrContextMenu` (overflow).
 
-#### `FsSectionHeader`: 0.5
+#### `PrSectionHeader`: 0.5
 
 ```dart
-FsSectionHeader({
+PrSectionHeader({
   required String title, IconData? icon, String? subtitle,
   required bool expanded, required ValueChanged<bool> onExpandedChanged,
   VoidCallback? onToggleAll,           // Alt-click
   bool? enabled, ValueChanged<bool>? onEnabledChanged, // the component checkbox; null = none
-  List<FsMenuEntry<void>> menu = const [],
+  List<PrMenuEntry<void>> menu = const [],
   bool error = false,
 })
 ```
 
 24px; states: expanded, collapsed; default, hover, pressed, focused (inset ring), disabled
 (title and icon `text-disabled`, the properties stay editable), error (alert-circle in `error`,
-subtitle says why). The expand/collapse body animation (150ms) is `FsCollapsible`, a small helper
-exported alongside. Uses: `FsInteractive`, `FsCheckbox`, `FsIconButton`, `FsContextMenu`.
+subtitle says why). The expand/collapse body animation (150ms) is `PrCollapsible`, a small helper
+exported alongside. Uses: `PrInteractive`, `PrCheckbox`, `PrIconButton`, `PrContextMenu`.
 
-#### `FsTabs<T>`: 0.75
+#### `PrTabs<T>`: 0.75
 
 ```dart
-FsTabs<T>({
-  required List<FsTab<T>> tabs, // FsTab(value:, label:, icon:, dirty:, closable:, badges:, error:)
+PrTabs<T>({
+  required List<PrTab<T>> tabs, // PrTab(value:, label:, icon:, dirty:, closable:, badges:, error:)
   required T selected,
   required ValueChanged<T> onSelect,
   ValueChanged<T>? onClose,      // ⌘W and middle-click call it too
-  FsTabsStyle style = FsTabsStyle.document, // document (above the viewport) or dock (bottom)
+  PrTabsStyle style = PrTabsStyle.document, // document (above the viewport) or dock (bottom)
 })
 ```
 
 28px. States: default, hover, pressed, focused, disabled, selected, selected in an unfocused
 panel (top edge `text-secondary`), dirty (dot that becomes × on hover), error; badges for
-counts. ⌃Tab / ⌃⇧Tab cycling is an app shortcut that calls `onSelect`. Uses: `FsInteractive`,
-`FsPanelFocus`, `FsBadge`.
+counts. ⌃Tab / ⌃⇧Tab cycling is an app shortcut that calls `onSelect`. Uses: `PrInteractive`,
+`PrPanelFocus`, `PrBadge`.
 
-#### `FsTreeRow<T>`: 1.25
+#### `PrTreeRow<T>`: 1.25
 
 ```dart
-FsTreeRow<T>({
+PrTreeRow<T>({
   required int depth,
   required String name, IconData? icon,
   bool hasChildren = false, bool expanded = false, ValueChanged<bool>? onExpandedChanged,
   bool selected = false, bool keyboardCursor = false,
-  FsTreeRowTone tone = FsTreeRowTone.normal,  // normal, dimmed (hidden node), prefab, error
+  PrTreeRowTone tone = PrTreeRowTone.normal,  // normal, dimmed (hidden node), prefab, error
   List<Widget> badges = const [],
-  List<FsTreeRowAction> actions = const [],   // visibility, lock: shown on hover, pinned when set
+  List<PrTreeRowAction> actions = const [],   // visibility, lock: shown on hover, pinned when set
   VoidCallback? onTap, VoidCallback? onDoubleTap, VoidCallback? onSecondaryTap, // + position
   // Inline rename
   bool renaming = false, ValueChanged<String>? onRenameCommit, VoidCallback? onRenameCancel,
   // Drag and drop
   T? dragData, Widget Function()? dragFeedback,
   bool canHaveChildren = true,                // leaf rows: 50/50 zones
-  bool Function(T data, FsDropZone zone)? canAccept,
-  void Function(T data, FsDropZone zone)? onAccept,
+  bool Function(T data, PrDropZone zone)? canAccept,
+  void Function(T data, PrDropZone zone)? onAccept,
   VoidCallback? onAutoExpand,                 // after 600ms hovering "inside"
 })
-enum FsDropZone { above, inside, below }
+enum PrDropZone { above, inside, below }
 ```
 
 22px; 16px indent per level + 4px; 16px chevron box; 14px icon. States: default, hover (row
@@ -643,27 +643,27 @@ above, inside and below, drop not allowed. The row computes the zone (§7.5), as
 and paints the insertion line, inside fill or reject border. Keyboard navigation (↑ ↓ → ← Space
 ⇧/⌘) is the app's tree view, because only it knows siblings and parents. The row exposes
 `keyboardCursor` and the panel's `Shortcuts`. Rows are meant for a `ListView.builder` over the
-flattened, visible tree. Uses: `FsInteractive`, `FsPanelFocus`, `FsTextField` (rename),
-`FsIconButton`, `FsBadge`.
+flattened, visible tree. Uses: `PrInteractive`, `PrPanelFocus`, `PrTextField` (rename),
+`PrIconButton`, `PrBadge`.
 
 ### 3.5 Floating
 
-#### `FsContextMenu<T>`: 1.25
+#### `PrContextMenu<T>`: 1.25
 
 ```dart
-sealed class FsMenuEntry<T>
-  FsMenuItem<T>({required String label, IconData? icon, FsShortcutLabel? shortcut,
+sealed class PrMenuEntry<T>
+  PrMenuItem<T>({required String label, IconData? icon, PrShortcutLabel? shortcut,
                  bool enabled = true, bool checked = false, bool destructive = false,
-                 T? value, VoidCallback? onSelected, List<FsMenuEntry<T>>? submenu})
-  FsMenuSeparator<T>()
-  FsMenuHeader<T>(String label)
+                 T? value, VoidCallback? onSelected, List<PrMenuEntry<T>>? submenu})
+  PrMenuSeparator<T>()
+  PrMenuHeader<T>(String label)
 
 Future<T?> showFsContextMenu<T>(BuildContext context,
-    {required Offset position, required List<FsMenuEntry<T>> entries, String? header})
-FsContextMenuRegion<T>({required List<FsMenuEntry<T>> Function() entries,
+    {required Offset position, required List<PrMenuEntry<T>> entries, String? header})
+PrContextMenuRegion<T>({required List<PrMenuEntry<T>> Function() entries,
                         ValueChanged<T>? onSelected, required Widget child}) // right-click
-FsMenuButton<T>(...)  // anchored variant used by Dropdown-like triggers, ⋯ menus, SplitButton
-FsShortcutLabel(SingleActivator activator) // renders ⌘⇧⌥⌃⌫↩ on macOS, "Ctrl+Shift+D" elsewhere
+PrMenuButton<T>(...)  // anchored variant used by Dropdown-like triggers, ⋯ menus, SplitButton
+PrShortcutLabel(SingleActivator activator) // renders ⌘⇧⌥⌃⌫↩ on macOS, "Ctrl+Shift+D" elsewhere
 ```
 
 248px wide (min 180), 24px items, the 16px icon column always reserved. Hover and keyboard focus look
@@ -671,16 +671,16 @@ the same (`accent` fill, `text-on-accent`). Disabled items show no highlight. De
 `error`, highlighted with `error-border`. The parent of an open submenu keeps `surface-pressed`. Submenus open
 after 150ms hover or →, close with ←, and Esc closes one level. States: default, hover/focus, pressed,
 checked, disabled, destructive, destructive hover, submenu open, section header. Built on
-`RawMenuAnchor` (§7.3). Uses: `FsAnchoredOverlay` (positioner), `RawMenuAnchor`.
+`RawMenuAnchor` (§7.3). Uses: `PrAnchoredOverlay` (positioner), `RawMenuAnchor`.
 
-#### `FsTooltip`: 0.75
+#### `PrTooltip`: 0.75
 
 ```dart
-FsTooltip({
-  required String message, FsShortcutLabel? shortcut, List<String> details = const [],
+PrTooltip({
+  required String message, PrShortcutLabel? shortcut, List<String> details = const [],
   required Widget child,
 })
-FsTooltipGroup({required Widget child}) // optional; one at the app root is enough
+PrTooltipGroup({required Widget child}) // optional; one at the app root is enough
 ```
 
 `surface-overlay`, 1px `border-overlay`, `radius-sm`, `shadow-tooltip`, 4×8 padding, max
@@ -692,113 +692,113 @@ too; keyboard users reach those only with `focusableWhenDisabled`. `showWhileFoc
 error: dense TextField, NumberField, a PropertyRow's label via `focusTarget`) pins it while focus is
 in the field, at once and announced; a separate anchored layer, since `RawTooltip` hides on any press
 and on mouse exit. Not for errors the user didn't just cause (Dropdown). States in the gallery: property
-label, truncated name, disabled control. Uses: `RawTooltip`, `FsAnchoredOverlay` (positioner).
+label, truncated name, disabled control. Uses: `RawTooltip`, `PrAnchoredOverlay` (positioner).
 
-#### `FsDialog`: 0.5
+#### `PrDialog`: 0.5
 
 ```dart
-Future<T?> showFsDialog<T>(BuildContext context, {required FsDialog<T> dialog})
-FsDialog<T>({
+Future<T?> showFsDialog<T>(BuildContext context, {required PrDialog<T> dialog})
+PrDialog<T>({
   required String title,             // a question or an action
   String? body, Widget? content,     // fields, a checkbox
-  required FsDialogAction<T> primary,   // FsDialogAction(label:, value:)
-  FsDialogAction<T>? secondary,         // "Cancel": also Esc
-  FsDialogAction<T>? destructive,       // left, apart
-  FsDialogWidth width = FsDialogWidth.regular, // 440 or form 560
+  required PrDialogAction<T> primary,   // PrDialogAction(label:, value:)
+  PrDialogAction<T>? secondary,         // "Cancel": also Esc
+  PrDialogAction<T>? destructive,       // left, apart
+  PrDialogWidth width = PrDialogWidth.regular, // 440 or form 560
 })
 ```
 
 Built on `showGeneralDialog` with the `scrim` barrier and a 200ms fade (no scale). The primary button has initial focus and answers Enter, Esc returns the secondary value,
 focus is trapped (the route's `FocusScope`), and focus goes back to the trigger on close (route
-default). Uses: `FsButton`, `FsIconButton` (close).
+default). Uses: `PrButton`, `PrIconButton` (close).
 
-#### `FsToast`: 0.75 (with `FsToastHost`, §2.5)
+#### `PrToast`: 0.75 (with `PrToastHost`, §2.5)
 
 ```dart
-FsToastData({
-  required FsToastKind kind,   // success, info, warning, error, progress
+PrToastData({
+  required PrToastKind kind,   // success, info, warning, error, progress
   required String title, String? message,
-  List<FsToastAction> actions = const [],  // ≤ 2 ghost buttons
+  List<PrToastAction> actions = const [],  // ≤ 2 ghost buttons
   bool dismissible = true,
   double? progress,            // progress kind; null = indeterminate
 })
 ```
 
 320px, overlay surface. States: one per kind, with and without message and actions, a stack of
-3, hovered (timer paused). Uses: `FsToastHost`, `FsButton` (ghost), `FsIconButton`,
-`FsProgressBar`.
+3, hovered (timer paused). Uses: `PrToastHost`, `PrButton` (ghost), `PrIconButton`,
+`PrProgressBar`.
 
 ### 3.6 Status
 
-#### `FsBanner`: 0.25
+#### `PrBanner`: 0.25
 
 ```dart
-FsBanner({required FsStatusKind kind,   // info, warning, error, success
+PrBanner({required PrStatusKind kind,   // info, warning, error, success
           required InlineSpan message,  // the caller bolds the subject
-          FsBannerAction? action, VoidCallback? onDismiss})
+          PrBannerAction? action, VoidCallback? onDismiss})
 ```
 
-States: the four kinds, with an action, with dismiss. Uses: `FsButton` (ghost, 20px),
-`FsIconButton`.
+States: the four kinds, with an action, with dismiss. Uses: `PrButton` (ghost, 20px),
+`PrIconButton`.
 
-#### `FsBadge` and `FsDeviceChip`: 0.5
+#### `PrBadge` and `PrDeviceChip`: 0.5
 
 ```dart
-FsBadge({required FsBadgeKind kind,  // warning, error, missing, prefab, info, success, neutral, accent
+PrBadge({required PrBadgeKind kind,  // warning, error, missing, prefab, info, success, neutral, accent
          String? label, int? count, IconData? icon, bool pill = false})
-FsDeviceChip({required IconData icon, required String label, String? detail, // "852×393", "offline"
+PrDeviceChip({required IconData icon, required String label, String? detail, // "852×393", "offline"
               bool selected = false, bool error = false, VoidCallback? onPressed})
 ```
 
 Status badges get their icon from the kind (warning → triangle, error → alert-circle), so colour
-never stands alone. `FsDeviceChip` takes an icon, a label and a detail string, so the app maps its
+never stands alone. `PrDeviceChip` takes an icon, a label and a detail string, so the app maps its
 device model to them. States: every badge kind and the pill; chip default, hover, pressed, focused,
-disabled, selected, error. Uses: `FsInteractive` (chip).
+disabled, selected, error. Uses: `PrInteractive` (chip).
 
-#### `FsProgressBar`, `FsSpinner`, `FsStatusDot`: 0.5
+#### `PrProgressBar`, `PrSpinner`, `PrStatusDot`: 0.5
 
 ```dart
-FsProgressBar({double? value, FsProgressTone tone = FsProgressTone.foreground}) // or .background (info)
-FsSpinner({double size = 14})               // 16 in toolbars
-FsStatusDot({required FsStatus status, required String label}) // idle, working, ok, error
-FsDelayedProgress({required bool busy, required Widget child}) // shows child after 300ms
+PrProgressBar({double? value, PrProgressTone tone = PrProgressTone.foreground}) // or .background (info)
+PrSpinner({double size = 14})               // 16 in toolbars
+PrStatusDot({required PrStatus status, required String label}) // idle, working, ok, error
+PrDelayedProgress({required bool busy, required Widget child}) // shows child after 300ms
 ```
 
 Under reduce-motion (`MediaQuery.disableAnimations`) spinners and the working pulse slow down
 instead of stopping. States: indeterminate, determinate, spinner 14/16, the four dots.
 Uses: none.
 
-#### `FsEmptyState`: 0.25
+#### `PrEmptyState`: 0.25
 
 ```dart
-FsEmptyState({required IconData icon, required String title, required String message,
-              required FsButton action, String? shortcutHint})
+PrEmptyState({required IconData icon, required String title, required String message,
+              required PrButton action, String? shortcutHint})
 ```
 
 Centred 48px tile, `title` text, the message at most 280px wide, one button (the caller picks primary or
-secondary). Uses: `FsButton`.
+secondary). Uses: `PrButton`.
 
 ---
 
 ## 4. EditorShell
 
-`FsEditorShell`, 1.5 evenings: a layout that knows only slots and sizes.
+`PrEditorShell`, 1.5 evenings: a layout that knows only slots and sizes.
 
 ```dart
-FsEditorShell({
+PrEditorShell({
   required Widget titleBar,        // centred document title; the shell reserves the
   double titleBarLeadingInset = 78,//   macOS traffic-light zone on the left
-  required Widget toolbar,         // usually an FsToolbar
+  required Widget toolbar,         // usually an PrToolbar
   required Widget left,            // Scene / Hierarchy panel
   required Widget center,          // document tabs + viewport toolbar + viewport
   required Widget right,           // Inspector
   Widget? bottom,                  // dock (Console / Assets); null hides it
   bool bottomCollapsed = false, ValueChanged<bool>? onBottomCollapsedChanged,
   required Widget statusBar,
-  required FsShellSizes sizes,     // left, right, bottom
-  required ValueChanged<FsShellSizes> onSizesChanged, // during a drag
-  ValueChanged<FsShellSizes>? onSizesChangeEnd,       // the app persists them per project
-  FsShellLimits limits = FsShellLimits.standard,
+  required PrShellSizes sizes,     // left, right, bottom
+  required ValueChanged<PrShellSizes> onSizesChanged, // during a drag
+  ValueChanged<PrShellSizes>? onSizesChangeEnd,       // the app persists them per project
+  PrShellLimits limits = PrShellLimits.standard,
 })
 ```
 
@@ -811,7 +811,7 @@ FsEditorShell({
 - **Sizes are reported, not stored:** `onSizesChanged` fires during the drag (the parent rebuilds
   with the new `sizes`) and `onSizesChangeEnd` on drag end, when the app saves them per project.
   Defaults 260 / 320 / 220.
-- **Fitting the window:** the centre keeps at least 750 × 520 (`FsShellLimits.minCenterWidth`,
+- **Fitting the window:** the centre keeps at least 750 × 520 (`PrShellLimits.minCenterWidth`,
   `minCenterHeight`); when the docks don't fit with it, they shrink in proportion, never below
   their minimum (layout, not persisted). At the 1280×800 minimum the defaults come out at about
   237 / 291 / 187. A drag starts from the size on screen. (Built this way rather than a fixed
@@ -825,30 +825,30 @@ FsEditorShell({
 - The gallery shows the full EditorShell preview with placeholder panels built from the package's
   components (§6).
 
-Uses: `FsPanelFocus` (indirectly through the panels the app passes in), nothing else.
+Uses: `PrPanelFocus` (indirectly through the panels the app passes in), nothing else.
 
 ---
 
 ## 5. Icons
 
-`FsIcons` grows from 11 to the 60 icons in the design system's Icons group. Each was compared
+`PrIcons` grows from 11 to the 60 icons in the design system's Icons group. Each was compared
 shape-by-shape against `lucide_icons_flutter` 4.0.0 in the pub cache (the design's SVGs from the
 artifact against the SVG in each constant's doc comment).
 
-**Naming rule:** each `FsIcons` member takes the **design system's icon name**, camel-cased
+**Naming rule:** each `PrIcons` member takes the **design system's icon name**, camel-cased
 (`chevron-down` → `chevronDown`), and its doc comment names the Lucide glyph. That already
 covers `hitbox`, and it covers the seven renamed below.
 
 **Role names for node types: not in the package.** Node types (camera, sprite, prefab, script…)
-are Studio concepts, and per *Q83* the package knows nothing about Nodes. The app keeps a
-`nodeKindIcon(…)` map in its Hierarchy code. The `FsIcons` doc comment records the design's
+are Pyro concepts, and per *Q83* the package knows nothing about Nodes. The app keeps a
+`nodeKindIcon(…)` map in its Hierarchy code. The `PrIcons` doc comment records the design's
 convention (camera → video, sprite → image, sprite animation → film, text → type, hitbox → hitbox,
 group → layers, world → globe, particles → sparkle, generic component → circle-dot,
 component/prefab → box, script → file-code) so the app's map follows it.
 
 ### 5.1 Names that differ from Lucide, or where the same name is the wrong glyph
 
-| Design name | `FsIcons` | `LucideIcons` | Note |
+| Design name | `PrIcons` | `LucideIcons` | Note |
 |---|---|---|---|
 | `external` | `external` | `externalLink` | |
 | `more` | `more` | `ellipsis` | `moreHorizontal` is an alias for it |
@@ -887,25 +887,25 @@ The design README asks for official Lucide glyphs, so these differences are expe
 ### 5.3 The filled Play
 
 The design draws `play` filled in the Play button and nowhere else. An icon font can only draw
-Lucide's outline. `FsPlayGlyph`, a ~20-line `CustomPainter` that fills the design's rounded
-triangle at 16px, is used only by the Play button. `FsIcons.play` stays the outline glyph for menus
+Lucide's outline. `PrPlayGlyph`, a ~20-line `CustomPainter` that fills the design's rounded
+triangle at 16px, is used only by the Play button. `PrIcons.play` stays the outline glyph for menus
 and elsewhere.
 
-Estimate: 0.25 evening (constants, doc comments, the pinning test, `FsPlayGlyph`).
+Estimate: 0.25 evening (constants, doc comments, the pinning test, `PrPlayGlyph`).
 
 ---
 
 ## 6. Gallery app and tests
 
-### 6.1 Gallery: `packages/flame_studio_ui/example`
+### 6.1 Gallery: `packages/pyro_ui/example`
 
 - A macOS Flutter app (`flutter create --platforms=macos`), added to the root `pubspec.yaml`
-  workspace list, depending only on `flame_studio_ui`. Never released.
+  workspace list, depending only on `pyro_ui`. Never released.
 - One page per component, in the design system's groups (Actions, Inputs, Inspector,
   Structure, Floating, Status, Shell), and **one grid per `preview.html`**: the same row and column
   labels (Default · Hover · Pressed · Focused · Disabled · …) and the same sample content
   (`Add component`, `jumpForce`, `player_run.png`), so the two can be laid side by side. Static
-  states come from `FsDebugStates` (§2.1); next to each grid, a live copy to try with mouse and
+  states come from `PrDebugStates` (§2.1); next to each grid, a live copy to try with mouse and
   keyboard.
 - A last page assembles the EditorShell preview from the package's widgets with placeholder
   content. It is the integration check that the pieces fit at 1440×900 and 1280×800.
@@ -920,7 +920,7 @@ Estimate: 0.25 evening (constants, doc comments, the pinning test, `FsPlayGlyph`
   font with `FontLoader`, so tests and goldens render real glyphs (by default flutter_test draws
   every glyph as a box).
 - **Widget tests per state** (in every component's estimate). Colours: pump with forced states
-  and check the resolved fill, border and text colours against `FsColors.dark`. Behaviour, through
+  and check the resolved fill, border and text colours against `PrColors.dark`. Behaviour, through
   real input: hover with a mouse `TestGesture`; keyboard focus with the highlight mode set to
   traditional (and a check that a click does **not** show the ring); scrub maths and the
   single `onCommit` with drags; DnD zones by dropping at 10%, 50% and 90% of a row; Esc, Enter and Tab;
@@ -951,7 +951,7 @@ edge and the scrub stops with it, and the user can't see why.
 
 **Recommendation: drop hiding and wrapping for v0.1.** Keep the ↔ cursor visible. The 2px-per-step rate with Shift
 ×10 covers large ranges, and a second drag continues from the new value. The package defines
-`FsPointerLock` in `FsPlatformHooks` (§2.6), so the macOS runner can add hide + wrap later without
+`PrPointerLock` in `PrPlatformHooks` (§2.6), so the macOS runner can add hide + wrap later without
 changing the widget's API. Revisit if the early-preview testers scrub large values.
 
 ### 7.2 ColorProperty: the eyedropper
@@ -960,7 +960,7 @@ Sampling the screen needs native code. On macOS that's `NSColorSampler` (10.15+)
 in the runner, and it also covers the system colour panel's loupe UI.
 
 **Recommendation: ship the picker without the eyedropper first.** The button appears only when
-`FsPlatformHooks.sampleScreenColor` is set. Add the `NSColorSampler` channel in the app when Color
+`PrPlatformHooks.sampleScreenColor` is set. Add the `NSColorSampler` channel in the app when Color
 fields land (v0.1 work item 5, ~0.25 evening). Sampling only the game viewport, with
 `RenderRepaintBoundary.toImage`, is a portable fallback for Windows and Linux in v0.3.
 
@@ -978,7 +978,7 @@ menus, focus traversal with arrow keys, Esc, outside taps and `onOpenRequested`/
 hooks, which give the 150ms submenu delay and the open animation. Material's `MenuAnchor` sits on
 the same base but adds Material styling to override.
 
-**Recommendation: build `FsContextMenu` on `RawMenuAnchor`** and drop `flutter_context_menu` from
+**Recommendation: build `PrContextMenu` on `RawMenuAnchor`** and drop `flutter_context_menu` from
 the plan. It keeps the package Flutter-only, the keyboard behaviour comes from the framework, and
 the same base serves Dropdown lists, SplitButton menus and the ⋯ menus. If `flutter_context_menu`
 should stay in use elsewhere, it can be ported to `RawMenuAnchor` as a separate project.
@@ -990,16 +990,16 @@ between adjacent tooltipped controls". Flutter 3.44 has **`RawTooltip`** in the 
 no Material look, a per-instance `hoverDelay`, a `positionDelegate`, and dismissal on tap and on
 `dismissAllToolTips`.
 
-**Recommendation: a custom `FsTooltip` on `RawTooltip`, not one from scratch.** The only custom
-part is the hand-off. `FsTooltipGroup` holds a "warm" flag that is set while any tooltip is visible
-and for ~300ms after it hides. Each `FsTooltip` listens to it and rebuilds its `RawTooltip`
+**Recommendation: a custom `PrTooltip` on `RawTooltip`, not one from scratch.** The only custom
+part is the hand-off. `PrTooltipGroup` holds a "warm" flag that is set while any tooltip is visible
+and for ~300ms after it hides. Each `PrTooltip` listens to it and rebuilds its `RawTooltip`
 with `hoverDelay: Duration.zero` while warm and 500ms otherwise. Esc and hide-on-press come from
 `RawTooltip`'s dismissal plus a `TapRegion`. This saves rebuilding hover tracking, the overlay and
 semantics, ~0.5 evening less than a widget from scratch.
 
 ### 7.5 TreeRow: who decides whether a drop is allowed
 
-**Recommendation: yes, the row only computes the zone.** It works out `FsDropZone` from the
+**Recommendation: yes, the row only computes the zone.** It works out `PrDropZone` from the
 pointer's height in the row (top 25% above, middle 50% inside, bottom 25% below; 50/50 above/below
 when `canHaveChildren` is false), then asks the app's `canAccept(data, zone)` and paints the
 result: insertion line, inside fill, or reject border with the not-allowed cursor. "Into its own
@@ -1015,7 +1015,7 @@ on the row.
 
 | Group | Items | Evenings |
 |---|---|---|
-| Foundations | `FsInteractive` + focus ring + forced states 1 · `FsFieldBox` 0.5 · `FsPanelFocus` 0.25 · `FsAnchoredOverlay` 0.5 · icons 0.25 · gallery, test config, golden harness 0.75 | 3.25 |
+| Foundations | `PrInteractive` + focus ring + forced states 1 · `PrFieldBox` 0.5 · `PrPanelFocus` 0.25 · `PrAnchoredOverlay` 0.5 · icons 0.25 · gallery, test config, golden harness 0.75 | 3.25 |
 | Actions | Button 0.5 · IconButton 0.25 · ToggleButton 0.25 · SplitButton 0.5 · SegmentedControl 0.5 · Toolbar 0.5 | 2.5 |
 | Inputs | TextField 0.75 · SearchField 0.25 · NumberField 0.5 · Dropdown 0.75 | 2.25 |
 | Inspector | PropertyRow 0.75 · NumberProperty 1.25 · BoolProperty 0.5 · Vector2Property 0.5 · ColorProperty 0.75 + picker 0.75 · AssetSlot 0.75 · EntitySlot 0.25 | 5.5 |
@@ -1032,12 +1032,12 @@ resizable seams, and widget tests per state. v0.1 work item 14's 4 evenings
 covered tokens and the theme (now done) and a restyle, not this. If ~23 is too much for v0.1,
 these can move to v0.1.1 with nothing lost before then: the colour picker popover (hex + alpha
 fields still edit, −0.75), NumberProperty expressions (−0.25), goldens (−0.75), SplitButton (a
-Button next to an `FsMenuButton` caret works, −0.25). That brings it to ~21.
+Button next to an `PrMenuButton` caret works, −0.25). That brings it to ~21.
 
 ### 8.2 The early preview (*Q82*)
 
 The early preview leaves out the visual design: its panels would be built with Material widgets
-styled by `FsTheme.dark()`. Most of that is fine to throw away later (a button is a button). Four
+styled by `PrTheme.dark()`. Most of that is fine to throw away later (a button is a button). Four
 widgets aren't: **TreeRow** (drop zones, focus-aware selection, rename), **NumberProperty** and
 **Vector2Property** (label scrubbing), and **PropertyRow** (the Override marker and *Reset to
 default*). The preview's own work items 3 and 5 already have to build that behaviour (reparent by
@@ -1048,18 +1048,18 @@ in the package, it is written once.
 
 | In the early preview (item 14 core) | Evenings |
 |---|---|
-| `FsInteractive`, `FsFieldBox`, `FsPanelFocus`, icons, gallery skeleton and test config (no goldens yet) | 2.5 |
-| `FsTreeRow` (all states, DnD zones, rename) | 1.25 |
-| `FsPropertyRow` (fixed 40% label column; resizing waits) | 0.5 |
-| `FsNumberProperty` (scrub, modifiers, edit, commit; no expressions, no range slider) | 0.75 |
-| `FsVector2Property` (no aspect lock) | 0.5 |
+| `PrInteractive`, `PrFieldBox`, `PrPanelFocus`, icons, gallery skeleton and test config (no goldens yet) | 2.5 |
+| `PrTreeRow` (all states, DnD zones, rename) | 1.25 |
+| `PrPropertyRow` (fixed 40% label column; resizing waits) | 0.5 |
+| `PrNumberProperty` (scrub, modifiers, edit, commit; no expressions, no range slider) | 0.75 |
+| `PrVector2Property` (no aspect lock) | 0.5 |
 | **Total** | **~5.5** |
 
 In return, items 3 and 5 no longer build their own drag zones, scrub fields and override rows
 (~0.5 off item 3 and ~1 off item 5), so the preview grows by **~4 net (38 → ~42, ~14 weeks)**. Everything else in the
 preview (buttons, text fields, dropdowns, context menus, dialogs, toasts, tooltips, the panel layout)
 uses themed Material widgets as Q82 intended. Because the package's APIs take plain strings for
-tooltips and labels, swapping in `FsButton`, `FsTooltip` and the rest later changes the panels'
+tooltips and labels, swapping in `PrButton`, `PrTooltip` and the rest later changes the panels'
 call sites, not their logic.
 
 Not recommended: moving the proposed first set (11 components) in whole. That's ~10–11
@@ -1075,7 +1075,7 @@ evenings (~+8 net) for looks the preview deliberately cuts, and it delays first 
 switch from Material to the design in one pass, then the components each deferred panel needs,
 built just before that panel:
 
-1. Button, IconButton, Tooltip (with `FsAnchoredOverlay`), TextField, Panel, SectionHeader,
+1. Button, IconButton, Tooltip (with `PrAnchoredOverlay`), TextField, Panel, SectionHeader,
    ContextMenu: the remainder of the proposed first set.
 2. Dropdown, BoolProperty: the rest of the preview inspector's editors.
 3. Dialog, Toast + host, Badge, Banner, Progress: the preview's dialogs, image-restart toast,
@@ -1091,15 +1091,15 @@ built just before that panel:
 
 ## 9. Files
 
-All under `packages/flame_studio_ui/` unless noted.
+All under `packages/pyro_ui/` unless noted.
 
 | Path | Holds |
 |---|---|
-| `lib/flame_studio_ui.dart` | exports (grows by one line per component) |
+| `lib/pyro_ui.dart` | exports (grows by one line per component) |
 | `lib/src/foundation/` | `interactive.dart`, `focus_ring.dart`, `debug_states.dart`, `field_box.dart`, `panel_focus.dart`, `anchored_overlay.dart`, `platform_hooks.dart`, `value_source.dart`, `number_editing.dart`, `shortcut_label.dart` |
 | `lib/src/actions/`, `inputs/`, `inspector/`, `structure/`, `floating/`, `status/`, `shell/` | one file per component, grouped as in §3 |
-| `lib/src/icons.dart` | 60 `FsIcons` + `FsPlayGlyph` |
+| `lib/src/icons.dart` | 60 `PrIcons` + `PrPlayGlyph` |
 | `test/` | `flutter_test_config.dart`, one `<component>_test.dart` each (the goldens live in the gallery, `example/test/goldens/`, since they render its pages) |
 | `example/` | the gallery app (macOS) |
-| root `pubspec.yaml` | `packages/flame_studio_ui/example` added to `workspace:` |
+| root `pubspec.yaml` | `packages/pyro_ui/example` added to `workspace:` |
 | `README.md` | "Not done yet" replaced by a component list with links to the gallery |

@@ -1,0 +1,1 @@
+{"schemaVersion": 2, "rootId": "root", "nodes": {"root": {"kind": "root", "childIds": ["p"]}, "p": {"kind": "prefabInstance", "shape": {"required": true}}, "q": {"kind": 7}}}

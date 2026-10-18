@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "root": {
+      "kind": "root"
+    }
+  }
+}

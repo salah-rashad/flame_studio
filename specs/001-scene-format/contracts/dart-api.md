@@ -51,11 +51,11 @@ sealed class Node {
 }
 
 final class RootNode extends Node { ... }
-final class EntityNode extends Node { Transform transform; List<BehaviorAttachment> behaviors; ... }
-final class SpriteNode extends Node { Transform transform; AssetPath image; SpriteRegion? region; Map<String, Object?> propsExtra; ... }
+final class EntityNode extends Node { NodeTransform transform; List<BehaviorAttachment> behaviors; ... }
+final class SpriteNode extends Node { NodeTransform transform; AssetPath image; SpriteRegion? region; Map<String, Object?> propsExtra; ... }
 final class RectangleHitboxNode extends Node { ...; Map<String, Object?> propsExtra; }
 final class CircleHitboxNode extends Node { ...; Map<String, Object?> propsExtra; }
-final class CustomNode extends Node { TypeId type; Transform transform; Overrides fields; List<BehaviorAttachment> behaviors; ... }
+final class CustomNode extends Node { TypeId type; NodeTransform transform; Overrides fields; List<BehaviorAttachment> behaviors; ... }
 final class UnknownNode extends Node { String kind; ... }
 ```
 
@@ -63,10 +63,10 @@ Every non-root Node also exposes `String? name` and `List<String> tags`; every N
 `copyWith`. `Scene`'s constructor checks the invariants in data-model.md and throws
 `ArgumentError` when they don't hold, so a Scene in memory is always a valid tree.
 
-`Transform` carries an `extra` map for unknown keys inside `transform`, and the sprite and hitbox
+`NodeTransform` carries an `extra` map for unknown keys inside `transform`, and the sprite and hitbox
 classes carry `propsExtra` for unknown keys inside `props` (FR-017).
 
-Value types: `Vec2`, `Transform`, `NodeAnchor`, `SpriteRegion`, `CollisionType`,
+Value types: `Vec2`, `NodeTransform`, `NodeAnchor`, `SpriteRegion`, `NodeCollisionType`,
 `BehaviorAttachment`, `Overrides`, `EntityRef`, `AssetRef`, and the extension types `NodeId`,
 `TypeId` and `AssetPath`.
 

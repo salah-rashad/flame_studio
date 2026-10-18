@@ -485,3 +485,39 @@ major: the shared tiled loader (finding 2) and the `AssetSource` are where it la
 - The **Browse…** folder panel (`file_selector`) wasn't exercised; the folder came from an
   environment variable read at runtime.
 - Windows and Linux file watching (v0.3).
+
+---
+
+## Scene format — `schemaVersion` 1
+
+**Question:** can the Scene file be read and written fast enough that opening, saving and
+Hot-swap feel instant (SC-006 of [`specs/001-scene-format/`](../specs/001-scene-format/spec.md):
+median under 100 ms each to read and to write a 1,000-Node Scene)?
+
+**Answer:** yes, with a wide margin. The strict reader and canonical writer in
+`pyro_runtime/lib/src/scene/` (*Q92*) were timed with `benchmark/scene_codec_benchmark.dart`: a
+1,001-Node Scene (250 entities with one Behavior each, a sprite and two hitboxes), 365.5 KB,
+10 warm-up runs, then 50 timed runs.
+
+| Build | Decode median (p95) | Encode median (p95) |
+|---|---|---|
+| JIT (`dart run`) | 2.51 ms (3.62 ms) | 4.47 ms (6.28 ms) |
+| AOT (`dart compile exe`) | 2.30 ms (2.95 ms) | 4.38 ms (4.69 ms) |
+
+Measured 2026-10-18 on the **reference machine for SC-006**: Apple M4, 16 GB, macOS 26.2, Dart
+3.12 (Flutter 3.44.2). Plain `dart run` works for the benchmark because the format code is pure
+Dart (research R5), so no `flutter test` fallback was needed.
+
+**Findings**
+
+1. **The strict reader costs little.** Refusing duplicate keys and reporting line and column
+   needed a hand-written parser (`jsonDecode` keeps the last duplicate silently). At ~2.3 ms for
+   365 KB it is about as fast as `jsonDecode` was in the planning probe (~1.7 ms for 540 KB, JIT),
+   so Pyro can decode on the UI isolate for typical Scenes; `Isolate.run` stays available for
+   very large ones.
+2. **Writing costs about twice as much as reading**, mostly in sorting keys and escaping
+   strings. Still ~20× inside the budget.
+3. **One gap found in the planned repair rules.** "Attach the smallest remaining ID" doesn't
+   break a cycle when that ID only hangs off the cycle. The repair instead follows listing
+   parents up from it until a Node repeats and attaches the smallest ID on that cycle
+   (`tree_repair.dart`; fixture `damaged/cycle_with_tail`).

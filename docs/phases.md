@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Phase 2 next (2026-10-18) |
+| **Status** | Phase 2 in progress: Scene format done (2026-10-18) |
 | **Source of truth** | [`project-plan.md`](project-plan.md) §14 owns scope, estimates and build order; this file only groups that order into phases and tracks progress |
 | **Sync rule** | When §14 changes (an item, an estimate, the order), change this file in the same commit. When a step here is finished, tick it here; §14 changes only if its scope or estimate changed |
 
@@ -22,7 +22,7 @@ it). A phase starts only when the one before it is done, except for the tasks un
 ```mermaid
 flowchart LR
   P0["Phase 0<br/>De-risking spikes ✅"] --> P1["Phase 1<br/>Foundations ✅"]
-  P1 --> P2["Phase 2<br/>Data contract ⬜"]
+  P1 --> P2["Phase 2<br/>Data contract 🔶"]
   P2 --> P3["Phase 3<br/>Vertical slice ⬜"]
   P3 --> P4["Phase 4<br/>Editor ⬜"]
   P4 --> P5["Phase 5<br/>Play ⬜"]
@@ -37,7 +37,7 @@ flowchart LR
 |---|---|---|---|---|
 | 0 — De-risking spikes | v0.0 spikes #1–#3 | ~4 (outside the totals) | 0 | ✅ |
 | 1 — Foundations | #0 repo setup, #14 design system (all of it) | 3 + 23 | 0 | ✅ |
-| 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 13 | 13 | ⬜ |
+| 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 13 | 13 | 🔶 |
 | 3 — Vertical slice | `example/` skeleton (part of #13), #12 contract test, first slice of #11 | 1.5 + (in #11) | 1.5 | ⬜ |
 | 4 — Editor | #1 preview part with the editor window, #6, #4, #3, #5, #9 | 18 | 18 | ⬜ |
 | 5 — Play | Rest of #11 preview part, README recipe | 4 | 4 | ⬜ |
@@ -83,13 +83,13 @@ Throwaway code in `spikes/`, findings in [`ARCHITECTURE.md`](ARCHITECTURE.md) (*
 **Done when:** the Riverpod spike has settled the provider layout of §8.5 well enough to start
 Phase 2. ✅
 
-## Phase 2 — Data contract ⬜
+## Phase 2 — Data contract 🔶
 
 The file formats and the code on both sides of them, all headless (no editor UI). Integrity is
 never cut here (*Q82*). The scene model and its JSON live in `pyro_runtime`, so the app and games
 share one format (§5); that comes first, because #2 and #8 both build on it.
 
-- [ ] **Scene format** in `pyro_runtime` (part of #8): the Node model for the preview's Node kinds
+- [x] **Scene format** in `pyro_runtime` (part of #8): the Node model for the preview's Node kinds
   (root, entity, sprite, rectangle and circle hitboxes, custom), JSON with sorted keys, Overrides
   only (ADR 0003), `childIds`-only persistence with orphan and double-parent repair (*Q47*),
   `schemaVersion` with refusal of newer files. §7.1, §7.4
@@ -103,7 +103,8 @@ share one format (§5); that comes first, because #2 and #8 both build on it.
   collisions (ADR 0002), supertypes and parent types (*Q57*), the Registry and Manifest emitters
   into `lib/` with `build.yaml` (*Q68*), errors in the Manifest, for the preview's Field types.
   §6.1, §7.3, §9.2
-- [ ] **#8 Runtime** (4, full scope): `PyroScene.load` with the two-pass loading order, building
+- [ ] **#8 Runtime** (4, full scope): `PyroScene.load` with the two-pass loading order (it reads
+  each Scene with `SceneCodec.decode` and calls `warnAboutRepairs` after it, FR-024a), building
   the built-in Node kinds and custom ones through the Registry, `AssetSource` and asset fields
   (the *Q78* loader), lookup API (`find`, `findAll`, paths), unknown-type handling (*Q58*),
   Hot-swap (`onHotReload`, content hash, `onReloaded`, the stale-reference warning; *Q66, Q67,

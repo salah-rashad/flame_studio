@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "e1": {
+      "behaviors": [
+        {
+          "fields": {
+            "mode": "pingPong",
+            "speed": 80,
+            "target": {
+              "ref": "p1"
+            }
+          },
+          "type": "Patrol"
+        },
+        {
+          "enabled": false,
+          "fields": {
+            "damage": 2
+          },
+          "type": "Attack"
+        }
+      ],
+      "kind": "entity",
+      "name": "goblin_1",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [320, 128],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
+    },
+    "p1": {
+      "behaviors": [
+        {
+          "type": "Blink"
+        }
+      ],
+      "fields": {
+        "alive": true,
+        "direction": [1, 0],
+        "ghost": {
+          "ref": "missing-node"
+        },
+        "greeting": "Hello",
+        "hitEffect": {
+          "asset": "assets/images/fx.png"
+        },
+        "legacyField": 3,
+        "maxHealth": 5,
+        "mode": "loop",
+        "scale": 0.25,
+        "speed": 80,
+        "target": {
+          "ref": "e1"
+        },
+        "tint": "#FFFF8800"
+      },
+      "kind": "custom",
+      "name": "player",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [64, 128],
+        "scale": [1, 1],
+        "size": [32, 48]
+      },
+      "type": "Player"
+    },
+    "root": {
+      "childIds": [
+        "e1",
+        "p1"
+      ],
+      "kind": "root"
+    }
+  }
+}

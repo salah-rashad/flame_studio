@@ -84,7 +84,7 @@ packages/pyro_runtime/
 │       ├── scene/                     # pure Dart (R5)
 │       │   ├── scene.dart             # Scene, invariants, parentOf
 │       │   ├── node.dart              # sealed Node and the kinds
-│       │   ├── values.dart            # Vec2, Transform, NodeAnchor, SpriteRegion, CollisionType, ids
+│       │   ├── values.dart            # Vec2, NodeTransform, NodeAnchor, SpriteRegion, NodeCollisionType, ids
 │       │   ├── overrides.dart         # Overrides, BehaviorAttachment, EntityRef, AssetRef
 │       │   ├── scene_codec.dart       # SceneCodec, SceneReadResult, version gate
 │       │   ├── node_mapping.dart      # JSON values ↔ typed Nodes, validation

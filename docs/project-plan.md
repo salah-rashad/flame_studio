@@ -367,48 +367,96 @@ class MyGame extends FlameGame {
 
 ### 7.1 Scene file (`*.scene.json`) (*Q14, Q15, Q27, Q47*)
 
-Pretty-printed, **keys sorted**, one Node per block, paths are Flutter asset keys (project-root
-relative).
+Pretty-printed in one **canonical form** (*Q92*): `schemaVersion`, `rootId` and `nodes` first, every
+other key sorted, one Node per block; paths are Flutter asset keys (project-root relative). The
+full contract, including every Field type's written form, is
+[`specs/001-scene-format/contracts/scene-file-v1.md`](../specs/001-scene-format/contracts/scene-file-v1.md).
 
 ```json
 {
   "schemaVersion": 1,
-  "rootId": "0b5e…",
+  "rootId": "0b5e",
   "nodes": {
-    "0b5e…": {
-      "childIds": ["3f1c…", "c004…", "9b2e…"],
+    "0b5e": {
+      "childIds": [
+        "3f1c",
+        "9b2e"
+      ],
       "kind": "root"
     },
-    "3f1c…": {
+    "3f1c": {
       "behaviors": [
         {
-          "fields": { "mode": "pingPong", "speed": 80, "target": { "ref": "9b2e…" } },
+          "fields": {
+            "mode": "pingPong",
+            "speed": 80,
+            "target": {
+              "ref": "9b2e"
+            }
+          },
           "type": "Patrol"
         }
       ],
-      "childIds": ["a71d…"],
+      "childIds": [
+        "a71d",
+        "d220"
+      ],
       "kind": "entity",
       "name": "goblin_1",
-      "tags": ["enemy"],
-      "transform": { "angle": 0, "anchor": "center", "position": [320, 128], "scale": [1, 1], "size": [32, 32] }
+      "tags": [
+        "enemy"
+      ],
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [320, 128],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
     },
-    "a71d…": {
-      "kind": "rectangleHitbox",
-      "name": "body",
-      "props": { "collisionType": "active", "size": [24, 30] }
-    },
-    "9b2e…": {
-      "fields": { "maxHealth": 5 },
+    "9b2e": {
+      "fields": {
+        "maxHealth": 5,
+        "tint": "#FFFF8800"
+      },
       "kind": "custom",
       "name": "player",
-      "transform": { "angle": 0, "anchor": "center", "position": [64, 128], "scale": [1, 1], "size": [32, 48] },
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [64, 128],
+        "scale": [1, 1],
+        "size": [32, 48]
+      },
       "type": "Player"
     },
-    "c004…": {
-      "kind": "prefabInstance",
-      "name": "goblin_2",
-      "overrides": {},
-      "prefab": "assets/scenes/prefabs/goblin.scene.json"
+    "a71d": {
+      "kind": "rectangleHitbox",
+      "name": "body",
+      "props": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "collisionType": "active",
+        "isSolid": false,
+        "position": [4, 2],
+        "size": [24, 30]
+      }
+    },
+    "d220": {
+      "kind": "sprite",
+      "name": "sprite",
+      "props": {
+        "image": "assets/images/goblin_sheet.png",
+        "srcPosition": [0, 0],
+        "srcSize": [32, 32]
+      },
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
     }
   }
 }
@@ -424,10 +472,17 @@ relative).
 - **Type IDs** are class names or explicit `id:`s (*Q45*), so moving a Dart file never breaks a
   scene.
 - **Custom components** are `"kind": "custom"` plus `"type"` (*Q50*).
+- **Built-in Node properties are written in full** (*Q89*): `transform` on entities, sprites and
+  Custom components; `props` on sprites (`image`, optional `srcPosition`/`srcSize`) and hitboxes.
+- **Override values** use one written form per Field type (*Q91*): colours as `"#AARRGGBB"`,
+  asset references as `{"asset": path}`, entity references as `{"ref": Node ID}`.
+- **Damaged trees are repaired on read** and reported (*Q93*); a new Node kind, Field type or
+  required key bumps `schemaVersion` (*Q90*).
 - **Entity references** point only to Nodes in the same scene and not inside a Prefab instance in
   v1 (*Q56*).
-- Prefab instances (`kind: prefabInstance`, v0.2) already carry an `overrides` map so per-instance
-  overrides (v0.4) need no format change (*Q15*).
+- Prefab instances (`kind: prefabInstance`, v0.2, arriving with a `schemaVersion` bump per *Q90*)
+  carry an `overrides` map from the start, so per-instance overrides (v0.4) need no further format
+  change (*Q15*).
 
 ### 7.2 Animation file (`*.anim.json`) (*Q8, Q27, Q54*)
 

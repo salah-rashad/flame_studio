@@ -59,16 +59,16 @@ Every kind except the root also has:
 | Class | `kind` in the file | Own fields |
 |---|---|---|
 | `RootNode` | `root` | none |
-| `EntityNode` | `entity` | `transform: Transform`, `behaviors: List<BehaviorAttachment>` |
-| `SpriteNode` | `sprite` | `transform: Transform`, `image: AssetPath`, `region: SpriteRegion?`, `propsExtra` |
-| `RectangleHitboxNode` | `rectangleHitbox` | `position: Vec2`, `size: Vec2`, `angle: double`, `anchor: NodeAnchor`, `collisionType: CollisionType`, `isSolid: bool`, `propsExtra` |
-| `CircleHitboxNode` | `circleHitbox` | `position: Vec2`, `radius: double`, `anchor: NodeAnchor`, `collisionType: CollisionType`, `isSolid: bool`, `propsExtra` |
-| `CustomNode` | `custom` | `type: TypeId`, `transform: Transform`, `fields: Overrides`, `behaviors: List<BehaviorAttachment>` |
+| `EntityNode` | `entity` | `transform: NodeTransform`, `behaviors: List<BehaviorAttachment>` |
+| `SpriteNode` | `sprite` | `transform: NodeTransform`, `image: AssetPath`, `region: SpriteRegion?`, `propsExtra` |
+| `RectangleHitboxNode` | `rectangleHitbox` | `position: Vec2`, `size: Vec2`, `angle: double`, `anchor: NodeAnchor`, `collisionType: NodeCollisionType`, `isSolid: bool`, `propsExtra` |
+| `CircleHitboxNode` | `circleHitbox` | `position: Vec2`, `radius: double`, `anchor: NodeAnchor`, `collisionType: NodeCollisionType`, `isSolid: bool`, `propsExtra` |
+| `CustomNode` | `custom` | `type: TypeId`, `transform: NodeTransform`, `fields: Overrides`, `behaviors: List<BehaviorAttachment>` |
 | `UnknownNode` | anything else | `kind: String`, `name`/`tags` if they parse, everything else kept in `extra` |
 
 `propsExtra: Map<String, JsonValue>` holds unknown keys inside a Node's `props` object, written
 back unchanged (FR-017). Unknown keys therefore have a home at every level the format defines:
-the top level (`Scene.extra`), a Node (`extra`), `transform` (`Transform.extra`), `props`
+the top level (`Scene.extra`), a Node (`extra`), `transform` (`NodeTransform.extra`), `props`
 (`propsExtra`) and a Behavior (`BehaviorAttachment.extra`).
 
 **Validation on read** (each failure is a `SceneFormatException` naming the Node ID and, when
@@ -91,10 +91,10 @@ other, and parent-kind rules belong to the editor.
 | Type | Fields | Notes |
 |---|---|---|
 | `Vec2` | `x`, `y`: `double` | Value equality. Not Flame's `Vector2` (R5) |
-| `Transform` | `position`, `size`, `scale`: `Vec2`; `angle`: `double` (radians); `anchor`: `NodeAnchor`; `extra`: `Map<String, JsonValue>` | All five properties always written (FR-013); `extra` holds unknown keys inside `transform`, written back unchanged (FR-017) |
+| `NodeTransform` | `position`, `size`, `scale`: `Vec2`; `angle`: `double` (radians); `anchor`: `NodeAnchor`; `extra`: `Map<String, JsonValue>` | All five properties always written (FR-013); `extra` holds unknown keys inside `transform`, written back unchanged (FR-017) |
 | `NodeAnchor` | a named anchor (`topLeft`, `topCenter`, `topRight`, `centerLeft`, `center`, `centerRight`, `bottomLeft`, `bottomCenter`, `bottomRight`) or a custom `Vec2` | Named ones are written by name |
 | `SpriteRegion` | `position`, `size`: `Vec2` | Source rectangle in the image, in pixels |
-| `CollisionType` | enum `active`, `passive`, `inactive` | Flame's names |
+| `NodeCollisionType` | enum `active`, `passive`, `inactive` | Flame's names |
 | `AssetPath` | extension type over `String` | Project-root-relative, as declared in the game's `pubspec.yaml` |
 | `TypeId` | extension type over `String` | A Behavior or Custom component's Type ID (*Q45*) |
 
@@ -136,11 +136,11 @@ Pyro banner.
 |---|---|---|
 | `MissingChild` | `parentId`, `childId` | ID dropped from the parent's list |
 | `SelfChild` | `nodeId` | Own ID dropped from its list |
-| `RootAsChild` | `parentId` | Root's ID dropped from the parent's list |
+| `RootAsChild` | `parentId`, `rootId` | Root's ID dropped from the parent's list |
 | `DuplicateChild` | `parentId`, `childId` | Later occurrences dropped |
 | `MultipleParents` | `nodeId`, `keptParentId`, `removedFromParentId` | Removed from the later parent |
 | `OrphanAttached` | `nodeId` | Appended under the root |
-| `CycleBroken` | `nodeIds` (sorted), `attachedNodeId`, `removedFromParentId` | Smallest ID appended under the root; its back-reference removed |
+| `CycleBroken` | `nodeIds` (sorted), `attachedNodeId`, `removedFromParentId` | The smallest ID on the cycle appended under the root; its back-reference removed |
 
 ### SceneFormatException (sealed; implements `Exception`)
 

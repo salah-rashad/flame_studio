@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "e1": {
+      "childIds": [
+        "e2"
+      ],
+      "kind": "entity",
+      "name": "goblin",
+      "tags": [
+        "enemy",
+        "patrol"
+      ],
+      "transform": {
+        "anchor": "center",
+        "angle": 0.5,
+        "position": [320, 128],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
+    },
+    "e2": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [-1, 2.5],
+        "size": [16, 8]
+      }
+    },
+    "root": {
+      "childIds": [
+        "e1"
+      ],
+      "kind": "root"
+    }
+  }
+}

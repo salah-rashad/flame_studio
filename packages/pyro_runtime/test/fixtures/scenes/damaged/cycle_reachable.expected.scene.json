@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "a": {
+      "childIds": [
+        "b"
+      ],
+      "kind": "entity",
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [1, 1]
+      }
+    },
+    "b": {
+      "kind": "entity",
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [1, 1]
+      }
+    },
+    "root": {
+      "childIds": [
+        "a"
+      ],
+      "kind": "root"
+    }
+  }
+}

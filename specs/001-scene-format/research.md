@@ -73,7 +73,7 @@ reproduced on the web, where `80.0` and `80` are the same value.
 ## R4. Plain immutable classes, no freezed, in the Runtime
 
 **Decision:** the scene model is hand-written `final` classes with `final` fields, unmodifiable
-collections and `copyWith`. Value equality only on small value types (`Vec2`, `Transform`,
+collections and `copyWith`. Value equality only on small value types (`Vec2`, `NodeTransform`,
 `SpriteRegion`, `NodeAnchor`, `EntityRef`, `AssetRef`); `Node` and `Scene` compare by identity.
 
 **Rationale:**
@@ -141,7 +141,7 @@ for basics:
 - **rectangle hitbox `props`:** `position`, `size`, `angle`, `anchor`, `collisionType`,
   `isSolid`.
 - **circle hitbox `props`:** `position`, `radius`, `anchor`, `collisionType`, `isSolid`.
-- **`collisionType`:** `"active"`, `"passive"` or `"inactive"`, Flame's `CollisionType` names.
+- **`collisionType`:** `"active"`, `"passive"` or `"inactive"`, Flame's `NodeCollisionType` names.
 
 `angle`, `anchor` and `isSolid` on hitboxes go beyond the spec's minimum (FR-006). Adding them
 later would be a new required key and therefore a version bump, and Flame's hitboxes already
@@ -163,8 +163,12 @@ same tree (FR-022):
    Node lists. Heads are appended to the root's `childIds` in ascending Node ID order (*orphan
    attached*), and each is walked as in step 2.
 4. **Break cycles.** While Nodes remain unvisited, every one of them is listed by another, so
-   they form cycles. The smallest ID among them is appended under the root, the walk from it
-   removes the back-reference, and one *cycle broken* issue lists every Node in the cycle.
+   they form cycles, possibly with Nodes hanging off them. Starting from the smallest
+   remaining ID, follow listing parents (smallest first) until a Node repeats: that loop is a
+   cycle. Its smallest ID is appended under the root, the walk from it removes the
+   back-reference, and one *cycle broken* issue lists every Node the walk reached. (Attaching
+   the smallest remaining ID directly fails when that Node only hangs off a cycle; found while
+   implementing, fixture `damaged/cycle_with_tail`.)
    Removing the back-reference is part of that *cycle broken* issue (its
    `removedFromParentId`); no separate *multiple parents* issue is reported.
 

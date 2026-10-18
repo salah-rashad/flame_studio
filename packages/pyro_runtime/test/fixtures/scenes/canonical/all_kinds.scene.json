@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "rootId": "0b5e",
+  "nodes": {
+    "0b5e": {
+      "childIds": [
+        "3f1c",
+        "9b2e"
+      ],
+      "kind": "root"
+    },
+    "3f1c": {
+      "behaviors": [
+        {
+          "fields": {
+            "mode": "pingPong",
+            "speed": 80,
+            "target": {
+              "ref": "9b2e"
+            }
+          },
+          "type": "Patrol"
+        }
+      ],
+      "childIds": [
+        "a71d",
+        "d220"
+      ],
+      "kind": "entity",
+      "name": "goblin_1",
+      "tags": [
+        "enemy"
+      ],
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [320, 128],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
+    },
+    "9b2e": {
+      "fields": {
+        "maxHealth": 5,
+        "tint": "#FFFF8800"
+      },
+      "kind": "custom",
+      "name": "player",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [64, 128],
+        "scale": [1, 1],
+        "size": [32, 48]
+      },
+      "type": "Player"
+    },
+    "a71d": {
+      "kind": "rectangleHitbox",
+      "name": "body",
+      "props": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "collisionType": "active",
+        "isSolid": false,
+        "position": [4, 2],
+        "size": [24, 30]
+      }
+    },
+    "d220": {
+      "kind": "sprite",
+      "name": "sprite",
+      "props": {
+        "image": "assets/images/goblin_sheet.png",
+        "srcPosition": [0, 0],
+        "srcSize": [32, 32]
+      },
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
+    }
+  }
+}

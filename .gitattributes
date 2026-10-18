@@ -1,0 +1,5 @@
+# Scene fixtures are compared byte for byte (SC-001, FR-016), so git must
+# never touch their line endings: Windows checkouts would otherwise turn LF
+# into CRLF, and `core.autocrlf=input` would strip the CRLF that
+# non_canonical/crlf_line_endings.scene.json exists to hold.
+packages/pyro_runtime/test/fixtures/** -text

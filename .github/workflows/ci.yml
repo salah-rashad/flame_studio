@@ -49,7 +49,7 @@ jobs:
       - name: Analyze pure-Dart packages
         run: dart analyze --fatal-infos packages/flame_studio_annotations packages/flame_studio_generator
       - name: Analyze Flutter packages and the app
-        run: flutter analyze --fatal-infos packages/flame_studio_runtime apps/flame_studio
+        run: flutter analyze --fatal-infos packages/flame_studio_runtime packages/flame_studio_ui apps/flame_studio
       - name: Test flame_studio_annotations
         working-directory: packages/flame_studio_annotations
         run: dart test
@@ -58,6 +58,14 @@ jobs:
         run: dart test
       - name: Test flame_studio_runtime
         working-directory: packages/flame_studio_runtime
+        run: flutter test
+      - name: Test flame_studio_ui
+        working-directory: packages/flame_studio_ui
+        run: flutter test
+      # The gallery's smoke test everywhere; its goldens (tag `golden`) skip
+      # themselves off macOS, where fonts rasterise differently (Q84).
+      - name: Test the flame_studio_ui gallery
+        working-directory: packages/flame_studio_ui/example
         run: flutter test
       - name: Test the Studio app
         working-directory: apps/flame_studio

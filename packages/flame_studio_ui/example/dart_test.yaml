@@ -1,0 +1,5 @@
+# Goldens are rendered on macOS only (fonts rasterise differently per
+# platform); run them with `flutter test --tags golden`, refresh them with
+# `flutter test --tags golden --update-goldens` after a deliberate change.
+tags:
+  golden:

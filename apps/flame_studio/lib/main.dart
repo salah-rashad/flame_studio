@@ -1,3 +1,4 @@
+import 'package:flame_studio_ui/flame_studio_ui.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -11,9 +12,10 @@ class FlameStudioApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Flame Studio',
-      home: Scaffold(body: Center(child: Text('Flame Studio'))),
+      theme: FsTheme.dark(),
+      home: const Scaffold(body: Center(child: Text('Flame Studio'))),
     );
   }
 }

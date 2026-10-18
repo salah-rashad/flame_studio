@@ -132,7 +132,7 @@ hasn't been run there yet.
   annotated Behavior, one custom component and one hand-written Scene JSON, loaded through
   `PyroScene` and the generated Registry; macOS target enabled
 - [ ] **#12 CI contract test** (1, *Q59*): fill in the placeholder job; run the generator on
-  `example/`, check the committed Registry and Manifest (the `git diff` variant on Flutter 3.44,
+  `example/`, check the committed Registry and Manifest (`build_runner build --only-check`, *Q100*,
   §7.3), check the Manifest against its golden, load every `example/` scene with `flame_test`
   against the real Registry. §13
 - [ ] **First slice of #11:** Pyro's `flutter run --machine` client starts `example/` on macOS,
@@ -274,7 +274,12 @@ Tasks with lead time or a recurring trigger, done next to the phases rather than
   (*Q82*). With the Discord GIF canceled, this is the demand check
 - [ ] **Apple Developer Program** enrollment before Phase 8 (identity checks can take days; *Q40*)
 - [ ] **Each new Flutter stable:** re-check `--project-root` and `_flutter.setAssetBundlePath`
-  (§9.3, §15.1), and bump `FLUTTER_VERSION` in CI deliberately
+  (§9.3, §15.1), and bump `FLUTTER_VERSION` in CI deliberately: re-resolve the workspace
+  (`flutter_test`'s `test_api` pin decides the analyzer, so the freezed and build_runner
+  versions), regenerate and commit the app's generated files, apply the new `dart format`, commit
+  any `analysis_options.yaml` excludes flutter_tools adds, and refresh the goldens with the
+  "Update goldens" workflow. Last done for 3.47.7 on 2026-10-19 (*Q100*; the two interfaces
+  checked in the flutter_tools and engine sources, not yet in a live run)
 
 ## Open questions
 

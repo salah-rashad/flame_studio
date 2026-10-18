@@ -556,7 +556,8 @@ The format is fixed now; the grid slicer that writes it ships in v0.1.1 (*Q65*).
   | ≥ 3.47 (build_runner ≥ 2.16) | `dart run build_runner build --only-check` |
   | ≤ 3.46 | `dart run build_runner build`, then `git diff --exit-code lib/pyro.g.dart lib/pyro.manifest.json` |
 
-  The `git diff` variant wasn't run in spike #2; the contract job (§13) exercises it first.
+  The repository's own CI is on Flutter 3.47.7 and uses `--only-check` (*Q100*), so the `git diff`
+  variant is still untested (spike #2 didn't run it either).
   Either command takes build_runner's lock, so running one locally stops Pyro's watcher
   (§9.2).
 - The per-file builder uses build_runner's `triggers` / `run_only_if_triggered` so files without

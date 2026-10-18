@@ -1,3 +1,10 @@
 include:
   - ../../analysis_options.yaml
   - package:flutter_lints/flutter.yaml
+
+analyzer:
+  # Flutter >= 3.47 adds these on every flutter command if they are missing
+  # (flutter_tools AnalysisOptionsMigration); the root file's excludes still
+  # apply, since lists merge with the included file.
+  exclude:
+    - build/**

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'recovery_store.dart';
@@ -9,6 +9,7 @@ part of 'recovery_store.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -30,16 +31,21 @@ $RecoveryInfoCopyWith<RecoveryInfo> get copyWith => _$RecoveryInfoCopyWithImpl<R
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecoveryInfo&&(identical(other.projectRoot, projectRoot) || other.projectRoot == projectRoot)&&(identical(other.scenePath, scenePath) || other.scenePath == scenePath)&&(identical(other.writtenAt, writtenAt) || other.writtenAt == writtenAt)&&(identical(other.sceneFileModifiedAt, sceneFileModifiedAt) || other.sceneFileModifiedAt == sceneFileModifiedAt)&&(identical(other.key, key) || other.key == key));
+  final _this = this as RecoveryInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecoveryInfo&&(identical(other.projectRoot, _this.projectRoot) || other.projectRoot == _this.projectRoot)&&(identical(other.scenePath, _this.scenePath) || other.scenePath == _this.scenePath)&&(identical(other.writtenAt, _this.writtenAt) || other.writtenAt == _this.writtenAt)&&(identical(other.sceneFileModifiedAt, _this.sceneFileModifiedAt) || other.sceneFileModifiedAt == _this.sceneFileModifiedAt)&&(identical(other.key, _this.key) || other.key == _this.key));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,projectRoot,scenePath,writtenAt,sceneFileModifiedAt,key);
+int get hashCode {
+  final _this = this as RecoveryInfo;
+  return Object.hash(runtimeType,_this.projectRoot,_this.scenePath,_this.writtenAt,_this.sceneFileModifiedAt,_this.key);
+}
 
 @override
 String toString() {
-  return 'RecoveryInfo(projectRoot: $projectRoot, scenePath: $scenePath, writtenAt: $writtenAt, sceneFileModifiedAt: $sceneFileModifiedAt, key: $key)';
+  final _this = this as RecoveryInfo;
+  return 'RecoveryInfo(projectRoot: ${_this.projectRoot}, scenePath: ${_this.scenePath}, writtenAt: ${_this.writtenAt}, sceneFileModifiedAt: ${_this.sceneFileModifiedAt}, key: ${_this.key})';
 }
 
 
@@ -68,7 +74,7 @@ class _$RecoveryInfoCopyWithImpl<$Res>
 /// Create a copy of RecoveryInfo
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? projectRoot = null,Object? scenePath = null,Object? writtenAt = null,Object? sceneFileModifiedAt = freezed,Object? key = null,}) {
-  return _then(_self.copyWith(
+  return _then(RecoveryInfo(
 projectRoot: null == projectRoot ? _self.projectRoot : projectRoot // ignore: cast_nullable_to_non_nullable
 as String,scenePath: null == scenePath ? _self.scenePath : scenePath // ignore: cast_nullable_to_non_nullable
 as String,writtenAt: null == writtenAt ? _self.writtenAt : writtenAt // ignore: cast_nullable_to_non_nullable
@@ -239,16 +245,18 @@ _$RecoveryInfoCopyWith<_RecoveryInfo> get copyWith => __$RecoveryInfoCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecoveryInfo&&(identical(other.projectRoot, projectRoot) || other.projectRoot == projectRoot)&&(identical(other.scenePath, scenePath) || other.scenePath == scenePath)&&(identical(other.writtenAt, writtenAt) || other.writtenAt == writtenAt)&&(identical(other.sceneFileModifiedAt, sceneFileModifiedAt) || other.sceneFileModifiedAt == sceneFileModifiedAt)&&(identical(other.key, key) || other.key == key));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecoveryInfo&&(identical(other.projectRoot, projectRoot) || other.projectRoot == projectRoot)&&(identical(other.scenePath, scenePath) || other.scenePath == scenePath)&&(identical(other.writtenAt, writtenAt) || other.writtenAt == writtenAt)&&(identical(other.sceneFileModifiedAt, sceneFileModifiedAt) || other.sceneFileModifiedAt == sceneFileModifiedAt)&&(identical(other.key, key) || other.key == key));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,projectRoot,scenePath,writtenAt,sceneFileModifiedAt,key);
+int get hashCode {
+    return Object.hash(runtimeType,projectRoot,scenePath,writtenAt,sceneFileModifiedAt,key);
+}
 
 @override
 String toString() {
-  return 'RecoveryInfo(projectRoot: $projectRoot, scenePath: $scenePath, writtenAt: $writtenAt, sceneFileModifiedAt: $sceneFileModifiedAt, key: $key)';
+    return 'RecoveryInfo(projectRoot: $projectRoot, scenePath: $scenePath, writtenAt: $writtenAt, sceneFileModifiedAt: $sceneFileModifiedAt, key: $key)';
 }
 
 

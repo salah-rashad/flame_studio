@@ -66,9 +66,9 @@ void main() {
     );
     final scene = SceneCodec.decode(fs.file(sceneCopy()).readAsStringSync());
     expect(scene.scene.nodes.length, state.nodes.length);
-    final meta =
-        jsonDecode(fs.file(metadata()).readAsStringSync())
-            as Map<String, Object?>;
+    final meta = jsonDecode(
+      fs.file(metadata()).readAsStringSync(),
+    ) as Map<String, Object?>;
     expect(meta, {
       'formatVersion': 1,
       'projectRoot': projectRoot,
@@ -141,9 +141,9 @@ void main() {
 
     test('a newer metadata format', () async {
       await writeCopy();
-      final meta =
-          jsonDecode(fs.file(metadata()).readAsStringSync())
-              as Map<String, Object?>;
+      final meta = jsonDecode(
+        fs.file(metadata()).readAsStringSync(),
+      ) as Map<String, Object?>;
       fs
           .file(metadata())
           .writeAsStringSync(jsonEncode({...meta, 'formatVersion': 2}));
@@ -152,9 +152,9 @@ void main() {
 
     test('metadata naming another Scene', () async {
       await writeCopy();
-      final meta =
-          jsonDecode(fs.file(metadata()).readAsStringSync())
-              as Map<String, Object?>;
+      final meta = jsonDecode(
+        fs.file(metadata()).readAsStringSync(),
+      ) as Map<String, Object?>;
       fs
           .file(metadata())
           .writeAsStringSync(jsonEncode({...meta, 'scenePath': '/elsewhere'}));

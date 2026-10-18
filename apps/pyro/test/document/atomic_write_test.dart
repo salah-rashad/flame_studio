@@ -21,9 +21,8 @@ void main() {
     fs.inner.directory(folder).createSync(recursive: true);
     fs.inner.file(path).writeAsBytesSync(oldBytes);
     final files = SceneFiles(fileSystem: fs, offload: runInline);
-    final doc = (await files.open(
-      path,
-    )).transact('Add', (d) => d.addNode(entity('x'), parentId: d.rootId));
+    final doc = (await files.open(path))
+        .transact('Add', (d) => d.addNode(entity('x'), parentId: d.rootId));
     fs.operationCount = 0;
     fs.operations.clear();
     return (files, doc);

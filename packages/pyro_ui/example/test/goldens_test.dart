@@ -14,7 +14,8 @@ import 'package:pyro_ui_gallery/main.dart';
 /// component still looks like its preview.html after a token or layout
 /// change. macOS only, since font rasterisation differs between platforms.
 ///
-/// Refresh deliberately: `flutter test --tags golden --update-goldens`.
+/// Refresh deliberately: the "Update goldens" workflow on your branch, or
+/// `flutter test --tags golden --update-goldens`.
 void main() {
   setUpAll(() {
     final local = goldenFileComparator as LocalFileComparator;

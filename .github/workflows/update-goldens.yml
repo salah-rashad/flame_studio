@@ -1,0 +1,68 @@
+# Regenerates the pyro_ui goldens on the CI image and commits them to the
+# branch it runs on (Q84). Run it from the Actions tab ("Run workflow", pick
+# your branch) after a deliberate visual change, then review the images in
+# the PR diff. Rendering on the runner rather than a laptop means the goldens
+# match what CI compares against.
+name: Update goldens
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write # push the refreshed goldens
+  actions: write # start CI on the new commit
+
+concurrency:
+  group: update-goldens-${{ github.ref }}
+
+env:
+  # Keep in step with ci.yml.
+  FLUTTER_VERSION: "3.44.2"
+
+jobs:
+  update-goldens:
+    name: Update goldens
+    # The same image as the CI job that checks them (see ci.yml).
+    runs-on: macos-26
+    steps:
+      - name: Refuse the default branch
+        if: github.ref_name == github.event.repository.default_branch
+        run: |
+          echo "::error title=Update goldens::Run this on a branch and review the images in its PR, not on ${GITHUB_REF_NAME}."
+          exit 1
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Resolve the workspace
+        run: dart pub get
+      - name: Regenerate the goldens
+        working-directory: packages/pyro_ui/example
+        run: flutter test --tags golden --update-goldens
+      - name: Commit and push
+        id: commit
+        run: |
+          goldens=packages/pyro_ui/example/test/goldens
+          if [ -z "$(git status --porcelain -- "$goldens")" ]; then
+            echo "The goldens are already up to date." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo "### Refreshed goldens"
+            git status --porcelain -- "$goldens" | sed 's/^/- /'
+          } >> "$GITHUB_STEP_SUMMARY"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add -- "$goldens"
+          git commit -m "test(pyro_ui): refresh goldens on the CI image"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+      # A push made with GITHUB_TOKEN starts no workflows, so start CI on the
+      # new commit here; its checks land on that commit and show in the PR.
+      - name: Run CI on the new commit
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci.yml --ref "$GITHUB_REF_NAME"

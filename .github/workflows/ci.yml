@@ -16,7 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Flutter stable only (Q18). Bump together with the local toolchain; Flutter
+  # Flutter stable only (Q18). Bump together with the local toolchain and
+  # update-goldens.yml (then refresh the goldens with it); Flutter
   # 3.44.x caps build_runner at 2.15.1 (Q76), which matters once the contract
   # job runs the generator.
   FLUTTER_VERSION: "3.44.2"
@@ -24,8 +25,8 @@ env:
 # Ubuntu 26 from 2026-10-19 (the desktop build's apt packages, e.g.
 # libstdc++-12-dev, are named per release). macOS jobs pin macos-26 rather
 # than macos-latest: the pyro_ui goldens are rendered on it, and fonts
-# rasterise differently between macOS releases. Move deliberately, and
-# refresh the goldens on the new image in the same change.
+# rasterise differently between macOS releases. Move deliberately, together
+# with update-goldens.yml, and refresh the goldens with it in the same change.
 
 jobs:
   analyze-test:

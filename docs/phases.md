@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Phase 2 in progress: Scene format done (2026-10-18) |
+| **Status** | Phase 2 in progress: Scene format (2026-10-18) and #2 Document model (2026-10-19) done |
 | **Source of truth** | [`project-plan.md`](project-plan.md) §14 owns scope, estimates and build order; this file only groups that order into phases and tracks progress |
 | **Sync rule** | When §14 changes (an item, an estimate, the order), change this file in the same commit. When a step here is finished, tick it here; §14 changes only if its scope or estimate changed |
 
@@ -37,23 +37,24 @@ flowchart LR
 |---|---|---|---|---|
 | 0 — De-risking spikes | v0.0 spikes #1–#3 | ~4 (outside the totals) | 0 | ✅ |
 | 1 — Foundations | #0 repo setup, #14 design system (all of it) | 3 + 23 | 0 | ✅ |
-| 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 13 | 13 | 🔶 |
+| 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 13 | 8.5 | 🔶 |
 | 3 — Vertical slice | `example/` skeleton (part of #13), #12 contract test, first slice of #11 | 1.5 + (in #11) | 1.5 | ⬜ |
 | 4 — Editor | #1 preview part with the editor window, #6, #4, #3, #5, #9 | 18 | 18 | ⬜ |
 | 5 — Play | Rest of #11 preview part, README recipe | 4 | 4 | ⬜ |
-| **Early preview** | | **~62.5** | **~36.5** | |
+| **Early preview** | | **~62.5** | **~32** | |
 | 6 — Testers and feedback | 5–8 testers, response table | — | — | ⬜ |
 | 7 — v0.1 breadth | #10, then the deferred parts of #1–#9 and #11 | 23 | 23 | ⬜ |
 | 8 — Release | #15 with pub.dev, rest of #13, #14 final pass, #16 | 7.5 | 7.5 | ⬜ |
-| **v0.1** | | **~93** | **~67** | |
+| **v0.1** | | **~93** | **~62.5** | |
 
-**Left to the early preview:** ~36.5 evenings ≈ 12 weeks, ~17 weeks with a 1.4× overrun.
-**Left to v0.1:** ~67 evenings ≈ 22 weeks, ~31 weeks with a 1.4× overrun.
+**Left to the early preview:** ~32 evenings ≈ 11 weeks, ~15 weeks with a 1.4× overrun.
+**Left to v0.1:** ~62.5 evenings ≈ 21 weeks, ~29 weeks with a 1.4× overrun.
 
 §14 counts the early preview as ~45 evenings. The ~62.5 above is larger because Phase 1 holds all
 ~23 evenings of #14, while §14 puts only a ~5.5-evening core in the preview. The other ~17.5 were
 built ahead of the preview, so the preview's panels use the Pyro components throughout (*Q84,
-Q87*). The ~26 done are the repo setup and the whole design system. The spikes come on top.
+Q87*). The ~30.5 done are the repo setup, the whole design system and the Document model. The
+spikes come on top.
 
 ---
 
@@ -93,11 +94,12 @@ share one format (§5); that comes first, because #2 and #8 both build on it.
   (root, entity, sprite, rectangle and circle hitboxes, custom), JSON with sorted keys, Overrides
   only (ADR 0003), `childIds`-only persistence with orphan and double-parent repair (*Q47*),
   `schemaVersion` with refusal of newer files. §7.1, §7.4
-- [ ] **#2 Document model** in the app (4.5): add `freezed` (and Riverpod, for Phase 4);
+- [x] **#2 Document model** in the app (4.5): add `freezed` (and Riverpod, for Phase 4);
   `SceneDocument` (flat `NodeId → Node` map over the shared model), named transactions, undo/redo
   with coalescing, dirty flag, atomic save/load, recovery file (*Q55*; the interval is a fixed
   default until Settings arrive in Phase 7, *Q85*), `schemaVersion` gate (*Q49*). *Deferred:*
-  migrations framework. §8.1, §8.2
+  migrations framework. §8.1, §8.2; [`specs/002-document-model/`](../specs/002-document-model/spec.md)
+  (*Q94–Q99*)
 - [ ] **#7 Generator** (4.5): the annotations in `pyro_annotations` (`@PyroBehavior`,
   `@PyroComponent`, `@Editable`), introspection, the build-time rules of §6.1, Type IDs and
   collisions (ADR 0002), supertypes and parent types (*Q57*), the Registry and Manifest emitters
@@ -154,7 +156,9 @@ including the ones these panels lean on most (`PrTreeRow`, `PrPropertyRow`, `PrN
   list and open project, basic SDK detection (*Q39*), Runtime compatibility check from
   `pubspec.lock` (*Q49*); the editor window on `PrEditorShell` with panel slots, scene tabs, new,
   open and save scene, the dirty marker, a close confirmation and the recovery *Restore* prompt.
-  The window part (~1) had no item before (*Q88*)
+  The window part (~1) had no item before (*Q88*). Wrap `DocumentSession` in
+  `documentProvider(sceneId)`; call `RecoveryStore.find` before opening a Scene and pass the
+  compatibility check's version to `save`
 - [ ] **#6 Built-in Node kinds, editor side** (2): the Type catalog (Manifest parser, hand-written
   descriptors for entity, sprite, rectangle and circle hitboxes, reload when the Manifest file
   changes, §9.2), preview components for them, placeholders for custom components (*Q6*)

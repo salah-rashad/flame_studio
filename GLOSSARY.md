@@ -103,6 +103,20 @@ _Avoid_: Missing script
 **Document**:
 Pyro's in-memory, undoable model of one open Scene.
 
+**Transaction**:
+A named change to a Document, such as *Move 3 Nodes*; the only way a Document changes, and one step of undo.
+
+**Coalescing key**:
+The identifier that merges the transactions of one continuous gesture (a drag, a slider scrub, typing in one field) into one undo step.
+
+**Unsaved changes**:
+A Document whose state differs from its Scene file on disk; shown with a marker and confirmed before closing.
+_Avoid_: dirty (in user-facing text)
+
+**Recovery copy**:
+A copy of a Document with unsaved changes, kept outside the project so the work survives a crash; Pyro offers to restore it on the next launch.
+_Avoid_: autosave, backup
+
 **Play**:
 Running the developer's game from Pyro on a chosen device; Pyro owns that running game.
 _Avoid_: Run game, launch

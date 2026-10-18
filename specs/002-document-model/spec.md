@@ -53,6 +53,11 @@ are #1, which uses the operations defined here.
 - Q: Where should recovery copies be kept? → A: In Pyro's application data folder, keyed by
   project and Scene path, never inside the project (so `flutter clean` and `git clean` can't
   delete them); copies older than 30 days are pruned.
+- Q: SC-006's "less than 10% more memory than the Scene" can't be met by snapshot undo (*Q22*):
+  each one-Node step keeps one new Node, so 200 steps on a 1,000-Node Scene cost about 20% of it
+  before any map overhead (measured during implementation, 2026-10-19). What should the budget
+  be? → A: An absolute budget: under 2 MB (measured 0.9 MB), keeping the collection library's
+  defaults. Diff-based undo may come later as an enhancement.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -386,8 +391,8 @@ above the version Pyro writes, and check that only the first is refused and noth
 - **SC-005**: On a 1,000-Node Scene on the reference Mac, the median time to apply a
   one-Node transaction, an undo or a redo is under 1 ms, so a drag or a number scrub keeps the
   editor's 60 fps budget with room for panels and the viewport (constitution III).
-- **SC-006**: On the same Scene, a full history of 200 one-Node steps uses less than 10% more
-  memory than the Scene itself, because steps share unchanged Nodes.
+- **SC-006**: On the same Scene, a full history of 200 one-Node steps holds less than 2 MB
+  beyond the Scene and its opening state, because steps share unchanged Nodes.
 - **SC-007**: No save that would write a `schemaVersion` the project's Runtime can't read
   succeeds, in 100% of tested cases.
 

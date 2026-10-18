@@ -84,13 +84,17 @@ in a document Node with a `parentId` (doubles the objects, and every consumer un
 
 - `IMap.add` is O(1): the new map is an `MAdd` link pointing at the previous one, so a history
   of edits shares everything before it.
-- Reads walk the chain; after `IMap.flushFactor` operations the map flushes into one flat
-  `LinkedHashMap` (O(n), about 20–50 µs at 1,000 entries). Older states keep their own chains.
-- So a history of 200 one-Node steps holds about one flat copy of the map plus 200 links, rather
-  than 200 copies. Plain `Map` copies would hold about 32 KB per step at 1,000 Nodes (≈ 6 MB for
-  200 steps, many times the Scene itself) and miss SC-006.
-- The benchmark (quickstart §4) measures both SC-005 and SC-006; if a long-lived old state's
-  chain makes reads slow, `flush` is called on states as they enter history.
+- Reads walk the chain; after `IMap.flushFactor` counted operations (50 by default, reads
+  included) the map flushes into one flat `LinkedHashMap` (O(n), about 20–50 µs at 1,000
+  entries), so reads stay O(1). The history entry holding that state keeps the flat copy.
+- Measured (2026-10-19, heap snapshot, tasks.md T038): a 200-step history on a 1,000-Node Scene
+  holds 909 KB beyond the Scene (525 KB) and its opening state, about a dozen flat copies plus
+  the new Nodes. With flushing off it is 130 KB: the floor, since each step keeps one new Node
+  (about 0.6 KB here). Plain `Map` copies would hold about 32 KB per step (≈ 6 MB).
+- SC-006 was first written as "under 10% of the Scene", which no snapshot history can meet (the
+  floor alone is about 25%); it is now "under 2 MB", which the defaults meet without a
+  process-wide flush setting (spec Clarifications, 2026-10-19). Diff-based undo, which would
+  hold far less, is a possible later enhancement that would revisit *Q22*.
 
 **Alternatives considered:** plain `Map` copies (fast enough, too much memory); a hand-written
 HAMT (best asymptotics, ~300 lines to maintain, no second caller); `built_collection` (copy on

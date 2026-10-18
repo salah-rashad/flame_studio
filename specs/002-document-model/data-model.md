@@ -37,10 +37,10 @@ Pure functions returning a new `SceneDocument`, or `this` when nothing changes (
 
 | Edit | Changes | Refuses with |
 |---|---|---|
-| `addNode(node, {parentId, index})` | inserts `node` into `nodes`, its ID into the parent's `childIds` at `index` (default: last), and `parents` | `DuplicateNodeId`, `UnknownNode` (parent), `RootNotAllowed` (a second root), `NodeHasChildren` (node.childIds not empty), `IndexOutOfRange` |
-| `removeNode(id)` | removes the Node and its whole subtree from `nodes` and `parents`, and its ID from its parent's `childIds` | `UnknownNode`, `RootNotAllowed` |
-| `moveNode(id, {parentId, index})` | removes the ID from the old parent's list, inserts it into the new one at `index` (default: last), updates `parents`; moving within one parent reorders | `UnknownNode`, `RootNotAllowed`, `MoveIntoOwnSubtree`, `IndexOutOfRange` |
-| `replaceNode(node)` | swaps the Node with the same ID | `UnknownNode`, `RootNotAllowed` (to or from root), `ChildrenChanged` (node.childIds differs from the current list) |
+| `addNode(node, {parentId, index})` | inserts `node` into `nodes`, its ID into the parent's `childIds` at `index` (default: last), and `parents` | `DuplicateNodeId`, `NodeNotFound` (parent), `RootNotAllowed` (a second root), `NodeHasChildren` (node.childIds not empty), `IndexOutOfRange` |
+| `removeNode(id)` | removes the Node and its whole subtree from `nodes` and `parents`, and its ID from its parent's `childIds` | `NodeNotFound`, `RootNotAllowed` |
+| `moveNode(id, {parentId, index})` | removes the ID from the old parent's list, inserts it into the new one at `index` (default: last), updates `parents`; moving within one parent reorders | `NodeNotFound`, `RootNotAllowed`, `MoveIntoOwnSubtree`, `IndexOutOfRange` |
+| `replaceNode(node)` | swaps the Node with the same ID | `NodeNotFound`, `RootNotAllowed` (to or from root), `ChildrenChanged` (node.childIds differs from the current list) |
 
 No-ops that return `this`: moving a Node to its current parent and index; replacing a Node with
 an identical object.
@@ -145,7 +145,7 @@ a never-saved Scene gets no copy.
 
 Every error's `toString()` names what failed and where (FR-030).
 
-`DocumentEditError` (sealed, `Exception`): `DuplicateNodeId(id)`, `UnknownNode(id)`,
+`DocumentEditError` (sealed, `Exception`): `DuplicateNodeId(id)`, `NodeNotFound(id)`,
 `RootNotAllowed(id, operation)`, `NodeHasChildren(id)`, `IndexOutOfRange(parentId, index,
 length)`, `MoveIntoOwnSubtree(id, targetParentId)`, `ChildrenChanged(id)`. Each carries the Node
 ID and, when known, the Node name.

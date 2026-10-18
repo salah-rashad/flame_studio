@@ -48,16 +48,15 @@ must read back as exactly the old bytes or exactly the new ones, and the folder 
 ## 4. Measure the budgets (SC-005, SC-006)
 
 ```bash
-cd apps/pyro && flutter test benchmark/document_benchmark_test.dart
+cd apps/pyro && flutter test --enable-vmservice benchmark/document_benchmark_test.dart
 ```
 
 Prints, for a generated 1,000-Node Scene: the median time of a one-Node transaction, an undo
 and a redo (SC-005: < 1 ms; JIT numbers, so an upper bound for the release build), the time to
 open and to save it, and the time spent on the calling isolate during each (must stay under a
-frame). The benchmark also prints the RSS change from a 200-step history, as a quick signal
-only. SC-006 is decided in profile mode with DevTools heap snapshots: the retained size of the
-`DocumentHistory` after 200 one-Node steps must be less than 10% more than that of the opening
-`SceneDocument` (tasks.md T038).
+frame). For SC-006 it takes a heap snapshot through the VM service (hence
+`--enable-vmservice`) and counts the bytes a 200-step history reaches that neither the Scene nor
+its opening state reaches: under 2 MB. The run prints the Scene's own size beside it.
 
 ## 5. Recover after a crash
 

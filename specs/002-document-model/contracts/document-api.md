@@ -84,7 +84,6 @@ final class SessionServices {
     required String projectRoot,
     Duration recoveryInterval = const Duration(seconds: 30),
     NodeIdSource newId = uuidNodeIds,
-    Offload offload = Isolate.run,
   });
 }
 
@@ -159,7 +158,7 @@ session.transact(
 /// Recovery copies in a folder outside the project (contracts/recovery-copies.md).
 final class RecoveryStore {
   RecoveryStore({
-    required Directory folder,
+    required String folder,
     FileSystem fileSystem = const LocalFileSystem(),
     Offload offload = Isolate.run,
   });
@@ -183,6 +182,9 @@ Exported: `DocumentEditError` and its cases, `TransactionFailed`, `SceneOpenFail
 
 ## Not exported
 
-`DocumentHistory`'s constructor and `apply`, `OpenDocument`'s constructor, the atomic writer,
-`RecoveryTimer`, and the `childIds` helper stay in `lib/document/src/`: callers change a
-document only through `DocumentSession.transact`.
+The atomic writer, `RecoveryTimer`, the `childIds` helper and the store's `write` and `readCopy`
+(the `RecoveryWriting` extension) stay in `lib/document/src/`. `DocumentHistory`,
+`OpenDocument` and `SaveResult` are exported with public constructors because they are plain
+immutable values; a session's document still changes only through `DocumentSession.transact`.
+`SceneFiles` and `RecoveryStore` each take their own `Offload`, so `SessionServices` doesn't
+need one.

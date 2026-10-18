@@ -7,7 +7,8 @@ spike #1, Q76–Q77 from spike #2, Q78–Q80 from spike #3, Q81 from the Attach 
 (2026-10-17), Q82 from the feedback-latency review (2026-10-17), Q83 from the UI package
 split (2026-10-17), Q84 from the UI components plan (2026-10-17), Q85 from the design-prompts sync
 (2026-10-18), Q86 from the maintainers' answer on the name (2026-10-18), Q87 and Q88 from the phases
-review (2026-10-18), Q89–Q93 from the Scene format spec (`specs/001-scene-format/`, 2026-10-18).
+review (2026-10-18), Q89–Q93 from the Scene format spec (`specs/001-scene-format/`, 2026-10-18),
+Q94–Q99 from the Document model spec (`specs/002-document-model/`, 2026-10-19).
 
 ## 1. Product
 
@@ -56,7 +57,7 @@ review (2026-10-18), Q89–Q93 from the Scene format spec (`specs/001-scene-form
 | # | Decision |
 |---|---|
 | Q21 | The **document is the source of truth**; the Flame viewport is a projection of it. |
-| Q22 | **Snapshot undo** over an immutable document with structural sharing. All edits go through named transactions (`doc.transact('Move', ...)`); continuous gestures are **coalesced**. |
+| Q22 | **Snapshot undo** over an immutable document with structural sharing. All edits go through named transactions (`doc.transact('Move', ...)`); continuous gestures are **coalesced**. *See Q99: diff-based undo may replace it later.* |
 | Q23 | **Flat normalized map** `id → node` (`parentId`, ordered `childIds`), built with **freezed**. |
 | Q24 | Viewport sync through a **reconciler** that diffs documents by node ID (identity checks skip unchanged nodes) and patches components. |
 | Q25 | **Selection is not undoable** and lives outside the document. |
@@ -132,7 +133,7 @@ Grilling of `project-plan.md`. Vocabulary in [`../GLOSSARY.md`](../GLOSSARY.md);
 | Q52 | Vocabulary: **Registry** (generated runtime code) vs **Type catalog** (Pyro); **Missing behavior / Missing component** (not "script"); **Node kind / Type role / Field type** instead of bare "kind". |
 | Q53 | Scenes default to **`assets/scenes/`**. Saving or importing into an undeclared folder (incl. subfolders, which Flutter doesn't include) appends it to `pubspec.yaml`. No config file. |
 | Q54 | **One `.anim.json` per spritesheet.** |
-| Q55 | **Recovery file only**, no real autosave; undo history not persisted. |
+| Q55 | **Recovery file only**, no real autosave; undo history not persisted. *Amended by Q85 (the interval is a setting) and Q97 (where copies live).* |
 | Q56 | Entity references only to Nodes in the same scene and not inside a Prefab instance (v1). |
 | Q57 | The Manifest records every annotated type's **supertypes**; built-in Node kinds declare theirs by hand; reference fields accept subtypes and may target built-in types. |
 | Q58 | Runtime **throws on an unknown Type ID** (naming scene, Node, Type ID); `onUnknownType: skip` opt-out. |
@@ -171,3 +172,9 @@ Grilling of `project-plan.md`. Vocabulary in [`../GLOSSARY.md`](../GLOSSARY.md);
 | Q91 | **Field type written forms** (Scene format spec, 2026-10-18): numbers, booleans, strings and enum names as JSON values, vectors as `[x, y]`, colours as `"#AARRGGBB"` (Flutter's `Color(0xAARRGGBB)` digit order), asset references as `{"asset": path}` and entity references as `{"ref": Node ID}`. Asset references are tagged so Pyro can find and rewrite them without the Manifest, including inside Missing behaviors (Q27). |
 | Q92 | **Scene files have one canonical form** (Scene format spec, 2026-10-18; details Q14): `schemaVersion`, `rootId`, `nodes` first, every other key sorted; number arrays on one line, other arrays one element per line, so a vector edit is a one-line diff and two branches adding children merge; whole numbers written without `.0` and other numbers in their shortest form, so a file is byte-identical whether written on the VM or the web. Reading refuses duplicate keys. Details in `specs/001-scene-format/contracts/scene-file-v1.md`. |
 | Q93 | **Damaged trees are repaired on read, in Pyro and in games** (Scene format spec, 2026-10-18; details Q47). Orphans go under the root in Node ID order; a Node under two parents stays with the first one a depth-first walk from the root reaches; cycles are broken at their smallest Node ID. Only `childIds` lists change. Games load the repaired Scene in every build and print one warning per Scene in debug builds; Pyro shows the report and saves the repair only when the developer saves. |
+| Q94 | **The toolchain stays on Flutter 3.44.2 for now, with prerelease freezed** (Document model spec, 2026-10-19; details Q26). In this workspace `test` caps analyzer at 12, so the app uses freezed 3.2.6-dev.1, riverpod_generator 4.0.4, riverpod_annotation 4.0.3 and flutter_riverpod 3.3.2 (build_runner 2.15.1); the generated files are committed and CI regenerates and diffs them. Moving to Flutter 3.47.x (stable freezed 4.x, riverpod_lint, `--only-check`) is a separate chore. ([`ARCHITECTURE.md`](ARCHITECTURE.md#document-model)) |
+| Q95 | **Saving refuses when the Scene file changed on disk** since it was opened or last saved (a `git pull`, another tool), compared by content digest; the editor can then force the overwrite (Document model spec, 2026-10-19). "Save as" onto an existing file is refused the same way. File watching and §11's *Reload* / *Keep mine* banner come later; *Keep mine* is the forced overwrite. |
+| Q96 | **A Scene repaired on open has unsaved changes** (Document model spec, 2026-10-19; details Q93), so closing prompts the developer to save the repair. The repair isn't an undo step: the damaged tree never exists in the Document. |
+| Q97 | **Recovery copies live in Pyro's application support folder, never in the project** (Document model spec, 2026-10-19; amends Q55), keyed by a hash of the project and Scene paths, so `flutter clean` and `git clean` can't delete them and they never reach git, the asset bundle or Hot-swap. Copies older than 30 days are pruned; a never-saved Scene gets copies from its first save on. |
+| Q98 | **Saving refuses while the Runtime's readable `schemaVersion` is unknown** (Document model spec, 2026-10-19; details Q49): every save takes the compatibility check's answer, and there is no "assume it's fine". |
+| Q99 | **The history's memory budget is absolute: under 2 MB for 200 one-Node steps on a 1,000-Node Scene** (Document model spec, 2026-10-19; measured 0.9 MB). Snapshot undo (Q22) can't stay under 10% of the Scene, since each step keeps its new Node; diff-based undo, which would hold far less, may come later as an enhancement. ([`ARCHITECTURE.md`](ARCHITECTURE.md#document-model)) |

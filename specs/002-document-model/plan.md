@@ -34,8 +34,8 @@ project ([contracts/recovery-copies.md](contracts/recovery-copies.md))
 **Testing**: `flutter test` in `apps/pyro` with `MemoryFileSystem`, a forwarding file system
 that fails or pauses on demand, `fake_async`, an injected clock and an inline `Offload` runner
 (R9, R10); `pyro_runtime`'s fixtures for round trips; a benchmark run by hand with
-`flutter test benchmark/` (JIT, so an upper bound), with SC-006 decided by the DevTools heap view
-in profile mode
+`flutter test --enable-vmservice benchmark/` (JIT, so an upper bound), with SC-006 measured
+from a heap snapshot taken through the VM service
 
 **Target Platform**: Pyro desktop on macOS (first class), Windows and Linux (built and tested
 in CI, best effort)
@@ -43,7 +43,7 @@ in CI, best effort)
 **Project Type**: desktop app module (a feature folder inside `apps/pyro`)
 
 **Performance Goals**: one-Node transaction, undo and redo < 1 ms median on a 1,000-Node Scene
-(SC-005); a 200-step history < 10% extra memory over the Scene (SC-006); open and save never
+(SC-005); a 200-step history holds < 2 MB on a 1,000-Node Scene (SC-006); open and save never
 block a frame (decode and encode off the UI isolate through an injected `Offload`, default `Isolate.run`, R9)
 
 **Constraints**: the Scene file is written only on save, atomically (constitution IV); in tests,

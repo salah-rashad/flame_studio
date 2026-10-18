@@ -48,6 +48,12 @@ jobs:
           cache: true
       - name: Resolve the workspace
         run: dart pub get
+      # The app's generated freezed files are committed; regenerating them
+      # must change nothing (spec 002).
+      - name: Check generated code
+        if: runner.os == 'Linux'
+        working-directory: apps/pyro
+        run: dart run build_runner build -d && git diff --exit-code -- lib
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed packages apps
       - name: Analyze pure-Dart packages

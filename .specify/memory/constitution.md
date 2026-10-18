@@ -1,34 +1,3 @@
-<!--
-Sync Impact Report
-==================
-Version change: (unversioned template) → 1.0.0
-Bump rationale: first ratification; every placeholder replaced with concrete governance.
-
-Modified principles (template slot → new title):
-- [PRINCIPLE_1_NAME] → I. Clean Code
-- [PRINCIPLE_2_NAME] → II. Modular Boundaries
-- [PRINCIPLE_3_NAME] → III. Performance by Design
-- [PRINCIPLE_4_NAME] → IV. User Data Integrity (NON-NEGOTIABLE)
-- [PRINCIPLE_5_NAME] → V. Tested Core
-
-Added sections:
-- Technology and Platform Constraints (template [SECTION_2_NAME])
-- Development Workflow and Quality Gates (template [SECTION_3_NAME])
-
-Removed sections: none
-
-Templates checked (read at runtime, not modified by this command):
-- ✅ .specify/templates/plan-template.md: its "Constitution Check" gate and "Complexity
-  Tracking" table match the Governance section; no change needed
-- ✅ .specify/templates/spec-template.md: no constitution-specific fields
-- ✅ .specify/templates/tasks-template.md: test tasks already optional per feature; Principle V
-  makes them required for the §13 layers, which /speckit-tasks reads from this file
-
-Follow-up TODOs:
-- The performance budgets in Principle III (60 fps, 1,000-Node reference scene) are new and not
-  yet measured; confirm them when the first benchmark lands (Phase 4, viewport + reconciler).
--->
-
 # Pyro Constitution
 
 ## Core Principles

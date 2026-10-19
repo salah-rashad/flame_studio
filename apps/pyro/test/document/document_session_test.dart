@@ -221,6 +221,67 @@ void main() {
       expect(fs.inner.file(path).readAsStringSync(), isNot(contains('"x"')));
     });
 
+    test(
+      'a save ends a coalescing run, so undo returns to the saved state',
+      () async {
+        void drag(String id) => session.transact(
+          'Drag',
+          (d) => d.addNode(entity(id), parentId: d.rootId),
+          coalesceKey: 'drag',
+        );
+        drag('x');
+        final hold = Completer<void>();
+        fs
+          ..holdWrites = hold
+          ..holdPattern = '.pyro-tmp';
+        final saving = session.save(runtimeReadsUpTo: reads);
+        await pumpEventQueue();
+        drag('y');
+        hold.complete();
+        await saving;
+        expect(session.state.isDirty, isTrue);
+        expect(session.state.history.undoLabel, 'Drag');
+        session.undo();
+        expect(
+          session.state.isDirty,
+          isFalse,
+          reason: 'the saved state is kept',
+        );
+        expect(session.state.state.contains(const NodeId('x')), isTrue);
+      },
+    );
+
+    test('close waits for a save in flight', () async {
+      add('x');
+      final hold = Completer<void>();
+      fs
+        ..holdWrites = hold
+        ..holdPattern = '.pyro-tmp';
+      final saving = session.save(runtimeReadsUpTo: reads);
+      await pumpEventQueue();
+      final closing = session.close();
+      hold.complete();
+      await saving;
+      await closing;
+      expect(session.isClosed, isTrue);
+      expect(fs.inner.file(path).readAsStringSync(), contains('"x"'));
+    });
+
+    test('discardAndClose waits for a save in flight', () async {
+      add('x');
+      final hold = Completer<void>();
+      fs
+        ..holdWrites = hold
+        ..holdPattern = '.pyro-tmp';
+      final saving = session.save(runtimeReadsUpTo: reads);
+      await pumpEventQueue();
+      final closing = session.discardAndClose();
+      hold.complete();
+      await expectLater(saving, completes);
+      await closing;
+      expect(session.isClosed, isTrue);
+    });
+
     test('a refused save keeps the edits and the unsaved state', () async {
       add('x');
       fs.inner.file(path).writeAsStringSync('changed elsewhere');

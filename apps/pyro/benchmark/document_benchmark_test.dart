@@ -110,8 +110,8 @@ class _HistoryHolder {
 
 /// SC-006: the bytes a 200-step history holds that neither the Scene nor
 /// the opening state reaches (budget: under 2 MB), next to the bytes the
-/// Scene reaches. Counted
-/// in a full heap snapshot, as DevTools does, so garbage doesn't skew it.
+/// Scene reaches. Counted in a full heap snapshot, as DevTools does, so
+/// garbage doesn't skew it.
 Future<void> _measureHistory() async {
   final uri = (await Service.getInfo()).serverWebSocketUri;
   if (uri == null) {
@@ -189,7 +189,14 @@ Future<void> _measureHistory() async {
     'memory: Scene ${_kb(sceneBytes)}, opening document beyond it '
     '${_kb(openedBytes)}, 200-step history beyond both ${_kb(historyBytes)} '
     '(${(100 * historyBytes / sceneBytes).toStringAsFixed(0)}% of the Scene; '
-    'budget < 2 MB; ${history.history.entries.length} entries)',
+    'budget < 2 MB)',
+  );
+  // Uses every holder after the snapshot, so none can be collected before
+  // it is taken.
+  stdout.writeln(
+    '(${scene.scene.nodes.length} Nodes, opening state of '
+    '${opened.opened.nodes.length}, ${history.history.entries.length} '
+    'history entries)',
   );
   await vm.dispose();
 }

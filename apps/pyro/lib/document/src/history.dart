@@ -107,6 +107,13 @@ final class DocumentHistory {
   DocumentHistory redo() =>
       canRedo ? DocumentHistory._(entries, index + 1, saved, null) : this;
 
+  /// The history with the coalescing run in progress ended, so the next
+  /// keyed transaction starts a new entry. A save calls it when it captures
+  /// the state it writes, so that state stays in history (FR-011).
+  DocumentHistory endRun() => openCoalesceKey == null
+      ? this
+      : DocumentHistory._(entries, index, saved, null);
+
   /// The history after [state] was written to disk. [state] is the state the
   /// save started from, which may no longer be current (FR-020).
   DocumentHistory markSaved(SceneDocument state) =>

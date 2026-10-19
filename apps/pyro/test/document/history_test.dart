@@ -97,6 +97,13 @@ void main() {
       expect(twoRuns((h) => h.undo().redo()).entries.length, 3);
     });
 
+    test('endRun, which a save calls when it starts', () {
+      final history = twoRuns((h) => h.endRun());
+      expect(history.entries.length, 3);
+      final idle = DocumentHistory.opened(opened, clean: true);
+      expect(identical(idle.endRun(), idle), isTrue, reason: 'no run open');
+    });
+
     test('a save', () {
       final history = twoRuns((h) => h.markSaved(h.current));
       expect(history.entries.length, 3);

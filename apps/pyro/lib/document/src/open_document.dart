@@ -103,6 +103,9 @@ final class OpenDocument {
   /// The document one step forward.
   OpenDocument redo() => _withHistory(history.redo());
 
+  /// The document with the coalescing run in progress ended (a save starts).
+  OpenDocument endRun() => _withHistory(history.endRun());
+
   /// The document after [result] was written; edits made since the save
   /// started stay unsaved.
   OpenDocument markSaved(SaveResult result) => OpenDocument(

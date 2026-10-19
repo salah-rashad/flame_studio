@@ -149,6 +149,10 @@ final class DocumentSession {
     required bool overwrite,
   }) async {
     final oldPath = _state.path;
+    // A save ends the coalescing run now, not when the write finishes, so a
+    // gesture that goes on during the write starts a new entry and the saved
+    // state stays in history (FR-011).
+    _publish(_state.endRun());
     final result = await _services.files.save(
       _state,
       runtimeReadsUpTo: runtimeReadsUpTo,
@@ -180,6 +184,8 @@ final class DocumentSession {
   /// Closes the session, dropping any unsaved changes.
   Future<void> discardAndClose() async {
     _checkOpen();
+    // A save already asked for finishes first; it never fails here.
+    await _lastSave;
     _recovery.cancel();
     await _recovery.idle;
     await _discardCopies({?_state.path});
@@ -190,6 +196,7 @@ final class DocumentSession {
   /// some, so unsaved work is never dropped by accident.
   Future<void> close() async {
     _checkOpen();
+    await _lastSave;
     if (_state.isDirty) {
       throw StateError(
         'Scene "${_state.path ?? 'untitled'}" has unsaved changes; save or '

@@ -7,7 +7,6 @@ import 'package:crypto/crypto.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:path/path.dart' as p;
 import 'package:pyro_runtime/pyro_runtime.dart';
 
 import 'atomic_write.dart';
@@ -99,10 +98,14 @@ final class RecoveryStore {
   FileSystem get _fs => fileSystem;
 
   /// The file-name key of the copy for [scenePath] in [projectRoot]: the hex
-  /// SHA-256 of both paths, normalized, joined by a line break.
-  static String keyFor(String projectRoot, String scenePath) => sha256
+  /// SHA-256 of both paths, normalized by [fileSystem]'s path rules, joined by
+  /// a line break.
+  String keyFor(String projectRoot, String scenePath) => sha256
       .convert(
-        utf8.encode('${p.normalize(projectRoot)}\n${p.normalize(scenePath)}'),
+        utf8.encode(
+          '${_fs.path.normalize(projectRoot)}\n'
+          '${_fs.path.normalize(scenePath)}',
+        ),
       )
       .toString();
 
@@ -266,15 +269,15 @@ extension RecoveryWriting on RecoveryStore {
     required String scenePath,
     required SceneDocument state,
   }) async {
-    final key = RecoveryStore.keyFor(projectRoot, scenePath);
+    final key = keyFor(projectRoot, scenePath);
     try {
       if (!folder.existsSync()) await folder.create(recursive: true);
       final bytes = await RecoveryStore._encodeOff(offload, state);
       await writeAtomically(_fs, _sceneFile(key).path, bytes);
       final meta = const JsonEncoder.withIndent('  ').convert({
         'formatVersion': RecoveryStore._formatVersion,
-        'projectRoot': p.normalize(projectRoot),
-        'scenePath': p.normalize(scenePath),
+        'projectRoot': _fs.path.normalize(projectRoot),
+        'scenePath': _fs.path.normalize(scenePath),
         'writtenAt': clock.now().toUtc().toIso8601String(),
       });
       await writeAtomically(

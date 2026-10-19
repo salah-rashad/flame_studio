@@ -33,8 +33,7 @@ void main() {
   Future<T> at<T>(DateTime time, Future<T> Function() body) =>
       withClock(Clock.fixed(time), body);
 
-  String key([String path = scenePath]) =>
-      RecoveryStore.keyFor(projectRoot, path);
+  String key([String path = scenePath]) => store.keyFor(projectRoot, path);
   String sceneCopy([String path = scenePath]) =>
       '$recoveryFolder/${key(path)}.scene.json';
   String metadata([String path = scenePath]) =>
@@ -51,10 +50,7 @@ void main() {
         .toString();
     expect(key(), expected);
     expect(
-      RecoveryStore.keyFor(
-        '/project/',
-        '/project/assets/./scenes/level.scene.json',
-      ),
+      store.keyFor('/project/', '/project/assets/./scenes/level.scene.json'),
       expected,
     );
   });
@@ -276,4 +272,37 @@ void main() {
       );
     },
   );
+
+  test('paths follow the file system\'s own style, not the host\'s', () async {
+    // On Windows CI the host style differed from MemoryFileSystem's, so keys
+    // and metadata came out wrong; a Windows-style file system on any host
+    // catches it.
+    final windows = MemoryFileSystem(style: FileSystemStyle.windows);
+    const root = r'C:\project';
+    const scene = r'C:\project\assets\scenes\level.scene.json';
+    windows.directory(r'C:\project\assets\scenes').createSync(recursive: true);
+    final windowsStore = RecoveryStore(
+      folder: r'C:\support\recovery',
+      fileSystem: windows,
+      offload: runInline,
+    );
+    expect(
+      windowsStore.keyFor(
+        r'C:\project\.',
+        r'C:\project\assets\.\scenes\level.scene.json',
+      ),
+      windowsStore.keyFor(root, scene),
+    );
+    await at<void>(
+      now,
+      () =>
+          windowsStore.write(projectRoot: root, scenePath: scene, state: state),
+    );
+    final check = await at(
+      now,
+      () => windowsStore.find(projectRoot: root, scenePath: scene),
+    );
+    expect(check, isA<RecoveryAvailable>());
+    expect((check as RecoveryAvailable).info.scenePath, scene);
+  });
 }

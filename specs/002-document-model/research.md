@@ -17,7 +17,6 @@ prototyped the document, history and providers on 2026-10-16; its findings are c
 | `file` | ^7.0.1 | dependency |
 | `clock` | ^1.1.2 | dependency |
 | `crypto` | ^3.0.6 | dependency |
-| `path` | ^1.9.1 | dependency |
 | `flutter_riverpod` | ^3.3.2 (resolves 3.3.2) | dependency |
 | `riverpod_annotation` | 4.0.3 | dependency |
 | `freezed` | 3.2.6-dev.1 | dev dependency |

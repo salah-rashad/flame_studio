@@ -23,7 +23,7 @@ choice; R1)
 
 **Primary Dependencies**: `pyro_runtime` (Scene format, `SceneCodec`), `freezed_annotation`
 3.1.0 + `freezed` 3.2.6-dev.1, `fast_immutable_collections` 12.0.0, `uuid`, `file`, `clock`,
-`crypto`, `path`; `flutter_riverpod` 3.3.2, `riverpod_annotation` 4.0.3 and
+`crypto`; `flutter_riverpod` 3.3.2, `riverpod_annotation` 4.0.3 and
 `riverpod_generator` 4.0.4 added for #1 but unused here; `build_runner` 2.15.1, `fake_async`
 (dev). Versions verified to resolve in the workspace lock (R1)
 

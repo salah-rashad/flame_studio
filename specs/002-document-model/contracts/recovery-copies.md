@@ -13,7 +13,8 @@ support folder (`path_provider`'s `getApplicationSupportDirectory()`, for exampl
 ## Files per copy
 
 `<key>` is the lowercase hex SHA-256 of the UTF-8 string `<projectRoot>\n<scenePath>`, both
-absolute and normalized with `package:path`'s `normalize` (no trailing separator).
+absolute and normalized by the recovery file system's own path rules (`fileSystem.path.normalize`,
+not the host's), with no trailing separator.
 
 | File | Contents |
 |---|---|

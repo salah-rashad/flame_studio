@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Phase 2 in progress: Scene format (2026-10-18) and #2 Document model (2026-10-19) done |
+| **Status** | Phase 2 in progress: Scene format (2026-10-18), #2 Document model (2026-10-19) and #7 Generator (2026-10-20) done |
 | **Source of truth** | [`project-plan.md`](project-plan.md) §14 owns scope, estimates and build order; this file only groups that order into phases and tracks progress |
 | **Sync rule** | When §14 changes (an item, an estimate, the order), change this file in the same commit. When a step here is finished, tick it here; §14 changes only if its scope or estimate changed |
 
@@ -37,24 +37,24 @@ flowchart LR
 |---|---|---|---|---|
 | 0 — De-risking spikes | v0.0 spikes #1–#3 | ~4 (outside the totals) | 0 | ✅ |
 | 1 — Foundations | #0 repo setup, #14 design system (all of it) | 3 + 23 | 0 | ✅ |
-| 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 13 | 8.5 | 🔶 |
+| 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 13 | 4 | 🔶 |
 | 3 — Vertical slice | `example/` skeleton (part of #13), #12 contract test, first slice of #11 | 1.5 + (in #11) | 1.5 | ⬜ |
 | 4 — Editor | #1 preview part with the editor window, #6, #4, #3, #5, #9 | 18 | 18 | ⬜ |
 | 5 — Play | Rest of #11 preview part, README recipe | 4 | 4 | ⬜ |
-| **Early preview** | | **~62.5** | **~32** | |
+| **Early preview** | | **~62.5** | **~27.5** | |
 | 6 — Testers and feedback | 5–8 testers, response table | — | — | ⬜ |
 | 7 — v0.1 breadth | #10, then the deferred parts of #1–#9 and #11 | 23 | 23 | ⬜ |
 | 8 — Release | #15 with pub.dev, rest of #13, #14 final pass, #16 | 7.5 | 7.5 | ⬜ |
-| **v0.1** | | **~93** | **~62.5** | |
+| **v0.1** | | **~93** | **~58** | |
 
-**Left to the early preview:** ~32 evenings ≈ 11 weeks, ~15 weeks with a 1.4× overrun.
-**Left to v0.1:** ~62.5 evenings ≈ 21 weeks, ~29 weeks with a 1.4× overrun.
+**Left to the early preview:** ~27.5 evenings ≈ 9 weeks, ~13 weeks with a 1.4× overrun.
+**Left to v0.1:** ~58 evenings ≈ 19 weeks, ~27 weeks with a 1.4× overrun.
 
 §14 counts the early preview as ~45 evenings. The ~62.5 above is larger because Phase 1 holds all
 ~23 evenings of #14, while §14 puts only a ~5.5-evening core in the preview. The other ~17.5 were
 built ahead of the preview, so the preview's panels use the Pyro components throughout (*Q84,
-Q87*). The ~30.5 done are the repo setup, the whole design system and the Document model. The
-spikes come on top.
+Q87*). The ~35 done are the repo setup, the whole design system, the Document model and the
+Generator. The spikes come on top.
 
 ---
 
@@ -100,11 +100,12 @@ share one format (§5); that comes first, because #2 and #8 both build on it.
   default until Settings arrive in Phase 7, *Q85*), `schemaVersion` gate (*Q49*). *Deferred:*
   migrations framework. §8.1, §8.2; [`specs/002-document-model/`](../specs/002-document-model/spec.md)
   (*Q94–Q99*)
-- [ ] **#7 Generator** (4.5): the annotations in `pyro_annotations` (`@PyroBehavior`,
-  `@PyroComponent`, `@Editable`), introspection, the build-time rules of §6.1, Type IDs and
-  collisions (ADR 0002), supertypes and parent types (*Q57*), the Registry and Manifest emitters
-  into `lib/` with `build.yaml` (*Q68*), errors in the Manifest, for the preview's Field types.
-  §6.1, §7.3, §9.2
+- [x] **#7 Generator** (4.5): the annotations in `pyro_annotations` (`@PyroBehavior`,
+  `@PyroComponent`, `@Editable`, `ImagePath`), introspection, the build-time rules of §6.1, Type
+  IDs and collisions (ADR 0002), supertypes and parent types (*Q57*), the Registry and Manifest
+  emitters into `lib/` (*Q68*; no `build.yaml` needed in games, *Q107*), errors and warnings in
+  the Manifest, for **every** v1 Field type (*Q100*); the Registry contract in `pyro_runtime`.
+  §6.1, §7.3, §9.2; [`specs/003-generator/`](../specs/003-generator/spec.md) (*Q100–Q108*)
 - [ ] **#8 Runtime** (4, full scope): `PyroScene.load` with the two-pass loading order (it reads
   each Scene with `SceneCodec.decode` and calls `warnAboutRepairs` after it, FR-024a), building
   the built-in Node kinds and custom ones through the Registry, `AssetSource` and asset fields
@@ -187,8 +188,10 @@ Behavior's class shows it as Missing with its values kept.
   generator goes idle (*Q61*); *Attach debugger* copying the current URI (*Q81*); the
   image-restart toast (*Q72*); "Game stopped" handling (*Q63*)
 - [ ] **README recipe** for adding Pyro to a project (stands in for the "Add Pyro" flow): the
-  packages as git dependencies on this repository (they aren't on pub.dev until Phase 8),
-  `build_runner ≥ 2.14`, `build.yaml`, `assets/scenes/` in `pubspec.yaml`, the `PyroScene.load`
+  packages as git dependencies on this repository (they aren't on pub.dev until Phase 8; they
+  depend on each other by version, so the recipe needs `dependency_overrides` for them too, as
+  spike #2's `gen_project.dart --pyro` found), `build_runner ≥ 2.14`, `assets/scenes/` in
+  `pubspec.yaml`, the `PyroScene.load`
   call, and enabling the macOS target if the game lacks one (the preview's Play has no device
   list)
 - [ ] **Dry run:** the tester task, following only the README, in a Flame project that isn't

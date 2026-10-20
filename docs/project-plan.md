@@ -100,7 +100,7 @@ frustrated by placing objects with hard-coded coordinates and restarting the gam
 
 1. Open Pyro → pick a Flame project from the project list.
 2. First time only: **"Add Pyro to this project"** adds the runtime and generator
-   dependencies (and `build_runner ≥ 2.14`), `build.yaml`, an `assets/scenes/` folder and its
+   dependencies (and `build_runner ≥ 2.14`), an `assets/scenes/` folder and its
    `pubspec.yaml` asset entry, shows the diff, runs `pub get` (*Q29, Q48, Q53*).
 3. Pyro starts `build_runner watch` in the background, or uses one the user already runs
    (*Q48*). The user's annotated behaviors and components appear in the "Add Behavior" list (*Q38*).
@@ -301,9 +301,16 @@ class Boss extends PositionedEntity { ... }
   [ADR 0002](adr/0002-type-ids-are-class-names.md)).
 - `@PyroComponent` classes must extend **`PositionComponent`** in v1. They accept Behaviors only
   if they mix in `EntityMixin`; the generator records this (*Q50*).
-- `@Editable` fields must be public, non-final, of a supported Field type: `int`, `double`, `bool`,
-  `String`, enums, `Vector2`, `Color`, asset types (`Sprite`, `SpriteAnimation`, image path),
-  or a `Component` subtype (entity reference) (*Q12*).
+- `@Editable` fields must be public, non-final instance fields (never getters or setters, *Q103*)
+  of a supported Field type: `int`, `double`, `bool`, `String`, enums, `Vector2`, `Color`, asset
+  types (`Sprite`, `SpriteAnimation`, `ImagePath` from `pyro_annotations`, *Q101*), or a
+  `Component` subtype that isn't a Behavior (entity reference) (*Q12*). Entity references,
+  `Sprite` and `SpriteAnimation` must be nullable (*Q102*); any other non-nullable field needs an
+  initializer. Fields inherited from superclasses and mixins count.
+- `min`/`max` apply to `int` and `double` only; `min` above `max` is an error, a default outside
+  the range a warning (*Q106*). An `@Editable` field no annotated class uses is a warning (*Q104*).
+- A Behavior's parent type must be a class; a package using the generator must depend on
+  `pyro_runtime`; a field type must be reachable through the declaring file's own imports.
 - Unsupported types (e.g. `Map`, `List` in v1) fail the build with a message pointing at the field.
 - The Manifest records each type's **supertypes** (so reference fields accept subclasses, *Q57*)
   and each Behavior's **required parent type** (`Behavior<Enemy>`), so the inspector only offers
@@ -538,14 +545,17 @@ The format is fixed now; the grid slicer that writes it ships in v0.1.1 (*Q65*).
 ```
 
 - Constant defaults are evaluated; non-constant defaults keep their source text for display.
-- Generator errors are written into `errors` too, so Pyro can show them inline even when
-  the Dart build fails. ◇ proposed
+- Generator errors and warnings are written into `errors` and `warnings` too, each with a stable
+  `code`, file, line, class and field, so Pyro can show them inline even when the Dart build fails.
+  Keys are sorted; the full format is
+  [`specs/003-generator/contracts/manifest-v1.md`](../specs/003-generator/contracts/manifest-v1.md).
+  `manifestVersion` goes up only for a change an older reader would misread (*Q105*).
 - **No timestamps or other non-deterministic content:** the file is committed and checked in CI
   (below), so it must be byte-identical for identical input.
 - **Location (*Q68*):** `lib/pyro.manifest.json`, next to the Registry
   `lib/pyro.g.dart`. Both are `build_to: source` outputs of one `$lib$` aggregator that
-  reads per-file results from the build cache (the pattern source_gen's own combining builder
-  uses). **Both are committed**: a fresh clone compiles and opens in Pyro with no build
+  reads per-library results from the build cache. Both builders auto-apply to dependents, so a
+  game needs no `build.yaml` (*Q107*). **Both are committed**: a fresh clone compiles and opens in Pyro with no build
   step, so a Missing behavior always means the code really changed.
 - **CI check (*Q76*).** Getting Started recommends one of two checks, depending on the project's
   Flutter version. Flutter ≤ 3.46 pins `meta` tightly enough that build_runner resolves to at
@@ -559,8 +569,8 @@ The format is fixed now; the grid slicer that writes it ships in v0.1.1 (*Q65*).
   The `git diff` variant wasn't run in spike #2; the contract job (§13) exercises it first.
   Either command takes build_runner's lock, so running one locally stops Pyro's watcher
   (§9.2).
-- The per-file builder uses build_runner's `triggers` / `run_only_if_triggered` so files without
-  Pyro annotations cost nearly nothing. ◇ proposed
+- The per-library builder uses build_runner's `triggers` / `run_only_if_triggered` so files
+  without Pyro annotations cost nearly nothing.
 
 ### 7.4 Versioning, migrations and compatibility (*Q35, Q49*)
 

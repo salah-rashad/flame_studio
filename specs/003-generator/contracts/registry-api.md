@@ -15,11 +15,11 @@ enum TypeRole { behavior, component }
 /// The Field type of an Editable field (project plan §6.1, Q12), with the
 /// value the Runtime passes to [RegistryField.set] for it.
 enum FieldType {
-  int_,            // int
-  double_,         // double
-  bool_,           // bool
+  int,             // int
+  double,          // double
+  bool,            // bool
   string,          // String
-  enum_,           // the enum value
+  enumeration,     // the enum value (the Manifest writes "enum")
   vector2,         // Flame's Vector2
   color,           // dart:ui Color
   imagePath,       // ImagePath
@@ -43,7 +43,7 @@ final class RegistryField {
   final FieldType type;
   final bool nullable;
 
-  /// The enum's values, for [FieldType.enum_]; null otherwise.
+  /// The enum's values, for [FieldType.enumeration]; null otherwise.
   final List<Enum>? values;
 
   /// Whether [value] can be assigned to the field (its type, or null when
@@ -89,8 +89,10 @@ final class PyroRegistry {
 }
 ```
 
-`FieldType`'s Dart names carry a trailing `_` only where the plain word is a reserved word or a
-core type name; the Manifest's strings (contracts/manifest-v1.md) are the wire names. A
+`FieldType`'s Dart names match the Manifest's strings (contracts/manifest-v1.md), except
+`enumeration`, since `enum` is a reserved word. `int`, `double` and `bool` are legal value names;
+code inside the enum body can't name the core types, so the generator keeps its rules in an
+extension (implementation note, 2026-10-20). A
 hand-written Registry (#8's tests, Phase 2's done-when) uses the same classes.
 
 ## Generated `lib/pyro.g.dart`
@@ -114,7 +116,7 @@ final pyroRegistry = i3.PyroRegistry([
     fields: {
       'speed': i3.RegistryField(
         name: 'speed',
-        type: i3.FieldType.double_,
+        type: i3.FieldType.double,
         nullable: false,
         accepts: (v) => v is double,
         set: (t, v) => (t as i1.Patrol).speed = v as double,
@@ -128,7 +130,7 @@ final pyroRegistry = i3.PyroRegistry([
       ),
       'mode': i3.RegistryField(
         name: 'mode',
-        type: i3.FieldType.enum_,
+        type: i3.FieldType.enumeration,
         nullable: false,
         values: i1.PatrolMode.values,
         accepts: (v) => v is i1.PatrolMode,

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:build/build.dart';
 import 'package:build_test/build_test.dart';
@@ -38,9 +39,19 @@ final class GeneratorRun {
   String get logText => log.isEmpty ? '' : '${log.join('\n')}\n';
 }
 
+/// The `lib/` folder of [package], found through the test's package
+/// config, so the tests also run outside the workspace (task T050).
+Directory packageLib(String package) {
+  final uri = Isolate.resolvePackageUriSync(Uri.parse('package:$package/'));
+  if (uri == null) throw StateError('Package $package is not resolvable');
+  return Directory.fromUri(uri);
+}
+
 /// Reads `pyro_annotations`' real sources into `testBuilders` form.
 Map<String, String> _annotationSources() {
-  final root = Directory('../pyro_annotations/lib');
+  final root = Directory(
+    packageLib('pyro_annotations').path.replaceAll(RegExp(r'[/\\]$'), ''),
+  );
   return {
     for (final file in root.listSync(recursive: true).whereType<File>())
       if (file.path.endsWith('.dart'))

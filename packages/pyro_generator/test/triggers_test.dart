@@ -11,7 +11,9 @@ void main() {
   final config = BuildConfig.parse(
     'pyro_generator',
     const [],
-    File('build.yaml').readAsStringSync(),
+    File.fromUri(
+      packageLib('pyro_generator').uri.resolve('../build.yaml'),
+    ).readAsStringSync(),
   );
 
   test('the scan writes to the cache and runs only when triggered', () {

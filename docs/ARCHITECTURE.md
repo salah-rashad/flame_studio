@@ -568,3 +568,61 @@ Measured 2026-10-19 on the reference machine (Apple M4, macOS 26.2, Flutter 3.44
 4. **freezed needs `map`/`when` off for a class whose only factory is private**, or the generated
    code fails to compile (`SceneDocument`, which has no public constructor so that only the
    tree-safe edits make new states).
+
+## Generator
+
+**Question:** does the Generator ([`specs/003-generator/`](../specs/003-generator/spec.md))
+keep spike #2's shape and speed with the real rules, every v1 Field type and the error
+reporting, and does it resolve across its wide dependency ranges?
+
+**Answer:** yes, with three findings below. The per-library scan plus `$lib$` aggregator of
+spike #2 is kept; all 24 diagnostic codes have a golden case; the fixture game
+(`packages/pyro_generator/fixture_game`) builds against real Flame, its Registry analyzes clean
+and creates every type, and clean rebuilds are byte-identical.
+
+| What | Result |
+|---|---|
+| Tests at the workspace's versions (analyzer 12.1.0, build 4.0.7, source_gen 4.2.4, dart_style 3.1.8) | ✅ 116 pass |
+| Same tests at the top of the ranges (analyzer 14.5.0, build 5.0.0, source_gen 4.3.1, dart_style 3.1.14) | ✅ 116 pass, goldens byte-identical |
+| Real Flutter project outside the workspace (analyzer 13.0.0, build_runner 2.15.1) | ✅ builds 42 types, no errors |
+| Fixture game, clean cache, built twice | ✅ byte-identical outputs |
+
+Watch latency, 300 files / 42 annotated, Flutter 3.44.2, build_runner 2.15.1, median of 5, with
+spike #2's harness (`gen_project.dart --pyro`, `measure.dart`). **Linux early signal**, not the
+reference Mac (a 4-core Intel Xeon @ 2.1 GHz cloud container, 2026-10-20); SC-004 is still to
+be measured on the M4 (task T045):
+
+| Save | Manifest | Registry | Done |
+|---|---|---|---|
+| First save after watch start | 6.7 s | unchanged | 6.7 s |
+| Annotated: tooltip edit | 1.56 s | unchanged | 1.58 s |
+| Annotated: add an `@Editable` field | 1.60 s | 1.61 s | 1.62 s |
+| Annotated: method body | unchanged | unchanged | 1.70 s |
+| Unannotated leaf file | unchanged | unchanged | 0.45 s |
+| Unannotated file every annotated file imports | unchanged | unchanged | 1.69 s |
+| New annotated file | 1.73 s | 1.73 s | 1.75 s |
+
+Every annotated save lands well under the 3 s budget on this slower machine; the first save
+after the watcher starts pays the analyzer's warm-up (2.8 s on the M4 in spike #2), as before.
+
+**Findings**
+
+1. **`vector_math` declares `Vector2` in a part file.** The class's library is
+   `package:vector_math/vector_math.dart`, so matching the part's path
+   (`src/vector_math/vector2.dart`, research R3's first plan) matched nothing and every `Vector2`
+   field was "unsupported". The checker matches the library's URL; `vector_math_64`'s `Vector2`
+   (also a part) is told apart by its library.
+2. **build_runner doesn't restore a hand-edited output while its cache is warm.** With
+   unchanged inputs, `build_runner build` wrote nothing after `lib/pyro.g.dart` was edited by
+   hand. CI is unaffected (a fresh checkout has no cache, so the regenerate-and-diff check of
+   §7.3 sees the edit), but locally a stale output needs `rm -rf .dart_tool/build` or an input
+   change.
+3. **The packages need `dependency_overrides` when used by path or git.** `pyro_generator`
+   depends on `pyro_annotations` by version, as `pyro_runtime` does, so a project using them
+   from the repository before pub.dev (Phase 5's README recipe) must override all three.
+4. **Included `analyzer: exclude` lists merge.** The root options' `**/*.g.dart` exclusion
+   can't be undone by an including file, so CI analyzes the fixture's `lib/pyro.g.dart` by
+   naming it, which analyzes a file even when excluded (verified in a scratch project).
+5. **Enum values named `int`, `double` and `bool` shadow the core types inside the enum body.**
+   `FieldType` keeps those names (they match the Manifest); code that needs the core types sits
+   outside the enum.

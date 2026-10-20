@@ -303,8 +303,8 @@ Manifest update in `build_runner watch`, as spike #2 did.
   error naming the class and the accessor.
 - **FR-011**: The supported Field types MUST be every v1 Field type (*§6.1, Q12*): `int`,
   `double`, `bool`, `String`, enums, `Vector2`, `Color`, asset references (`ImagePath`, `Sprite`,
-  `SpriteAnimation`) and entity references (a `Component` or any subtype of it), each in both the
-  Manifest and the Registry. Any other type, including `Map` and `List`, fails the build with an
+  `SpriteAnimation`) and entity references (a `Component` or any subtype of it that isn't a
+  `Behavior`, since Behaviors are never Nodes), each in both the Manifest and the Registry. Any other type, including `Map` and `List`, fails the build with an
   error pointing at the field.
 - **FR-012**: An image-path field MUST be declared with the `ImagePath` type from
   `pyro_annotations`, a const-constructible wrapper around a project-root-relative asset path as
@@ -315,8 +315,13 @@ Manifest update in `build_runner watch`, as spike #2 did.
   default is `null`, which a Scene's Override replaces. `ImagePath` fields may be nullable or not.
 - **FR-012a**: For an entity reference, the Manifest MUST record the referenced type: by Type ID
   when it is annotated, by class name otherwise (*Q57*).
-- **FR-013**: A class MUST include the Editable fields it inherits from its superclasses, whether
-  or not those are annotated, listed superclass first, then in declaration order.
+- **FR-013**: A class MUST include the Editable fields it inherits from its superclasses and the
+  mixins applied to them, whether or not those are annotated, listed from the top of the chain
+  down, each in declaration order.
+- **FR-013a**: A Behavior's parent type (`T` in `Behavior<T>`) MUST be a class, so Pyro can match
+  it against Nodes' supertypes; a mixin or interface-only type fails the build with an error
+  naming the Behavior. `Behavior<EntityMixin>` or a bare `Behavior` means any Node that accepts
+  Behaviors.
 - **FR-014**: All errors in a build MUST be reported, not only the first; a class with any error
   MUST be left out of both outputs; the remaining valid classes MUST still be written.
 - **FR-014a**: An `@Editable` field in a class that has no Pyro annotation and is no annotated
@@ -365,7 +370,11 @@ Manifest update in `build_runner watch`, as spike #2 did.
   Flutter (*§5*, constitution II).
 - **FR-025**: The Registry MUST compile without analyzer errors or warnings in the game, MUST
   import types through public libraries (no `src/` implementation imports of other packages), and
-  MUST stay correct when user types or field types share names across libraries.
+  MUST stay correct when user types or field types share names across libraries. A field type
+  that no import of the declaring library makes available fails the build with an error naming
+  the field, rather than producing an implementation import.
+- **FR-025a**: A package that uses the Generator but doesn't depend on `pyro_runtime` MUST get a
+  build error saying so, since its Registry couldn't compile.
 
 **Build integration and determinism**
 
@@ -410,9 +419,9 @@ Manifest update in `build_runner watch`, as spike #2 did.
   type, both roles, explicit IDs, parent types, supertypes and inherited fields, and one fixture
   per build-time rule (at least Type ID collision, unsupported field and bad constructor), each
   compared byte for byte with its Registry and Manifest goldens.
-- **SC-002**: 100% of the build-time rules in FR-003, FR-006 to FR-012 and FR-014a have an error
-  or warning fixture, and every message names the file and the class (and field, where there is
-  one).
+- **SC-002**: 100% of the build-time rules in FR-003, FR-006 to FR-014a, FR-025 and FR-025a
+  have an error or warning fixture, and every message names the file and the class (and field,
+  where there is one).
 - **SC-003**: Building the fixture packages twice from a clean cache, on macOS, Linux and
   Windows in CI, produces byte-identical outputs every time.
 - **SC-004**: In `build_runner watch` on a mid-size Flame project (300 files, 42 annotated), the

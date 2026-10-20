@@ -1,0 +1,156 @@
+# Contract: the Registry
+
+Two halves: the types `pyro_runtime` exports for it (this feature adds them; the loader in #8
+uses them), and the shape of the `lib/pyro.g.dart` that `pyro_generator` writes into a game
+(FR-021 to FR-025; research R9 to R11).
+
+## `pyro_runtime`: `lib/src/loader/registry.dart`
+
+Exported from `package:pyro_runtime/pyro_runtime.dart`.
+
+```dart
+/// Whether a user type is a Behavior or a Custom component.
+enum TypeRole { behavior, component }
+
+/// The Field type of an Editable field (project plan §6.1, Q12), with the
+/// value the Runtime passes to [RegistryField.set] for it.
+enum FieldType {
+  int_,            // int
+  double_,         // double
+  bool_,           // bool
+  string,          // String
+  enum_,           // the enum value
+  vector2,         // Flame's Vector2
+  color,           // dart:ui Color
+  imagePath,       // ImagePath
+  sprite,          // Sprite
+  spriteAnimation, // SpriteAnimation
+  entityRef,       // the referenced Component
+}
+
+/// One Editable field of a user type.
+final class RegistryField {
+  const RegistryField({
+    required this.name,
+    required this.type,
+    required this.nullable,
+    required this.accepts,
+    required this.set,
+    this.values,
+  });
+
+  final String name;
+  final FieldType type;
+  final bool nullable;
+
+  /// The enum's values, for [FieldType.enum_]; null otherwise.
+  final List<Enum>? values;
+
+  /// Whether [value] can be assigned to the field (its type, or null when
+  /// [nullable]). The Runtime checks it before [set] so it can name the
+  /// Scene, Node and field in its error.
+  final bool Function(Object? value) accepts;
+
+  /// Assigns [value] to the field of [target], an instance this type's
+  /// `create` made. [value] must satisfy [accepts].
+  final void Function(Object target, Object? value) set;
+}
+
+/// One user type: what the Runtime needs to build it from a Scene.
+final class RegistryType {
+  const RegistryType({
+    required this.id,
+    required this.role,
+    required this.create,
+    required this.fields,
+  });
+
+  final TypeId id;
+  final TypeRole role;
+
+  /// A new instance through the class's unnamed constructor.
+  final Component Function() create;
+
+  /// The Editable fields by name, in Manifest order.
+  final Map<String, RegistryField> fields;
+}
+
+/// The game's generated Registry: every valid user type by Type ID.
+final class PyroRegistry {
+  /// Throws [ArgumentError] if two types share a Type ID (the Generator
+  /// never emits that; a hand-written Registry might).
+  PyroRegistry(Iterable<RegistryType> types);
+
+  /// The type with Type ID [id], or null.
+  RegistryType? operator [](TypeId id);
+
+  /// Every type, in Type ID order.
+  Iterable<RegistryType> get types;
+}
+```
+
+`FieldType`'s Dart names carry a trailing `_` only where the plain word is a reserved word or a
+core type name; the Manifest's strings (contracts/manifest-v1.md) are the wire names. A
+hand-written Registry (#8's tests, Phase 2's done-when) uses the same classes.
+
+## Generated `lib/pyro.g.dart`
+
+```dart
+// GENERATED CODE - DO NOT MODIFY BY HAND.
+// pyro_generator: the Registry for this package's annotated types.
+// ignore_for_file: type=lint
+
+import 'package:flame/components.dart' as i0;
+import 'package:my_game/behaviors/patrol.dart' as i1;
+import 'package:my_game/components/player.dart' as i2;
+import 'package:pyro_runtime/pyro_runtime.dart' as i3;
+
+/// Every Behavior and Custom component in this package, for `PyroScene.load`.
+final pyroRegistry = i3.PyroRegistry([
+  i3.RegistryType(
+    id: const i3.TypeId('Patrol'),
+    role: i3.TypeRole.behavior,
+    create: i1.Patrol.new,
+    fields: {
+      'speed': i3.RegistryField(
+        name: 'speed',
+        type: i3.FieldType.double_,
+        nullable: false,
+        accepts: (v) => v is double,
+        set: (t, v) => (t as i1.Patrol).speed = v as double,
+      ),
+      'direction': i3.RegistryField(
+        name: 'direction',
+        type: i3.FieldType.vector2,
+        nullable: false,
+        accepts: (v) => v is i0.Vector2,
+        set: (t, v) => (t as i1.Patrol).direction = v as i0.Vector2,
+      ),
+      'mode': i3.RegistryField(
+        name: 'mode',
+        type: i3.FieldType.enum_,
+        nullable: false,
+        values: i1.PatrolMode.values,
+        accepts: (v) => v is i1.PatrolMode,
+        set: (t, v) => (t as i1.Patrol).mode = v as i1.PatrolMode,
+      ),
+      'target': i3.RegistryField(
+        name: 'target',
+        type: i3.FieldType.entityRef,
+        nullable: true,
+        accepts: (v) => v == null || v is i2.Player,
+        set: (t, v) => (t as i1.Patrol).target = v as i2.Player?,
+      ),
+    },
+  ),
+]);
+```
+
+Rules:
+
+- Imports are prefixed `i0`, `i1`, … in URI order; field types are imported through a library
+  the declaring class's library imports (research R10), never through another package's `src/`.
+- Types in Type ID order, fields in Manifest order; the top-level name is always `pyroRegistry`.
+- Formatted with `dart_style` (research R11). With no types:
+  `final pyroRegistry = i0.PyroRegistry(const []);` and only the runtime import.
+- The file passes `flutter analyze` in the game with no errors or warnings (SC-005).

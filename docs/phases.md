@@ -37,23 +37,23 @@ flowchart LR
 |---|---|---|---|---|
 | 0 — De-risking spikes | v0.0 spikes #1–#3 | ~4 (outside the totals) | 0 | ✅ |
 | 1 — Foundations | #0 repo setup, #14 design system (all of it) | 3 + 23 | 0 | ✅ |
-| 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 13 | 4 | 🔶 |
+| 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 15 | 4 | 🔶 |
 | 3 — Vertical slice | `example/` skeleton (part of #13), #12 contract test, first slice of #11 | 1.5 + (in #11) | 1.5 | ⬜ |
 | 4 — Editor | #1 preview part with the editor window, #6, #4, #3, #5, #9 | 18 | 18 | ⬜ |
 | 5 — Play | Rest of #11 preview part, README recipe | 4 | 4 | ⬜ |
-| **Early preview** | | **~62.5** | **~27.5** | |
+| **Early preview** | | **~64.5** | **~27.5** | |
 | 6 — Testers and feedback | 5–8 testers, response table | — | — | ⬜ |
-| 7 — v0.1 breadth | #10, then the deferred parts of #1–#9 and #11 | 23 | 23 | ⬜ |
+| 7 — v0.1 breadth | #10, then the deferred parts of #1–#6, #8, #9 and #11 | 21 | 21 | ⬜ |
 | 8 — Release | #15 with pub.dev, rest of #13, #14 final pass, #16 | 7.5 | 7.5 | ⬜ |
-| **v0.1** | | **~93** | **~58** | |
+| **v0.1** | | **~93** | **~56** | |
 
 **Left to the early preview:** ~27.5 evenings ≈ 9 weeks, ~13 weeks with a 1.4× overrun.
-**Left to v0.1:** ~58 evenings ≈ 19 weeks, ~27 weeks with a 1.4× overrun.
+**Left to v0.1:** ~56 evenings ≈ 19 weeks, ~26 weeks with a 1.4× overrun.
 
-§14 counts the early preview as ~45 evenings. The ~62.5 above is larger because Phase 1 holds all
+§14 counts the early preview as ~47 evenings. The ~64.5 above is larger because Phase 1 holds all
 ~23 evenings of #14, while §14 puts only a ~5.5-evening core in the preview. The other ~17.5 were
 built ahead of the preview, so the preview's panels use the Pyro components throughout (*Q84,
-Q87*). The ~35 done are the repo setup, the whole design system, the Document model and the
+Q87*). The ~37 done are the repo setup, the whole design system, the Document model and the
 Generator. The spikes come on top.
 
 ---
@@ -100,7 +100,7 @@ share one format (§5); that comes first, because #2 and #8 both build on it.
   default until Settings arrive in Phase 7, *Q85*), `schemaVersion` gate (*Q49*). *Deferred:*
   migrations framework. §8.1, §8.2; [`specs/002-document-model/`](../specs/002-document-model/spec.md)
   (*Q94–Q99*)
-- [x] **#7 Generator** (4.5): the annotations in `pyro_annotations` (`@PyroBehavior`,
+- [x] **#7 Generator** (6.5, all of it, *Q100*): the annotations in `pyro_annotations` (`@PyroBehavior`,
   `@PyroComponent`, `@Editable`, `ImagePath`), introspection, the build-time rules of §6.1, Type
   IDs and collisions (ADR 0002), supertypes and parent types (*Q57*), the Registry and Manifest
   emitters into `lib/` (*Q68*; no `build.yaml` needed in games, *Q107*), errors and warnings in
@@ -235,7 +235,6 @@ open until Phase 6's feedback (*Q82*). Components come from `pyro_ui`, as in Pha
 - [ ] **#4 Viewport** (3.5): grid, snapping, rotate/scale gizmos, the reference rectangle (*Q85*)
 - [ ] **#5 Inspector** (2): editors for `Color`, entity reference, `Sprite`, `SpriteAnimation`
 - [ ] **#6 Built-in Node kinds** (0.5): the third hitbox kind
-- [ ] **#7 Generator** (2): the rest of the v1 Field types
 - [ ] **#8 Runtime** (0.5): the difference between §14's preview and v0.1 estimates
 - [ ] **#9 Behaviors** (1): reorder, Missing behavior polish
 - [ ] **#11 Play** (5): device list and emulator boot (*Q62*), Attach info file, `launch.json`,
@@ -283,5 +282,5 @@ Tasks with lead time or a recurring trigger, done next to the phases rather than
 
 None right now.
 
-The phase estimates are the per-item figures in §14's two tables. Phase 7's #7 and #8 lines are
-the differences between those tables, so they are rough.
+The phase estimates are the per-item figures in §14's two tables. Phase 7's #8 line is the
+difference between those tables, so it is rough. #7 moved wholly into Phase 2 (*Q100*).

@@ -60,6 +60,9 @@ parses the Manifest (#6) and the build_runner watcher Pyro runs (#11) are separa
 - Q: Can `@Editable` go on a setter or a getter/setter pair, or only on plain fields? → A: Plain
   fields only in v0.1; `@Editable` on a getter or setter fails the build with an error naming it.
   Developers react to values in `onLoad`, after the Runtime has set every Override.
+- Q: What happens to `@Editable` on a class that has no Pyro annotation and isn't a superclass of
+  an annotated class? → A: A build warning, in the build log and in a separate `warnings` list in
+  the Manifest; the build still succeeds and no type is left out.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -161,6 +164,10 @@ the errors) and its Registry with golden files; check that the build reports fai
    again, **Then** the errors are gone from the Manifest and the fixed types reappear in both
    files; **When** nothing is fixed and the build runs again, **Then** the same errors are
    reported again rather than disappearing.
+10. **Given** an `@Editable` field in a class that has no Pyro annotation and is no annotated
+    class's superclass, **When** the build runs, **Then** it succeeds, and a warning naming the
+    class, the field and its file appears in the build log and the Manifest's `warnings`,
+    suggesting `@PyroBehavior` or `@PyroComponent`.
 
 ---
 
@@ -304,11 +311,14 @@ Manifest update in `build_runner watch`, as spike #2 did.
   or not those are annotated, listed superclass first, then in declaration order.
 - **FR-014**: All errors in a build MUST be reported, not only the first; a class with any error
   MUST be left out of both outputs; the remaining valid classes MUST still be written.
+- **FR-014a**: An `@Editable` field in a class that has no Pyro annotation and is no annotated
+  class's superclass MUST produce a warning naming the class, the field and its file. Warnings
+  MUST NOT fail the build or leave any type out of either output.
 
 **Manifest**
 
 - **FR-015**: The Generator MUST write `lib/pyro.manifest.json` with `manifestVersion`, the list
-  of types and the list of errors (*§7.3*).
+  of types, the list of errors and the list of warnings (*§7.3*).
 - **FR-016**: Each type MUST record its Type ID, role, label (the class name when none is given),
   category, source path relative to the package root, doc comment, supertypes and fields. A
   Behavior MUST also record its required parent type; a Custom component MUST also record whether
@@ -321,7 +331,7 @@ Manifest update in `build_runner watch`, as spike #2 did.
   and maximum when given, and its default: the evaluated value when the initializer is constant,
   otherwise an empty default and the initializer's source text. Enum fields MUST also record their
   value names in declaration order.
-- **FR-019**: Each error MUST record a message, the file, the line, and the Type ID, class and
+- **FR-019**: Each error and each warning MUST record a message, the file, the line, and the Type ID, class and
   field it concerns where they apply, so Pyro can show it next to the right type.
 - **FR-020**: Errors MUST be written into the Manifest even when the build fails, and both
   outputs MUST be written before the build reports failure (spike #2 finding 4).
@@ -373,8 +383,9 @@ Manifest update in `build_runner watch`, as spike #2 did.
 - **Field type**: the value type of an Editable field; decides how the Runtime converts the
   Scene's written form and which editor Pyro shows.
 - **Generator error**: a broken build-time rule; names the file, line, type and field it concerns
-  and how to fix it; written to the build log and the Manifest.
-- **Manifest**: the committed JSON description of all valid types plus all errors, read by Pyro.
+  and how to fix it; written to the build log and the Manifest. A **Generator warning** has the
+  same shape but doesn't fail the build (FR-014a).
+- **Manifest**: the committed JSON description of all valid types plus all errors and warnings, read by Pyro.
 - **Registry**: the committed generated code that creates types by Type ID and sets their fields,
   implementing the Runtime's Registry contract.
 

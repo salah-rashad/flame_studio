@@ -250,7 +250,7 @@ the type, field or path involved (spec US2)
 
 ### Tests for User Story 2
 
-- [ ] T024 [P] [US2] Add one fixture per US2 scenario under `rt/test/fixtures/loader/errors/` (listed in the README):
+- [X] T024 [P] [US2] Add one fixture per US2 scenario under `rt/test/fixtures/loader/errors/` (listed in the README):
   - `unknown_behavior`, `unknown_custom` (with a child and a grandchild), `unknown_kind`, `role_mismatch` (a Behavior Type ID on a `custom` Node);
   - `bad_value_int` (`1.5`), `bad_value_bool`, `bad_value_enum`, `bad_value_color`, `null_non_nullable`, `unused_override`;
   - `missing_ref`, `wrong_ref_type` (a `Player?`-typed field pointing at a sprite), `ref_to_skipped`;
@@ -258,7 +258,7 @@ the type, field or path involved (spec US2)
   - `behavior_on_plain` (Behaviors on `Plain`), `wrong_parent` (`EnemyOnly` on a `Player`);
   - `malformed` (bad JSON), `newer_schema` (`schemaVersion: 2`);
   - `throwing_constructor`, `throwing_setter`.
-- [ ] T025 [P] [US2] Write `rt/test/loader/errors_test.dart` for T027–T029. For each fixture of T024 except the `unknown_*` and `unused_override` ones, `PyroScene.load` throws a `SceneLoadException` whose fields and `toString` name:
+- [X] T025 [P] [US2] Write `rt/test/loader/errors_test.dart` for T027–T029. For each fixture of T024 except the `unknown_*` and `unused_override` ones, `PyroScene.load` throws a `SceneLoadException` whose fields and `toString` name:
   - the Scene path;
   - the Node (name and ID);
   - the Type ID, field and asset path where the scenario has them;
@@ -266,7 +266,7 @@ the type, field or path involved (spec US2)
   - for `malformed`, `newer_schema` and the throwing ones, a `cause` of the original type with a non-null `causeStackTrace`.
 
   Also: `missing scene file` (no text in the source) fails naming the path (US2 #11). Then lossless conversion loads silently (US2 #5).
-- [ ] T026 [P] [US2] Write `rt/test/loader/unknown_type_test.dart` for T027–T028, covering US2 #1–#3, #6 and #8:
+- [X] T026 [P] [US2] Write `rt/test/loader/unknown_type_test.dart` for T027–T028, covering US2 #1–#3, #6 and #8:
   - with the default policy, `unknown_behavior`, `unknown_custom` and `unknown_kind` fail naming the Type ID or kind and mentioning `UnknownType.skip`, and `role_mismatch` fails under both policies;
   - with `UnknownType.skip`:
     - the unknown Behavior is gone and its Node stays;
@@ -278,12 +278,12 @@ the type, field or path involved (spec US2)
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] Complete pass 1 in `rt/lib/src/loader/scene_builder.dart` per [research R9](research.md#r9-unknown-type-ids-and-node-kinds):
+- [X] T027 [US2] Complete pass 1 in `rt/lib/src/loader/scene_builder.dart` per [research R9](research.md#r9-unknown-type-ids-and-node-kinds):
   - unknown Type IDs and `UnknownNode` kinds throw under `UnknownType.error` with the message of contracts/runtime-api.md (the first example), and under `skip` are recorded as `SkippedItem`s (a Behavior alone; a Node with its whole subtree, so pass 1 doesn't descend into it);
   - role mismatches always throw (FR-007);
   - constructor errors are caught per Node and rethrown with `typeId` and the cause (FR-018).
-- [ ] T028 [US2] Implement `rt/lib/src/loader/load_warnings.dart`: `void warnAboutSkipped(AssetPath scene, List<SkippedItem> items)` and `void warnAboutUnusedOverrides(AssetPath scene, List<UnusedOverride> items)`, in `rt/lib/src/loader/repair_warning.dart`'s style (`if (!kDebugMode || items.isEmpty) return;`, one `debugPrint` with a `══ … ══` header line). Record skipped references in pass 3 and unused Overrides in pass 2. Call both from `PyroScene.load` after a successful build. Make T026 pass.
-- [ ] T029 [US2] Complete every other error path in `rt/lib/src/loader/scene_builder.dart` so T025 passes:
+- [X] T028 [US2] Implement `rt/lib/src/loader/load_warnings.dart`: `void warnAboutSkipped(AssetPath scene, List<SkippedItem> items)` and `void warnAboutUnusedOverrides(AssetPath scene, List<UnusedOverride> items)`, in `rt/lib/src/loader/repair_warning.dart`'s style (`if (!kDebugMode || items.isEmpty) return;`, one `debugPrint` with a `══ … ══` header line). Record skipped references in pass 3 and unused Overrides in pass 2. Call both from `PyroScene.load` after a successful build. Make T026 pass.
+- [X] T029 [US2] Complete every other error path in `rt/lib/src/loader/scene_builder.dart` so T025 passes:
   - **pass 2:** asset errors with `asset` and the first requesting Node and field; animation-file errors wrapped with the file path; an unknown or missing animation name listing the file's animations (sorted); value mismatches from T020; setter errors caught per field;
   - **pass 3:** a missing target (`missing_ref`), or a target the field's `accepts` rejects (`wrong_ref_type`), naming the target's Node ID;
   - **pass 4:** Behaviors on a component that isn't an `EntityMixin`, and `acceptsParent` rejecting the Node's component (FR-008), naming the Behavior's Type ID.
@@ -304,7 +304,7 @@ every lookup form and check its results and its errors (spec US3)
 
 ### Tests for User Story 3
 
-- [ ] T030 [P] [US3] Add `rt/test/fixtures/loader/lookups.scene.json`:
+- [X] T030 [P] [US3] Add `rt/test/fixtures/loader/lookups.scene.json`:
   - root → `arena` → `boss` (`Enemy`), and root → `cave` → `boss` (`Enemy`);
   - `player` (`Player`) at the top level;
   - three entities tagged `enemy` at different depths, one of them unnamed;
@@ -326,8 +326,8 @@ every lookup form and check its results and its errors (spec US3)
 
 ### Implementation for User Story 3
 
-- [ ] T031 [US3] Implement path matching in `rt/lib/src/loader/built_scene.dart` per [research R10](research.md#r10-lookups): `Iterable<NodeEntry> match({String? nameOrPath, String? tag})`. It splits on `/`, matches the last segment's name and then the nearest ancestors in order, and for a leading `/` requires the first segment's entry to have no `parent`. Unnamed entries never match a name.
-- [ ] T032 [US3] Add `find<T extends Component>(String nameOrPath)` and `findAll<T extends Component>({String? name, String? tag})` to `PyroScene` in `rt/lib/src/loader/pyro_scene.dart` per [contracts/runtime-api.md § Loading](contracts/runtime-api.md#loading). `find` throws a `StateError` for none, several (listing each match's `path`, and suggesting `findAll` or a longer path) or a type mismatch (naming the Node's runtime type and `T`). Ambiguity is decided by name alone, before `T` is checked. `findAll` returns a new `List<T>`. Make T030 pass.
+- [X] T031 [US3] Implement path matching in `rt/lib/src/loader/built_scene.dart` per [research R10](research.md#r10-lookups): `Iterable<NodeEntry> match({String? nameOrPath, String? tag})`. It splits on `/`, matches the last segment's name and then the nearest ancestors in order, and for a leading `/` requires the first segment's entry to have no `parent`. Unnamed entries never match a name.
+- [X] T032 [US3] Add `find<T extends Component>(String nameOrPath)` and `findAll<T extends Component>({String? name, String? tag})` to `PyroScene` in `rt/lib/src/loader/pyro_scene.dart` per [contracts/runtime-api.md § Loading](contracts/runtime-api.md#loading). `find` throws a `StateError` for none, several (listing each match's `path`, and suggesting `findAll` or a longer path) or a type mismatch (naming the Node's runtime type and `T`). Ambiguity is decided by name alone, before `T` is checked. `findAll` returns a new `List<T>`. Make T030 pass.
 
 **Checkpoint**: every lookup form behaves as US3 says (SC-005)
 

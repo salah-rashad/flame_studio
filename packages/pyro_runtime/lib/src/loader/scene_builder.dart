@@ -125,7 +125,8 @@ final class SceneBuilder {
         _unknown(
           node,
           'is of kind "${node.kind}", which this version of pyro_runtime '
-          "doesn't know. Was it written by a newer Pyro, or edited by hand?",
+          "doesn't know. Was it written by a newer Pyro, or edited by hand? "
+          'Pass onUnknownType: UnknownType.skip to load without it.',
           what: 'Node of kind "${node.kind}" and everything under it',
         );
         component = null;

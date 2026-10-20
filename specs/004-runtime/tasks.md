@@ -102,7 +102,7 @@ Registry, and a `PyroScene.load` that loads a root-only Scene
 
 - [ ] T008 [P] Implement `rt/lib/src/assets/asset_source.dart` per [contracts/runtime-api.md § Assets](contracts/runtime-api.md#assets) and research R8:
   - `abstract interface class AssetSource` with `loadText` and `loadImage`;
-  - `factory AssetSource.bundle([AssetBundle? bundle])` returning a private `_BundleAssetSource`. It reads text with `bundle.loadString(path, cache: false)` and images through its own `Images(prefix: '', bundle: bundle)`. When `Images.load` throws, it calls `images.clear(path)` before rethrowing.
+  - `factory AssetSource.bundle([AssetBundle? bundle])` returning a private `_BundleAssetSource`. It resolves `final b = bundle ?? rootBundle;` once and uses `b` for both: text with `b.loadString(path, cache: false)` and images through its own `Images(prefix: '', bundle: b)`, never `Flame.bundle`. When `Images.load` throws, it calls `images.clear(path)` before rethrowing.
 
   Document that the source owns its images. Make T007 pass.
 - [ ] T009 Amend `AssetRef` in `rt/lib/src/scene/overrides.dart` per [contracts/runtime-api.md § Amended: AssetRef](contracts/runtime-api.md#amended-assetref-spec-001-contract):
@@ -202,15 +202,15 @@ property and every field value (spec US1)
   - `CollisionType` from `NodeCollisionType` by name;
   - `Vector2` from `Vec2`;
   - hitboxes always get an explicit position and size or radius;
-  - a sprite gets `Sprite(image, srcPosition:, srcSize:)` with the image supplied by the caller.
-- [ ] T022 [US1] Implement `rt/lib/src/loader/scene_builder.dart`, the four passes of [research R4](research.md#r4-the-four-pass-build) for the success path. It takes a decoded `Scene`, a `PyroRegistry`, an `AssetSource`, an `UnknownType` and the Scene's `AssetPath`, and returns a `BuiltScene`:
+  - a sprite Node gets a `SpriteComponent` with its transform and no sprite, plus a helper that pass 2 calls with the loaded image to set `Sprite(image, srcPosition:, srcSize:)` (research R3).
+- [ ] T022 [US1] Implement `rt/lib/src/loader/scene_builder.dart`, the four passes of [research R4](research.md#r4-the-four-pass-build) for the success path. It takes a decoded `Scene`, a `PyroRegistry`, an `AssetSource`, an `UnknownType`, the Scene's `AssetPath` and a required `Component root` (the `PyroScene` the build is for), and returns a `BuiltScene`:
   1. **construct:** depth first in `childIds` order. Built-in kinds come from T021; `custom` Nodes and Behaviors are created through `RegistryType.create()`. Collect `AssetRequest`s deduplicated by path, noting the first Node and field that asked;
-  2. **configure:** `Future.wait` over every request (images by `loadImage`; animation files by `loadText` + `AnimationCodec.decode` + `loadImage` of their `image`, each file parsed once). Record each text read in `texts`. Then set Custom components' transforms and every non-reference Override via T020 and `RegistryField.set`;
-  3. **resolve:** set reference Overrides from `componentsById` (root → the `PyroScene` placeholder handle the caller supplies);
+  2. **configure:** `Future.wait` over every request (images by `loadImage`; animation files by `loadText` + `AnimationCodec.decode` + `loadImage` of their `image`, each file parsed once). Record each text read in `texts`. Then set each sprite Node's `sprite` (T021's helper), Custom components' transforms and every non-reference Override via T020 and `RegistryField.set`;
+  3. **resolve:** set reference Overrides from `componentsById` (the root → the `root` argument);
   4. **attach:** `add` Behaviors and children in Scene order, then build `entries` in tree order.
 
   Error paths stay minimal here (throw `SceneLoadException` with the message parts available); US2 completes them.
-- [ ] T023 [US1] Wire T022 into `PyroScene.load` in `rt/lib/src/loader/pyro_scene.dart`: build first, then create the `PyroScene` and `addAll(built.children)`. `componentsById[rootId]` must be the returned `PyroScene`, so create the instance before pass 3 and keep it private until `load` completes. Export `PyroEntity` from `rt/lib/pyro_runtime.dart`, and re-export `Behavior` and `EntityMixin` from `flame_behaviors` (contracts/runtime-api.md, Exports). Make T017 pass.
+- [ ] T023 [US1] Wire T022 into `PyroScene.load` in `rt/lib/src/loader/pyro_scene.dart`: build first, then create the `PyroScene` and `addAll(built.children)`. `componentsById[rootId]` must be the returned `PyroScene`, so create the instance first, pass it as `root`, and keep it private until `load` completes. Export `PyroEntity` from `rt/lib/pyro_runtime.dart`, and re-export `Behavior` and `EntityMixin` from `flame_behaviors` (contracts/runtime-api.md, Exports). Make T017 pass.
 
 **Checkpoint**: Phase 2 of phases.md's done-when for the Runtime holds: every fixture Scene loads in
 `flame_test` with the hand-written Registry (SC-001)
@@ -345,13 +345,13 @@ reload again and check that nothing was rebuilt (spec US4)
 - [ ] T035 [US4] Implement the change check in `rt/lib/src/loader/hot_swap.dart` per [research R11](research.md#r11-hot-swap): `Future<bool> contentChanged(AssetSource source, Map<AssetPath, String> texts)`. It re-reads every path in `texts` through `source.loadText` and compares with `==`. A read failure counts as changed, so the rebuild reports it.
 - [ ] T036 [US4] Override `onHotReload` in `PyroScene` (`rt/lib/src/loader/pyro_scene.dart`):
   - call `super.onHotReload()`, then, only `if (kDebugMode)`, chain `_checkForChanges()` onto a private `Future<void> _pending` (expose it as `@visibleForTesting pendingCheck`);
-  - `_checkForChanges`: if `contentChanged` (T035) finds no change, stop. Otherwise read and decode the Scene and run `SceneBuilder` with the kept Registry, policy and source;
+  - `_checkForChanges`: if `contentChanged` (T035) finds no change, stop. Otherwise read and decode the Scene and run `SceneBuilder` with the kept Registry, policy and source and `root: this`, so root references resolve to the same instance;
   - on failure, `debugPrint` one error starting `══ Pyro couldn't Hot-swap <path> ══` with the cause and keep the current build (FR-026);
   - on success, swap synchronously: `removeAll` the old root children, `addAll` the new, replace the build (index, `texts`), warn about repairs, skips and unused Overrides as in `load`, start the stale watch (T037), then call `onReloaded?.call(this)`.
 
   Make T033 pass.
 - [ ] T037 [US4] Implement `StaleWatch` in `rt/lib/src/loader/hot_swap.dart` per [research R12](research.md#r12-stale-reference-warning) and [data-model.md § StaleWatch](data-model.md#stalewatch-internal-debug-only):
-  - it watches each removed entry's component with a `transform` listener (only for `PositionComponent`s) and a `mounted.then` callback that checks the watch is still open;
+  - for each removed entry's component, once `component.removed` completes (research R12: before that, `mounted` is an already-completed future), it attaches a `transform` listener (only for `PositionComponent`s) and a `mounted.then` callback that checks the watch is still open;
   - `fire` prints `══ Pyro: <path> was Hot-swapped, but game code still uses Node "<name>" (<id>) from before ══`, followed by "Re-run lookups in onReloaded (PyroScene.load).", then detaches that Node;
   - `close()` detaches everything.
 
@@ -393,8 +393,8 @@ Registry and `rootBundle`
 
 **Purpose**: the budgets measured, documentation in sync, final checks
 
-- [ ] T042 [P] Write `rt/benchmark/load_benchmark_test.dart` (SC-004, quickstart §4). Reuse the 1,000-Node Scene generator from `rt/benchmark/scene_codec_benchmark.dart`: move it to `rt/benchmark/support/benchmark_scene.dart` and import it from both, with entities, sprites on 10 distinct images, hitboxes, and Custom components and Behaviors from a small benchmark Registry. Use a `MemoryAssetSource` with pre-made images (so image decoding is excluded). Report the median and p95 of 20 runs each for `PyroScene.load`, a no-op Hot-swap check (`contentChanged` on unchanged texts), and a full rebuild (load into a mounted Scene + swap). `expect` each median under 50 ms, 5 ms and 100 ms.
-- [ ] T043 On the reference Mac, run T042 and quickstart §5 step 4 (the release build checked with `strings … | grep -c "couldn't Hot-swap"` → 0, SC-006). Record the table, the configuration (macOS, Apple M4, Flutter 3.44.2, `flutter test` JIT) and the release result in a new "Runtime" section of `docs/ARCHITECTURE.md`, after the Generator section. If this can't run on the reference Mac in the implementing session, leave the task open and say so in the PR
+- [ ] T042 [P] Write `rt/benchmark/load_benchmark_test.dart` (SC-004, quickstart §4). Reuse the 1,000-Node Scene generator from `rt/benchmark/scene_codec_benchmark.dart`: move it to `rt/benchmark/support/benchmark_scene.dart` and import it from both, with entities, sprites on 10 distinct images, hitboxes, and Custom components and Behaviors from a small benchmark Registry. Use a `MemoryAssetSource` with pre-made images (so image decoding is excluded). Report the median and p95 of 20 runs each for `PyroScene.load`, a no-op Hot-swap check (`contentChanged` on unchanged texts), and a full rebuild (load into a mounted Scene + swap). `expect` each median under 50 ms, 5 ms and 100 ms. Also record the longest synchronous pause of the isolate during a load and during a rebuild: run a `Timer.periodic(Duration.zero)` probe alongside and report the longest gap between its ticks. No `expect` on it yet (spec Clarifications).
+- [ ] T043 On the reference Mac, run T042 and quickstart §5 step 4 (the release build checked with `strings … | grep -c "couldn't Hot-swap"` → 0, SC-006). Record the table (including the longest pauses), the configuration (macOS, Apple M4, Flutter 3.44.2, `flutter test` JIT) and the release result. Then propose a pause limit to the author. Once they set it, add it to SC-004 and plan.md, add the `expect` to T042's benchmark, and if the limit needs it, make `scene_builder.dart` yield between passes (and every ~200 Nodes in pass 1), recording the limit as a decision in `docs/decisions.md`. Record all of this in a new "Runtime" section of `docs/ARCHITECTURE.md`, after the Generator section. If this can't run on the reference Mac in the implementing session, leave the task open and say so in the PR
 - [ ] T044 [P] Update `GLOSSARY.md` (plan.md, Documentation updates):
   - add **Asset source**, **Animation file** and **Stale reference**, each one line in the file's style;
   - add to **Entity** that its component in games is `PyroEntity`;

@@ -50,8 +50,9 @@ builds only
 its fixture
 
 **Performance Goals**: 1,000-Node Scene loaded in < 50 ms median excluding image decoding; a
-no-op Hot-swap check < 5 ms; a rebuild < 100 ms (SC-004, constitution III); zero per-frame work
-after load (FR-032)
+no-op Hot-swap check < 5 ms; a rebuild < 100 ms (SC-004, constitution III); the longest
+synchronous pause during a load and a rebuild measured, with its limit set after T043 (spec
+Clarifications); zero per-frame work after load (FR-032)
 
 **Constraints**: no new dependency in `pyro_runtime` (constitution II); every Hot-swap path
 behind `kDebugMode` (constitution III); nothing read from `Flame.images`, `Flame.assets` or
@@ -69,7 +70,7 @@ behind `kDebugMode` (constitution III); nothing read from `Flame.images`, `Flame
 |---|---|---|---|
 | I. Clean Code | Glossary names; public API documented; errors name Scene, Node, Type ID, field, path; immutable data; no speculative abstraction | ✅ | ✅ one `SceneLoadException` carrying every name (contracts/runtime-api.md); the builder's passes are private functions, not a framework; `AssetSource` has two real callers (bundle, Pyro's disk source in #4) plus the test double; `BuiltScene` and `AnimationFile` are immutable; new glossary terms below |
 | II. Modular Boundaries | Runtime stays small; the scene model and its formats live here; boundary changes stated | ✅ | ✅ no new dependency (R1); the `.anim.json` reader lives next to the Scene format (R7); the `RegistryType` change is a stated contract change made with the Generator in one commit (R6); `pyro_generator` still doesn't import the Runtime (it emits text) |
-| III. Performance by Design | Budget stated and measured; no per-frame work; debug-only Hot-swap behind `kDebugMode`; async I/O | ✅ | ✅ SC-004 budgets with a benchmark (R15, quickstart §4); `PyroScene` overrides no `update`/`render` (R14); stale watchers only on removed components (R12); assets loaded concurrently (R4); no-op reloads compare text before decoding (R11) |
+| III. Performance by Design | Budget stated and measured; no per-frame work; debug-only Hot-swap behind `kDebugMode`; async I/O | ✅ | ✅ SC-004 budgets with a benchmark (R15, quickstart §4); the "must not block a frame" rule is measured (longest isolate pause) before a limit is set, by the author's choice (spec Clarifications), and revisited in T043; `PyroScene` overrides no `update`/`render` (R14); stale watchers only on removed components (R12); assets loaded concurrently (R4); no-op reloads compare text before decoding (R11) |
 | IV. User Data Integrity | Runtime never writes user files; unknown data never silently misread | ✅ | ✅ the Runtime only reads; unknown Type IDs fail by default (Q58); unused Overrides warn, never vanish from the file (FR-012); the `AssetRef` amendment keeps every other value shape verbatim and doesn't need a `schemaVersion` bump (R13) |
 | V. Tested Core | Runtime loader is Heavy: tests for every behavior; deterministic | ✅ | ✅ a test file per user story plus format tests (quickstart §1); memory asset source and in-test images, no files, network or clocks; Hot-swap driven through `game.onHotReload()`; an end-to-end load with the real Registry in `fixture_game` |
 

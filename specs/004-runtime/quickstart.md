@@ -52,8 +52,9 @@ cd packages/pyro_runtime && flutter test benchmark/load_benchmark_test.dart
 ```
 
 It prints the median (p95) of 20 runs on the 1,000-Node benchmark Scene for a load without image
-decoding, a Hot-swap check that finds nothing changed, and a rebuild. Pass: under 50 ms, 5 ms and
-100 ms (SC-004). `flutter test` runs JIT with asserts, so passing here bounds a profile build.
+decoding, a Hot-swap check that finds nothing changed, and a rebuild, plus the longest
+synchronous pause during a load and during a rebuild. Pass: under 50 ms, 5 ms and 100 ms (SC-004).
+The pause has no limit yet: record it, and set the limit from it (spec Clarifications). `flutter test` runs JIT with asserts, so passing here bounds a profile build.
 Record the table in `docs/ARCHITECTURE.md` under a new "Runtime" section.
 
 ## 5. Hot-swap in a running game and check release builds (reference Mac)

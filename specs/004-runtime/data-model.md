@@ -50,7 +50,7 @@ The result of one complete build. Nothing in it is attached to a live tree until
 |---|---|---|
 | `children` | `List<Component>` | the root's child components, in `childIds` order, with their subtrees already added (queued) |
 | `entries` | `List<NodeEntry>` | every built Node except the root, in tree order (depth first, `childIds` order); the lookup index |
-| `componentsById` | `Map<NodeId, Component>` | pass 3's reference targets; the root maps to the `PyroScene` |
+| `componentsById` | `Map<NodeId, Component>` | pass 3's reference targets; the root maps to the `PyroScene`, the same instance across rebuilds (a required builder argument) |
 | `texts` | `Map<AssetPath, String>` | the Scene file and each animation file read, by path; the Hot-swap comparison (R11) |
 | `skipped` | `List<SkippedItem>` | Nodes, Behaviors and references dropped under `UnknownType.skip`; empty under `error` |
 | `unusedOverrides` | `List<UnusedOverride>` | Overrides for fields the Registry doesn't list (FR-012) |
@@ -121,6 +121,7 @@ debug builds.
 ## StaleWatch (internal, debug only)
 
 The removed components of the last swap, by Node, each with a transform listener and a
-`mounted` callback. `fire(node)` prints the warning and detaches that Node's watchers. `close()`
+`mounted` callback, both attached when that component's `removed` future completes (research
+R12). `fire(node)` prints the warning and detaches that Node's watchers. `close()`
 detaches every watcher left; it runs at the start of the next swap and when the `PyroScene` is
 removed.

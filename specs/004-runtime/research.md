@@ -55,8 +55,9 @@ with an `assert` in `onMount`.
 
 Hitboxes always get an explicit position and size or radius, so they never fill their parent. A
 named anchor maps to Flame's constant of the same name, and a custom one to `Anchor(x, y)`.
-`NodeCollisionType` maps to `CollisionType` by name. Each component is created with its final
-values, not mutated after construction.
+`NodeCollisionType` maps to `CollisionType` by name. Hitboxes and entities are created with
+their final values. A `SpriteComponent` is created in pass 1 with its transform and no sprite;
+pass 2 sets its `sprite` once the image is loaded (R4).
 
 **Rationale:** a public `PyroEntity` lets game code write `find<PyroEntity>('goblin_1')` and
 `findAll<PositionedEntity>()`. It's the one new class the Scene's `entity` kind needs.
@@ -72,13 +73,17 @@ Nothing is added to a live tree until all four passes succeed (FR-003, FR-004):
 
 1. **Construct.** Walk the tree depth first in `childIds` order. For each Node, look up its kind,
    or its Type ID in the Registry, check the role (FR-007), apply the unknown-type policy (R9),
-   and create its component and its Behaviors' components. Built-in kinds are created complete
-   (R3). This pass also collects every asset path the Scene uses.
+   and create its component and its Behaviors' components. Built-in kinds are created as R3
+   says (sprites without their image yet). This pass also collects every asset path the Scene
+   uses.
 2. **Configure.** Load every distinct asset concurrently (`Future.wait`): sprite images, `Sprite`
-   images and animation files with their images. Then set the transform of positioned Custom
-   components and convert and assign every non-reference Override (R5). Reference Overrides are
+   images and animation files with their images. Then set each sprite Node's `sprite`, set the
+   transform of positioned Custom components, and convert and assign every non-reference Override
+   (R5). Reference Overrides are
    only checked for shape in this pass.
-3. **Resolve.** Assign entity-reference Overrides from the Node ID → component map (FR-014).
+3. **Resolve.** Assign entity-reference Overrides from the Node ID → component map (FR-014). The
+   root's entry is a required builder argument: the `PyroScene` the build is for, so a Hot-swap
+   rebuild resolves root references to the same instance.
 4. **Attach.** Check each Behavior's parent (R6), then `add` Behaviors and child components in
    Scene order. Adding to a parent that isn't mounted queues the child in Flame, so no `onLoad`
    runs until the `PyroScene` is added to a game (*read*: `Component.add` on an unmounted parent
@@ -178,8 +183,9 @@ Reusing the Scene format's reader gives the same error quality for free.
 
 **Decision:** an `abstract interface class AssetSource` with two methods, `loadText(AssetPath)` and
 `loadImage(AssetPath)`, keyed by project-relative path (FR-030). `AssetSource.bundle([AssetBundle?
-bundle])` is the default. It reads text with `bundle.loadString(path, cache: false)` and images
-through its own `Images(prefix: '', bundle: bundle)`, so nothing goes through `Flame.images`,
+bundle])` is the default. It resolves `bundle ?? rootBundle` once, then reads text with
+`loadString(path, cache: false)` and images through its own `Images(prefix: '', bundle:)` on that
+same bundle, so nothing goes through `Flame.images`,
 `Flame.assets` or `Flame.bundle`. A failed image load is cleared from that cache before the error
 is rethrown, so a later Hot-swap retries the file. `PyroScene.load` creates one bundle source per
 Scene when the caller passes none, and keeps it for the Scene's lifetime, Hot-swap rebuilds
@@ -271,7 +277,10 @@ when the component isn't mounted.
 first use:
 
 - **transform changed** (positioned components): a listener on `transform`;
-- **added to a tree again**: `component.mounted.then(...)`;
+- **added to a tree again**: `component.mounted.then(...)`, attached only after
+  `component.removed` completes. `removeAll` only queues the removal, and while a component is
+  still mounted, `mounted` returns an already-completed future (*read*, flame 1.38.2), which
+  would warn at once. The transform listener starts at the same moment;
 - **passed to a `PyroScene` API**: `PyroScene` v0.1 has no API that takes a component, so there
   is nothing to check yet. Any later API that takes one consults the same watched set.
 
@@ -325,15 +334,18 @@ runner time for a property that only changes when Hot-swap code changes).
 - **Registry:** `test/support/test_registry.dart`, written by hand. It has Behaviors and Custom
   components covering every Field type, a Behavior with a narrow parent type, a component without
   `EntityMixin`, and components whose constructor or setter throws.
-- **Fixture Scenes:** `test/fixtures/loader/*.scene.json` (and `*.anim.json`), one per scenario and error case in User
-  Stories 1–3. Loaded through the memory source.
+- **Fixture Scenes:** `test/fixtures/loader/*.scene.json` (and `*.anim.json`), one per scenario
+  and error case in User Stories 1–3. Loaded through the memory source.
 - **Hot-swap:** change the memory source's text, then call `game.onHotReload()`, the path
   Flutter's reassemble takes (*read*). SC-003 alternates 100 changed and unchanged reloads.
 - **End to end:** `packages/pyro_generator/fixture_game` gets one Scene and a `flutter test` that
   loads it with the real generated Registry and `AssetSource.bundle()`. This is the pattern #12
   reuses for `example/`.
 - **Benchmark:** `benchmark/load_benchmark_test.dart`, run with `flutter test` on the 1,000-Node
-  Scene that `scene_codec_benchmark.dart` generates, with a memory source. It reports load,
+  Scene that `scene_codec_benchmark.dart` generates, with a memory source. It also records the
+  longest synchronous pause of the test isolate during a load and during a rebuild, timed as the
+  longest gap between event-loop turns, whose limit is set after T043 (spec Clarifications). It
+  reports load,
   no-op check and rebuild medians (SC-004). `flutter test` runs JIT with asserts, so the numbers
   are an upper bound on what a profile build would show.
 

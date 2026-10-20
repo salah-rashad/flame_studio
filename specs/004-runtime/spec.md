@@ -55,6 +55,11 @@ reload (#11) and the CI contract test on `example/` (#12) are separate items.
 - Q: Which uses of a stale reference does the debug warning detect? → A: The uses the Runtime can
   observe cheaply: a removed component's transform changing, the component being added to a tree
   again, or it being passed to a `PyroScene` API. Method calls and field reads on it go unnoticed.
+- Q: How long may a load or a rebuild block the game's isolate (constitution III: parsing a large
+  file must not block a frame)? → A: Measure it first. The benchmark records the longest
+  synchronous pause during a load and during a rebuild of the 1,000-Node Scene. The limit, and
+  whether the builder must yield between passes, is decided from that measurement on the
+  reference Mac (tasks T042, T043).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -157,9 +162,10 @@ the type, field or path involved.
    the Scene is loaded, **Then** the field stays `null` and the skip warning names the reference.
 9. **Given** a sprite Node, a `Sprite`, `SpriteAnimation` or animation file whose asset can't be
    loaded (missing, not an image, malformed animation file, or a `SpriteAnimation` Override
-   with no animation name or one the file doesn't hold), **When** the Scene is loaded,
-   **Then** the load fails with an error naming the Scene, the Node, the field (where there is
-   one) and the asset path.
+   naming an animation the file doesn't hold), **When** the Scene is loaded, **Then** the load
+   fails with an error naming the Scene, the Node, the field (where there is one) and the asset
+   path, and, for an unknown animation, the animations the file holds. A `SpriteAnimation`
+   Override with no animation name is a value mismatch (#4).
 10. **Given** Behaviors on a Custom component that can't hold Behaviors, or a Behavior whose
     required parent type the Node's component doesn't satisfy, **When** the Scene is loaded,
     **Then** the load fails with an error naming the Scene, the Node and the Behavior's Type ID.
@@ -283,8 +289,9 @@ assets come back.
 
 - **An empty Scene** (only the root): loads as an empty component, and lookups find nothing.
 - **A Node with no name**: never matched by name or path, but still found by tag and type.
-- **A Node name that contains `/`**: it can't be addressed by path. A name lookup still matches it
-  whole; the hierarchy panel (#3) warns about such names.
+- **A Node name that contains `/`**: it can't be found by name or path, because lookups read `/` as
+  a path separator. `findAll` still finds it by tag or type, and the hierarchy panel (#3) warns
+  about such names.
 - **An entity reference that points at a Behavior**: impossible, since Behaviors aren't Nodes; a
   reference always targets a Node's component.
 - **A reference cycle** (A references B, B references A): fine, because references are assigned
@@ -363,11 +370,12 @@ assets come back.
   - `{"asset": path, "animation": name}` becomes a loaded `SpriteAnimation` (FR-010);
   - `{"ref": id}` becomes the referenced Node's component.
 - **FR-010**: A `SpriteAnimation` Override MUST be `{"asset": path, "animation": name}`: the
-  `.anim.json` file (§7.2) and the name of one animation in it. A missing `animation` key, or a
-  name the file doesn't hold, fails the load with an error naming the Scene, the Node, the field,
-  the file and the animations it does hold. An `animation` key on any other Field type is a
-  mismatch (FR-011). The Runtime MUST read the animation file format, including grids, per-frame
-  step times and looping, and MUST refuse a newer `schemaVersion` in it as it does for Scenes.
+  `.anim.json` file (§7.2) and the name of one animation in it. A missing `animation` key is a
+  value mismatch (FR-011). A name the file doesn't hold fails the load with an error naming the
+  Scene, the Node, the field, the file and the animations it does hold. An `animation` key on any
+  other Field type is a mismatch (FR-011). The Runtime MUST read the animation file format,
+  including grids, per-frame step times and looping, and MUST refuse a newer `schemaVersion` in it
+  as it does for Scenes.
 - **FR-011**: Lossless number conversions (an integral number for `double`, an integral `2.0` for
   `int`) MUST be accepted silently. Every other mismatch MUST fail the load with an error naming
   the Scene, the Node, the Type ID, the field, the written value and the expected Field type.
@@ -434,7 +442,8 @@ assets come back.
   of a removed Node (*Q71*, provisional): when its transform changes, when it is added to a tree
   again, or when it is passed to a `PyroScene` API. The warning names the Scene and the Node and
   points to `onReloaded`, once per Node per rebuild. Other uses (method calls, field reads) are
-  not detected. The detection MUST add no work to Nodes of the current Scene version.
+  not detected. `PyroScene` v0.1 has no API that takes a component, so that case applies to APIs
+  added later. The detection MUST add no work to Nodes of the current Scene version.
 - **FR-029**: In release builds every Hot-swap path MUST be inactive and removable by the
   compiler (constitution III). Profile builds behave like release builds.
 
@@ -495,7 +504,9 @@ assets come back.
 - **SC-004**: On the reference Mac, loading the 1,000-Node benchmark Scene takes a median under
   50 ms, excluding image decoding. A Hot-swap check that finds nothing changed takes under 5 ms.
   A rebuild of that Scene takes under 100 ms, within the ~1 s save-to-device loop (constitution
-  III).
+  III). The longest synchronous pause of the game's isolate during a load and during a rebuild is
+  measured and recorded. Its limit is set once it has been measured on the reference Mac
+  (Clarifications).
 - **SC-005**: Every lookup form returns the expected Nodes on a fixture with repeated names, tags
   and nested paths. Every ambiguous or failed lookup's error lists the matching paths or what was
   searched.

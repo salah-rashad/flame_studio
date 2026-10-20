@@ -105,36 +105,59 @@ final class EntityRef {
   String toString() => 'EntityRef($target)';
 }
 
-/// An asset reference Override value: `{"asset": "<asset path>"}`.
+/// An asset reference Override value: `{"asset": "<asset path>"}`, or, for a
+/// `SpriteAnimation` field,
+/// `{"asset": "<.anim.json path>", "animation": "<name>"}` (spec 004
+/// FR-034).
 ///
 /// Tagged, unlike a plain string, so Pyro can find and rewrite asset paths
 /// in any Scene without the Manifest, including inside Missing behaviors
 /// (research R6).
 final class AssetRef {
-  /// Creates a reference to the asset at [path].
-  const AssetRef(this.path);
+  /// Creates a reference to the asset at [path], and for a
+  /// `SpriteAnimation` field to its [animation].
+  const AssetRef(this.path, {this.animation});
 
   /// The asset's path.
   final AssetPath path;
 
+  /// The name of one animation in the `.anim.json` file at [path], for a
+  /// `SpriteAnimation` Override; null otherwise.
+  final String? animation;
+
   /// The reference in [value], or null if [value] isn't exactly
-  /// `{"asset": "<non-empty string>"}`.
+  /// `{"asset": "<path>"}` or `{"asset": "<path>", "animation": "<name>"}`,
+  /// each a non-empty string.
   static AssetRef? fromJson(Object? value) {
-    final path = _singleString(value, 'asset');
-    return path == null ? null : AssetRef(AssetPath(path));
+    if (value is! Map<String, Object?>) return null;
+    final path = value['asset'];
+    if (path is! String || path.isEmpty) return null;
+    switch (value.length) {
+      case 1:
+        return AssetRef(AssetPath(path));
+      case 2:
+        final animation = value['animation'];
+        return animation is String && animation.isNotEmpty
+            ? AssetRef(AssetPath(path), animation: animation)
+            : null;
+      default:
+        return null;
+    }
   }
 
-  /// The written form, `{"asset": "<asset path>"}`.
-  Map<String, Object?> toJson() => {'asset': path};
+  /// The written form: `{"asset": path}`, plus `"animation"` when set.
+  Map<String, Object?> toJson() => {'asset': path, 'animation': ?animation};
 
   @override
-  bool operator ==(Object other) => other is AssetRef && other.path == path;
+  bool operator ==(Object other) =>
+      other is AssetRef && other.path == path && other.animation == animation;
 
   @override
-  int get hashCode => path.hashCode;
+  int get hashCode => Object.hash(path, animation);
 
   @override
-  String toString() => 'AssetRef($path)';
+  String toString() =>
+      animation == null ? 'AssetRef($path)' : 'AssetRef($path, $animation)';
 }
 
 /// The string in [value] if it is a map holding only [key] with a non-empty

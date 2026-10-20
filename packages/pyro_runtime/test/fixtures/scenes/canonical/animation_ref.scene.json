@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "e1": {
+      "behaviors": [
+        {
+          "fields": {
+            "effect": {
+              "animation": "walk",
+              "asset": "assets/anims/goblin.anim.json"
+            },
+            "notARef": {
+              "animation": "walk",
+              "asset": "assets/anims/goblin.anim.json",
+              "loop": true
+            }
+          },
+          "type": "Patrol"
+        }
+      ],
+      "kind": "entity",
+      "name": "goblin",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
+    },
+    "root": {
+      "childIds": [
+        "e1"
+      ],
+      "kind": "root"
+    }
+  }
+}

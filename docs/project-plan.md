@@ -482,7 +482,8 @@ full contract, including every Field type's written form, is
 - **Built-in Node properties are written in full** (*Q89*): `transform` on entities, sprites and
   Custom components; `props` on sprites (`image`, optional `srcPosition`/`srcSize`) and hitboxes.
 - **Override values** use one written form per Field type (*Q91*): colours as `"#AARRGGBB"`,
-  asset references as `{"asset": path}`, entity references as `{"ref": Node ID}`.
+  asset references as `{"asset": path}`, a `SpriteAnimation` as `{"asset": path, "animation":
+  name}` (spec 004, FR-034), entity references as `{"ref": Node ID}`.
 - **Damaged trees are repaired on read** and reported (*Q93*); a new Node kind, Field type or
   required key bumps `schemaVersion` (*Q90*).
 - **Entity references** point only to Nodes in the same scene and not inside a Prefab instance in

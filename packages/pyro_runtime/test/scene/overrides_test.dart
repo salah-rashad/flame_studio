@@ -104,6 +104,69 @@ void main() {
       expect(ref!.toJson(), {'asset': 'assets/images/fx.png'});
     });
 
+    test('AssetRef reads and writes {"asset", "animation"} (FR-034)', () {
+      final ref = AssetRef.fromJson({
+        'asset': 'assets/anims/goblin.anim.json',
+        'animation': 'walk',
+      });
+      expect(
+        ref,
+        const AssetRef(
+          AssetPath('assets/anims/goblin.anim.json'),
+          animation: 'walk',
+        ),
+      );
+      expect(ref!.toJson(), {
+        'animation': 'walk',
+        'asset': 'assets/anims/goblin.anim.json',
+      });
+      expect(
+        const AssetRef(AssetPath('a.png')).toJson(),
+        {'asset': 'a.png'},
+        reason: 'animation is written only when set',
+      );
+    });
+
+    test('a SpriteAnimation reference round-trips; a third key stays plain '
+        'JSON', () {
+      final text = readFixture('canonical/animation_ref.scene.json');
+      final scene = SceneCodec.decode(text).scene;
+      final goblin = scene.nodes[const NodeId('e1')]! as EntityNode;
+      final fields = goblin.behaviors.single.fields;
+      expect(
+        AssetRef.fromJson(fields['effect']),
+        const AssetRef(
+          AssetPath('assets/anims/goblin.anim.json'),
+          animation: 'walk',
+        ),
+      );
+      expect(AssetRef.fromJson(fields['notARef']), isNull);
+      expect(SceneCodec.encode(scene), text);
+    });
+
+    test('AssetRef equality includes the animation', () {
+      const walk = AssetRef(AssetPath('a.anim.json'), animation: 'walk');
+      const idle = AssetRef(AssetPath('a.anim.json'), animation: 'idle');
+      const none = AssetRef(AssetPath('a.anim.json'));
+      expect(walk, const AssetRef(AssetPath('a.anim.json'), animation: 'walk'));
+      expect(walk.hashCode, isNot(idle.hashCode));
+      expect(walk, isNot(idle));
+      expect(walk, isNot(none));
+      expect(none.animation, isNull);
+    });
+
+    test('other shapes with an animation key are not asset references', () {
+      for (final value in <Object?>[
+        {'asset': 'a.anim.json', 'animation': ''},
+        {'asset': 'a.anim.json', 'animation': 3},
+        {'asset': 'a.anim.json', 'animation': 'walk', 'loop': true},
+        {'animation': 'walk'},
+        {'asset': '', 'animation': 'walk'},
+      ]) {
+        expect(AssetRef.fromJson(value), isNull, reason: '$value');
+      }
+    });
+
     test('anything else is not a reference', () {
       for (final value in <Object?>[
         null,

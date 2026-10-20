@@ -2,30 +2,32 @@
 // pyro_generator: the Registry of this package's annotated types.
 // ignore_for_file: type=lint
 
-import 'package:game/case.dart' as i0;
-import 'package:game/good.dart' as i1;
-import 'package:pyro_runtime/pyro_runtime.dart' as i2;
+import 'package:flame_behaviors/flame_behaviors.dart' as i0;
+import 'package:game/case.dart' as i1;
+import 'package:game/good.dart' as i2;
+import 'package:pyro_runtime/pyro_runtime.dart' as i3;
 
 /// Every Behavior and Custom component in this package, for the Runtime.
-final pyroRegistry = i2.PyroRegistry([
-  i2.RegistryType(
-    id: const i2.TypeId('Good'),
-    role: i2.TypeRole.component,
-    create: i1.Good.new,
+final pyroRegistry = i3.PyroRegistry([
+  i3.RegistryType(
+    id: const i3.TypeId('Good'),
+    role: i3.TypeRole.component,
+    create: i2.Good.new,
     fields: {
-      'value': i2.RegistryField(
+      'value': i3.RegistryField(
         name: 'value',
-        type: i2.FieldType.int,
+        type: i3.FieldType.int,
         nullable: false,
         accepts: (v) => v is int,
-        set: (t, v) => (t as i1.Good).value = v as int,
+        set: (t, v) => (t as i2.Good).value = v as int,
       ),
     },
   ),
-  i2.RegistryType(
-    id: const i2.TypeId('Wobble'),
-    role: i2.TypeRole.behavior,
-    create: i0.Wobble.new,
+  i3.RegistryType(
+    id: const i3.TypeId('Wobble'),
+    role: i3.TypeRole.behavior,
+    create: i1.Wobble.new,
     fields: {},
+    acceptsParent: (parent) => parent is i0.EntityMixin,
   ),
 ]);

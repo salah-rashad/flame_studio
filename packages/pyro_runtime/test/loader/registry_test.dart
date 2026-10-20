@@ -1,4 +1,5 @@
 import 'package:flame/components.dart';
+import 'package:flame_behaviors/flame_behaviors.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pyro_runtime/pyro_runtime.dart';
 
@@ -19,6 +20,18 @@ RegistryType _coin(String id) => RegistryType(
       set: (t, v) => (t as _Coin).value = v! as int,
     ),
   },
+);
+
+class _Enemy extends PositionedEntity {}
+
+class _Chase extends Behavior<_Enemy> {}
+
+RegistryType _chase({bool Function(Component)? acceptsParent}) => RegistryType(
+  id: const TypeId('Chase'),
+  role: TypeRole.behavior,
+  create: _Chase.new,
+  fields: const {},
+  acceptsParent: acceptsParent,
 );
 
 void main() {
@@ -55,5 +68,49 @@ void main() {
     expect(field.accepts(null), isFalse);
     field.set(coin, 5);
     expect((coin as _Coin).value, 5);
+  });
+
+  test('keeps a Behavior\'s acceptsParent and calls it as given', () {
+    final registry = PyroRegistry([
+      _chase(acceptsParent: (parent) => parent is _Enemy),
+    ]);
+    final accepts = registry[const TypeId('Chase')]!.acceptsParent!;
+    expect(accepts(_Enemy()), isTrue);
+    expect(accepts(PositionComponent()), isFalse);
+  });
+
+  test('refuses a Behavior without acceptsParent, naming it', () {
+    expect(
+      () => PyroRegistry([_chase()]),
+      throwsA(
+        isA<ArgumentError>().having(
+          (e) => e.message,
+          'message',
+          allOf(contains('"Chase"'), contains('build_runner')),
+        ),
+      ),
+    );
+  });
+
+  test('refuses a Custom component with acceptsParent, naming it', () {
+    final coin = _coin('coin');
+    expect(
+      () => PyroRegistry([
+        RegistryType(
+          id: coin.id,
+          role: coin.role,
+          create: coin.create,
+          fields: coin.fields,
+          acceptsParent: (_) => true,
+        ),
+      ]),
+      throwsA(
+        isA<ArgumentError>().having(
+          (e) => e.message,
+          'message',
+          contains('"coin"'),
+        ),
+      ),
+    );
   });
 }

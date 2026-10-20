@@ -1,0 +1,36 @@
+{
+  "errors": [
+    {
+      "className": "Taunt",
+      "code": "unreachableParentType",
+      "file": "lib/case.dart",
+      "line": 7,
+      "message": "The parent type _Boss of Behavior Taunt is private, so the Registry can't check that a Node accepts Taunt. Make _Boss public.",
+      "typeId": "Taunt"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

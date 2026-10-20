@@ -63,6 +63,7 @@ final class RegistryType {
     required this.role,
     required this.create,
     required this.fields,
+    this.acceptsParent, // added by spec 004 (research R6)
   });
 
   final TypeId id;
@@ -73,6 +74,12 @@ final class RegistryType {
 
   /// The Editable fields by name, in Manifest order.
   final Map<String, RegistryField> fields;
+
+  /// For a Behavior, whether it can be attached to [parent]: the type
+  /// argument of its `Behavior<T>`, or `EntityMixin`. Null for Custom
+  /// components. PyroRegistry refuses a Behavior without one and a Custom
+  /// component with one.
+  final bool Function(Component parent)? acceptsParent;
 }
 
 /// The game's generated Registry: every valid user type by Type ID.
@@ -144,6 +151,7 @@ final pyroRegistry = i3.PyroRegistry([
         set: (t, v) => (t as i1.Patrol).target = v as i2.Player?,
       ),
     },
+    acceptsParent: (parent) => parent is i2.Player, // Patrol extends Behavior<Player>
   ),
 ]);
 ```
@@ -153,6 +161,10 @@ Rules:
 - Imports are prefixed `i0`, `i1`, … in URI order; field types are imported through a library
   the declaring class's library imports (research R10), never through another package's `src/`.
 - Types in Type ID order, fields in Manifest order; the top-level name is always `pyroRegistry`.
+- Every Behavior gets `acceptsParent: (parent) => parent is <T>`, with `<T>` its `Behavior<T>`
+  type argument imported like a field type, or `flame_behaviors`' `EntityMixin` when it has none
+  (spec 004 research R6). A parent type the Registry can't name is the `unreachableParentType`
+  error.
 - Formatted with `dart_style` (research R11). With no types:
   `final pyroRegistry = i0.PyroRegistry(const []);` and only the runtime import.
 - The file passes `flutter analyze` in the game with no errors or warnings (SC-005).

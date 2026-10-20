@@ -59,6 +59,8 @@ final class RegistryEntry {
     required this.className,
     required this.role,
     required this.fields,
+    this.parentClass,
+    this.parentImport,
   });
 
   /// Reads an entry written by [toJson].
@@ -66,6 +68,8 @@ final class RegistryEntry {
     classImport: json['classImport']! as String,
     className: json['className']! as String,
     role: json['role']! as String,
+    parentClass: json['parentClass'] as String?,
+    parentImport: json['parentImport'] as String?,
     fields: [
       for (final field in json['fields']! as List<Object?>)
         RegistryFieldEntry.fromJson(field! as Map<String, Object?>),
@@ -84,11 +88,21 @@ final class RegistryEntry {
   /// The Editable fields, in Manifest order.
   final List<RegistryFieldEntry> fields;
 
+  /// For a Behavior, the class its parent must be (the type argument of
+  /// `Behavior<T>`, or `EntityMixin`), which the Registry's `acceptsParent`
+  /// tests; null for Custom components.
+  final String? parentClass;
+
+  /// The URI to import [parentClass] from.
+  final String? parentImport;
+
   /// The JSON form.
   Map<String, Object?> toJson() => {
     'classImport': classImport,
     'className': className,
     'fields': [for (final field in fields) field.toJson()],
+    'parentClass': ?parentClass,
+    'parentImport': ?parentImport,
     'role': role,
   };
 }

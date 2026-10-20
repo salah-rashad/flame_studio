@@ -17,9 +17,9 @@ Diagnostic _d(
 );
 
 void main() {
-  test('every code has a kind: 23 errors and 2 warnings', () {
+  test('every code has a kind: 24 errors and 2 warnings', () {
     final kinds = [for (final code in DiagnosticCode.values) code.kind];
-    expect(kinds.where((k) => k == DiagnosticKind.error), hasLength(23));
+    expect(kinds.where((k) => k == DiagnosticKind.error), hasLength(24));
     expect(kinds.where((k) => k == DiagnosticKind.warning), hasLength(2));
     expect(DiagnosticCode.defaultOutOfRange.kind, DiagnosticKind.warning);
     expect(DiagnosticCode.unusedEditable.kind, DiagnosticKind.warning);

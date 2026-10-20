@@ -118,11 +118,9 @@ class _ContextMenuPageState extends State<ContextMenuPage> {
             }, PrMenuPanel<String>(entries: _nodeMenu())),
             Padding(
               padding: const EdgeInsets.only(top: 158),
-              child: force(
-                'SpriteComponent',
-                const {WidgetState.hovered},
-                const PrMenuPanel<String>(entries: _addMenu, width: 232),
-              ),
+              child: force('SpriteComponent', const {
+                WidgetState.hovered,
+              }, const PrMenuPanel<String>(entries: _addMenu, width: 232)),
             ),
             const SizedBox(width: PrSpacing.s6),
             Column(

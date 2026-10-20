@@ -17,10 +17,9 @@ concurrency:
 
 env:
   # Flutter stable only (Q18). Bump together with the local toolchain and
-  # update-goldens.yml (then refresh the goldens with it); Flutter
-  # 3.44.x caps build_runner at 2.15.1 (Q76), which matters once the contract
-  # job runs the generator.
-  FLUTTER_VERSION: "3.44.2"
+  # update-goldens.yml (then refresh the goldens with it). Flutter 3.47
+  # allows build_runner >= 2.16 and so `--only-check` (Q76, Q100).
+  FLUTTER_VERSION: "3.47.7"
 # Linux jobs pin ubuntu-24.04 rather than ubuntu-latest, which moves to
 # Ubuntu 26 from 2026-10-19 (the desktop build's apt packages, e.g.
 # libstdc++-12-dev, are named per release). macOS jobs pin macos-26 rather
@@ -49,11 +48,11 @@ jobs:
       - name: Resolve the workspace
         run: dart pub get
       # The app's generated freezed files are committed; regenerating them
-      # must change nothing (spec 002).
+      # must change nothing (spec 002, Q100).
       - name: Check generated code
         if: runner.os == 'Linux'
         working-directory: apps/pyro
-        run: dart run build_runner build -d && git diff --exit-code -- lib
+        run: dart run build_runner build --only-check
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed packages apps
       - name: Analyze pure-Dart packages
@@ -129,10 +128,7 @@ jobs:
     # exist:
     #   1. dart pub get, then run the generator on example/
     #      (dart run build_runner build in example/).
-    #   2. Check the committed Registry and Manifest (§7.3, Q76). On Flutter
-    #      3.44 (build_runner <= 2.15.1) that is
-    #        git diff --exit-code lib/pyro.g.dart lib/pyro.manifest.json
-    #      and on Flutter >= 3.47
+    #   2. Check the committed Registry and Manifest (§7.3, Q76, Q100):
     #        dart run build_runner build --only-check
     #   3. Check the Manifest against its golden file.
     #   4. Load every example/ scene with flame_test against the generated

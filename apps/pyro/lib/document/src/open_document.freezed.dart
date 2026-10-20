@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'open_document.dart';
@@ -9,6 +9,7 @@ part of 'open_document.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -28,16 +29,21 @@ $SaveResultCopyWith<SaveResult> get copyWith => _$SaveResultCopyWithImpl<SaveRes
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SaveResult&&(identical(other.state, state) || other.state == state)&&(identical(other.path, path) || other.path == path)&&(identical(other.digest, digest) || other.digest == digest));
+  final _this = this as SaveResult;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SaveResult&&(identical(other.state, _this.state) || other.state == _this.state)&&(identical(other.path, _this.path) || other.path == _this.path)&&(identical(other.digest, _this.digest) || other.digest == _this.digest));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,state,path,digest);
+int get hashCode {
+  final _this = this as SaveResult;
+  return Object.hash(runtimeType,_this.state,_this.path,_this.digest);
+}
 
 @override
 String toString() {
-  return 'SaveResult(state: $state, path: $path, digest: $digest)';
+  final _this = this as SaveResult;
+  return 'SaveResult(state: ${_this.state}, path: ${_this.path}, digest: ${_this.digest})';
 }
 
 
@@ -66,7 +72,7 @@ class _$SaveResultCopyWithImpl<$Res>
 /// Create a copy of SaveResult
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? state = null,Object? path = null,Object? digest = null,}) {
-  return _then(_self.copyWith(
+  return _then(SaveResult(
 state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as SceneDocument,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as String,digest: null == digest ? _self.digest : digest // ignore: cast_nullable_to_non_nullable
@@ -231,16 +237,18 @@ _$SaveResultCopyWith<_SaveResult> get copyWith => __$SaveResultCopyWithImpl<_Sav
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SaveResult&&(identical(other.state, state) || other.state == state)&&(identical(other.path, path) || other.path == path)&&(identical(other.digest, digest) || other.digest == digest));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SaveResult&&(identical(other.state, state) || other.state == state)&&(identical(other.path, path) || other.path == path)&&(identical(other.digest, digest) || other.digest == digest));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,state,path,digest);
+int get hashCode {
+    return Object.hash(runtimeType,state,path,digest);
+}
 
 @override
 String toString() {
-  return 'SaveResult(state: $state, path: $path, digest: $digest)';
+    return 'SaveResult(state: $state, path: $path, digest: $digest)';
 }
 
 

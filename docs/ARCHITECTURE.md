@@ -257,6 +257,12 @@ the pin to `meta: ^1.18.3` (read from the 3.47.x tags, not tested). Two conseque
   `git diff --exit-code lib/pyro.g.dart lib/pyro.manifest.json`. Decided as
   *Q76*; the `git diff` variant wasn't run in the spike
 
+*Update (Q100, 2026-10-19):* on Flutter 3.47.7 the workspace resolves build_runner 2.16.1 (2.17
+needs `build` 5, which riverpod_generator 4.0.9 doesn't allow), and `build_runner build
+--only-check` now checks the app's committed freezed files in CI: exit 0 when they match, 1 when
+one differs, and the file on disk is left alone. build_runner 2.16 also removed
+`-d` / `--delete-conflicting-outputs`, which it now ignores with a warning.
+
 **2. Latency is a fixed cost, not a project-size cost.** Each save pays ~0.4–0.5 s before any
 builder runs: build_runner's 250 ms debounce (`commands/watch/watcher.dart`) plus FSEvents. A
 pure-Dart project shows only that (0.5 s total, builds of 0.01–0.06 s). With Flutter + Flame,
@@ -344,8 +350,8 @@ the lock and stop Pyro's watcher.
 
 ### Open items
 
-- Flutter ≥ 3.47 with build_runner 2.17: re-run the latency matrix and `--only-check` in a real
-  Flutter project.
+- Flutter ≥ 3.47: re-run the latency matrix in a real Flutter project. `--only-check` itself is
+  confirmed on build_runner 2.16.1 (*Q100*).
 - Pub workspaces: the probe also takes a shared lock on `build_runner.workspace.lock` at the
   workspace root; not exercised.
 - Windows (v0.3): `lockSync` uses `LockFileEx` there; probe behavior untested.
@@ -559,12 +565,25 @@ Measured 2026-10-19 on the reference machine (Apple M4, macOS 26.2, Flutter 3.44
    and the transfer back. The calling isolate pauses for at most 3–4 ms, so the editor keeps
    drawing. For typical Scenes, decoding in place would also fit in a frame; the injected
    `Offload` makes either choice a one-line change.
-3. **In this workspace, spike #4's code-generator versions don't resolve on Flutter 3.44.2.**
-   `pyro_annotations` and `pyro_generator` depend on `test`, and the `test` versions that match
-   `flutter_test`'s pinned `test_api` 0.7.11 cap analyzer below 13 (the lock holds 12.1.0).
-   freezed 4.0.0-dev.3 and riverpod_generator 4.0.9 need analyzer ≥ 13; the working set is
-   freezed 3.2.6-dev.1, riverpod_generator 4.0.4, flutter_riverpod 3.3.2 and build_runner
-   2.15.1 (spec 002, research R1). Flutter 3.47.x (Dart 3.13) would allow stable freezed 4.x.
+3. **`flutter_test`'s `test_api` pin decides the code-generator versions in this workspace.**
+   `pyro_annotations` and `pyro_generator` depend on `test`, and only the `test` versions that
+   match `flutter_test`'s pinned `test_api` resolve. On Flutter 3.44.2 (`test_api` 0.7.11) that
+   capped analyzer below 13, which left prerelease freezed 3.2.6-dev.1 (spec 002, research R1).
+   On Flutter 3.47.7 (`test_api` 0.7.12, `test` 1.31.1) analyzer stays below 14, so the lock
+   holds analyzer 13.3.0, **stable freezed 4.0.1** (4.0.2 and later need analyzer 14),
+   riverpod_generator 4.0.9, riverpod_annotation 4.0.7, flutter_riverpod 3.4.3 and
+   build_runner 2.16.1 (*Q100*). freezed 4 needs Dart 3.13, so the app's SDK floor is
+   `^3.13.0`; the packages keep `^3.12.0`.
 4. **freezed needs `map`/`when` off for a class whose only factory is private**, or the generated
    code fails to compile (`SceneDocument`, which has no public constructor so that only the
-   tree-safe edits make new states).
+   tree-safe edits make new states). Still true on freezed 4.0.1: the generated `map` and `when`
+   take a named parameter `_create`, which Dart rejects. `flutter analyze` doesn't show it,
+   because `*.freezed.dart` is excluded from analysis; only compiling (the tests) does.
+5. **riverpod_lint is left for v0.1 work item 1** (*Q100*). riverpod_lint 3.1.9 is an
+   `analysis_server_plugin` plugin: it must be declared in the workspace root's
+   `analysis_options.yaml` (a member's file gets `plugins_in_inner_options`), its diagnostics
+   show in `dart analyze` but not in `flutter analyze` (3.47.7), and `missing_provider_scope`
+   fires on every app in the workspace, including the pyro_ui gallery, which doesn't use
+   Riverpod, because the workspace shares one package config. With no providers yet it would
+   only add noise; add it with the first providers, run it through `dart analyze` in CI, and
+   decide then how to handle the gallery.

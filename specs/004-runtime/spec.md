@@ -41,6 +41,21 @@ reload (#11) and the CI contract test on `example/` (#12) are separate items.
   for its bundle, so assets load from the same paths in both (*Q31, Q79*).
 - **CI** (the contract test, #12): loads every `example/` Scene against the real Registry.
 
+## Clarifications
+
+### Session 2026-10-20
+
+- Q: How does a `SpriteAnimation` Override name one animation of a multi-animation `.anim.json`
+  file? → A: With a second key in the asset reference: `{"asset": "assets/anims/goblin.anim.json",
+  "animation": "walk"}`. The value stays one tagged asset reference, so Pyro still finds and
+  rewrites every asset path without the Manifest (*Q27*, *Q91*), and the animation name is a
+  structured value rather than syntax hidden inside the path (asset keys may contain `#`). It
+  amends spec 001's v1 contract, which allowed only `{"asset": path}`. No released file uses it
+  yet, so `schemaVersion` stays 1 (FR-034).
+- Q: Which uses of a stale reference does the debug warning detect? → A: The uses the Runtime can
+  observe cheaply: a removed component's transform changing, the component being added to a tree
+  again, or it being passed to a `PyroScene` API. Method calls and field reads on it go unnoticed.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Load a Scene into a game (Priority: P1)
@@ -141,7 +156,8 @@ the type, field or path involved.
 8. **Given** an entity reference to a Node that was left out under `UnknownType.skip`, **When**
    the Scene is loaded, **Then** the field stays `null` and the skip warning names the reference.
 9. **Given** a sprite Node, a `Sprite`, `SpriteAnimation` or animation file whose asset can't be
-   loaded (missing, not an image, malformed animation file), **When** the Scene is loaded,
+   loaded (missing, not an image, malformed animation file, or a `SpriteAnimation` Override
+   with no animation name or one the file doesn't hold), **When** the Scene is loaded,
    **Then** the load fails with an error naming the Scene, the Node, the field (where there is
    one) and the asset path.
 10. **Given** Behaviors on a Custom component that can't hold Behaviors, or a Behavior whose
@@ -230,9 +246,9 @@ reload again and check that nothing was rebuilt.
 6. **Given** a rebuilt Scene, **When** game code calls a lookup on it, **Then** it returns the new
    components. The `PyroScene` the game holds stays the same object, still in the world.
 7. **Given** a component of a removed Node that game code kept from before a rebuild, **When**
-   game code [NEEDS CLARIFICATION: which uses of a stale reference does the debug warning detect?
-   See Q2] it, **Then** a debug warning names the Scene, the Node and `onReloaded`, once per Node
-   per rebuild (*Q71*).
+   game code changes its transform, adds it to a tree again or passes it to a `PyroScene` API,
+   **Then** a debug warning names the Scene, the Node and `onReloaded`, once per Node per rebuild
+   (*Q71*).
 8. **Given** a release build, **When** the game runs, **Then** no Hot-swap work happens and its
    code is left out of the build (constitution III).
 
@@ -343,12 +359,14 @@ assets come back.
   - booleans, strings and enum value names become their values;
   - `[x, y]` becomes `Vector2`;
   - `"#AARRGGBB"` becomes `Color`;
-  - `{"asset": path}` becomes `ImagePath`, a loaded `Sprite` (the whole image) or a loaded
-    `SpriteAnimation`;
+  - `{"asset": path}` becomes `ImagePath` or a loaded `Sprite` (the whole image);
+  - `{"asset": path, "animation": name}` becomes a loaded `SpriteAnimation` (FR-010);
   - `{"ref": id}` becomes the referenced Node's component.
-- **FR-010**: `SpriteAnimation` Overrides MUST name one animation of an `.anim.json` file (§7.2)
-  [NEEDS CLARIFICATION: how does `{"asset": path}` name one animation of a multi-animation
-  `.anim.json` file? See Q1]. The Runtime MUST read that file format, including grids, per-frame
+- **FR-010**: A `SpriteAnimation` Override MUST be `{"asset": path, "animation": name}`: the
+  `.anim.json` file (§7.2) and the name of one animation in it. A missing `animation` key, or a
+  name the file doesn't hold, fails the load with an error naming the Scene, the Node, the field,
+  the file and the animations it does hold. An `animation` key on any other Field type is a
+  mismatch (FR-011). The Runtime MUST read the animation file format, including grids, per-frame
   step times and looping, and MUST refuse a newer `schemaVersion` in it as it does for Scenes.
 - **FR-011**: Lossless number conversions (an integral number for `double`, an integral `2.0` for
   `int`) MUST be accepted silently. Every other mismatch MUST fail the load with an error naming
@@ -413,8 +431,10 @@ assets come back.
 - **FR-027**: Rebuilds MUST NOT overlap. A reload that arrives during a rebuild is handled after
   it, against the content as it is then.
 - **FR-028**: After a rebuild, the debug build MUST warn the first time game code uses a component
-  of a removed Node (*Q71*, provisional). The warning names the Scene and the Node and points to
-  `onReloaded`. Which uses are detected is settled by Q2.
+  of a removed Node (*Q71*, provisional): when its transform changes, when it is added to a tree
+  again, or when it is passed to a `PyroScene` API. The warning names the Scene and the Node and
+  points to `onReloaded`, once per Node per rebuild. Other uses (method calls, field reads) are
+  not detected. The detection MUST add no work to Nodes of the current Scene version.
 - **FR-029**: In release builds every Hot-swap path MUST be inactive and removable by the
   compiler (constitution III). Profile builds behave like release builds.
 
@@ -434,6 +454,15 @@ assets come back.
 - **FR-033**: The Runtime MUST NOT add package dependencies beyond what `pyro_runtime` already
   declares (Flutter, Flame, `flame_behaviors`, `pyro_annotations`) unless the plan justifies one
   (constitution II).
+
+**Scene format amendment**
+
+- **FR-034**: The Scene format (spec 001 contract, `schemaVersion` 1) MUST accept and write an
+  asset reference with an optional second key, `animation` (a non-empty string):
+  `{"asset": path, "animation": name}`. It reads, round-trips and is found by asset-path rewriting
+  like `{"asset": path}`, and any other extra key still makes the value an ordinary JSON value.
+  `schemaVersion` stays 1, since no released file uses the form yet. Spec 001's contract,
+  project-plan §7.1 and the Generator's written-form table are updated in the same change.
 
 ### Key Entities
 
@@ -495,6 +524,9 @@ assets come back.
   see. Pyro's viewport (#4) shows its own inline error instead (§11).
 - **Pyro's viewport** may reuse the built-in kinds' construction for its preview components (#6),
   but this item promises no API for that beyond the asset source.
+- **The animation-name key** is one of this item's decisions (Clarifications); it is recorded in
+  `decisions.md` with the others when the feature is implemented. `Sprite` fields keep the
+  one-key form (the whole image); a region key for them is not part of v0.1.
 - **Docs**: §14, phases.md and `decisions.md` are updated when this feature is implemented, as
   specs 001–003 did. `GLOSSARY.md` gains any new term (asset source, stale reference) in the same
   change.

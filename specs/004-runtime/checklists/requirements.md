@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -38,6 +38,7 @@
   harness) is left to the plan.
 - SC-004 and SC-006 name the reference Mac and release builds because they are the
   constitution's measured budgets (III).
-- Two markers are open: FR-010 (Q1: how a `SpriteAnimation` Override names one animation of an
-  `.anim.json` file) and US4 #7 / FR-028 (Q2: which uses of a stale reference the debug warning
-  detects).
+- Both markers were resolved on 2026-10-20 (see the spec's Clarifications): a `SpriteAnimation`
+  Override is `{"asset": path, "animation": name}` (FR-010, FR-034, amending spec 001's v1
+  contract without a `schemaVersion` bump), and the stale-reference warning detects transform
+  changes, re-adding and `PyroScene` API calls (FR-028). All items pass.

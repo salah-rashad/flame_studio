@@ -54,6 +54,9 @@ parses the Manifest (#6) and the build_runner watcher Pyro runs (#11) are separa
 - Q: How does a developer declare an image-path field? → A: With a small path type from
   `pyro_annotations` (`ImagePath`), which keeps that package free of dependencies, makes asset
   fields easy to spot in code, and lets the Generator tell an image path from ordinary text.
+- Q: Must entity-reference, `Sprite` and `SpriteAnimation` fields be nullable? → A: Yes; a
+  non-nullable one fails the build with an error naming the field. "No Override" means `null`.
+  `ImagePath` fields may be either, since a path can have a `const` default.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -140,15 +143,18 @@ the errors) and its Registry with golden files; check that the build reports fai
 4. **Given** an `@Editable` field that is private, final, const, static, or non-nullable
    with no initializer, **When** the build runs, **Then** it fails with an error naming the field
    and the rule.
-5. **Given** a `@PyroComponent` class that doesn't extend `PositionComponent`, or a
+5. **Given** a non-nullable `@Editable` entity-reference, `Sprite` or `SpriteAnimation` field
+   (`Player target = Player();`), **When** the build runs, **Then** it fails with an error naming
+   the field and saying it must be nullable.
+6. **Given** a `@PyroComponent` class that doesn't extend `PositionComponent`, or a
    `@PyroBehavior` class that doesn't extend `Behavior`, or a class with both annotations,
    **When** the build runs, **Then** it fails with an error naming the class and the rule.
-6. **Given** an explicit `id:` that is empty or contains whitespace, **When** the build runs,
+7. **Given** an explicit `id:` that is empty or contains whitespace, **When** the build runs,
    **Then** it fails with an error naming the class and the ID.
-7. **Given** a build with errors, **When** it finishes, **Then** both files are still written:
+8. **Given** a build with errors, **When** it finishes, **Then** both files are still written:
    valid types appear as usual, every error appears in the Manifest's `errors`, and build_runner
    reports the build as failed.
-8. **Given** a build that failed, **When** the developer fixes the cause and the build runs
+9. **Given** a build that failed, **When** the developer fixes the cause and the build runs
    again, **Then** the errors are gone from the Manifest and the fixed types reappear in both
    files; **When** nothing is fixed and the build runs again, **Then** the same errors are
    reported again rather than disappearing.
@@ -284,6 +290,9 @@ Manifest update in `build_runner watch`, as spike #2 did.
   `pyro_annotations`, a const-constructible wrapper around a project-root-relative asset path as
   in the Scene format (*Q27, Q91*). A plain `String` field is always text, never an asset
   reference.
+- **FR-011a**: Entity-reference, `Sprite` and `SpriteAnimation` fields MUST be nullable; a
+  non-nullable one fails the build with an error naming the class and the field. Their code
+  default is `null`, which a Scene's Override replaces. `ImagePath` fields may be nullable or not.
 - **FR-012a**: For an entity reference, the Manifest MUST record the referenced type: by Type ID
   when it is annotated, by class name otherwise (*Q57*).
 - **FR-013**: A class MUST include the Editable fields it inherits from its superclasses, whether

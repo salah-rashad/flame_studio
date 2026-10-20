@@ -1,22 +1,19 @@
-/// build_runner entry point for Pyro.
+/// build_runner entry point for Pyro: the factories `build.yaml` names.
 ///
-/// The `$lib$` aggregator that writes `lib/pyro.g.dart` and
-/// `lib/pyro.manifest.json` (project plan §7.3, §9.2) lands with v0.1
-/// work item 7, together with the `build.yaml` that registers it. Until then
-/// the factory returns a builder with no outputs.
+/// Two builders write the Registry (`lib/pyro.g.dart`) and the Manifest
+/// (`lib/pyro.manifest.json`) of a game's annotated Behaviors and Custom
+/// components (project plan §7.3, §9.2). Both apply automatically to any
+/// package that depends on `pyro_generator`, so a game needs no `build.yaml`.
 library;
 
 import 'package:build/build.dart';
 
-/// Creates the Pyro builder. Placeholder: produces no outputs.
-Builder pyroBuilder(BuilderOptions options) => const _PlaceholderBuilder();
+import 'src/aggregate_builder.dart';
+import 'src/scan_builder.dart';
 
-class _PlaceholderBuilder implements Builder {
-  const _PlaceholderBuilder();
+/// Creates the per-library scan, which writes `<file>.pyro.json` to the
+/// build cache.
+Builder pyroScan(BuilderOptions options) => const PyroScanBuilder();
 
-  @override
-  Map<String, List<String>> get buildExtensions => const {};
-
-  @override
-  Future<void> build(BuildStep buildStep) async {}
-}
+/// Creates the `$lib$` step, which writes the Registry and the Manifest.
+Builder pyroAggregate(BuilderOptions options) => const PyroAggregateBuilder();

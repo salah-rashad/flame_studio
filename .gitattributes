@@ -3,3 +3,8 @@
 # into CRLF, and `core.autocrlf=input` would strip the CRLF that
 # non_canonical/crlf_line_endings.scene.json exists to hold.
 packages/pyro_runtime/test/fixtures/** -text
+
+# The generator's golden files and the fixture game's committed outputs are
+# compared byte for byte (spec 003); git must not rewrite their line endings.
+packages/pyro_generator/test/goldens/** -text
+packages/pyro_generator/fixture_game/lib/pyro.* -text

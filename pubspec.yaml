@@ -14,6 +14,7 @@ workspace:
   - packages/pyro_annotations
   - packages/pyro_runtime
   - packages/pyro_generator
+  - packages/pyro_generator/fixture_game
   - packages/pyro_ui
   - packages/pyro_ui/example
   - apps/pyro

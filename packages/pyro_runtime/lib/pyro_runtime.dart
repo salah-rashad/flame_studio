@@ -2,12 +2,15 @@
 ///
 /// Re-exports `pyro_annotations`, so games depend on this package only.
 /// The Scene format (`SceneCodec`, `Scene` and the Node kinds) is shared
-/// with Pyro, so the editor and games always agree on it. The loader and
-/// Hot-swap support (project plan §5, §6.2) land with v0.1 work item 8.
+/// with Pyro, so the editor and games always agree on it. The Registry
+/// contract (`PyroRegistry`) is what `pyro_generator`'s `lib/pyro.g.dart`
+/// implements; the loader and Hot-swap support (project plan §5, §6.2) land
+/// with v0.1 work item 8.
 library;
 
 export 'package:pyro_annotations/pyro_annotations.dart';
 
+export 'src/loader/registry.dart';
 export 'src/loader/repair_warning.dart';
 export 'src/scene/errors.dart';
 export 'src/scene/node.dart';

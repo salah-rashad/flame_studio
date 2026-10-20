@@ -1,0 +1,1 @@
+SEVERE unsupportedFieldType lib/case.dart:11: @Editable field Host.other has type Wobble?, which isn't a Field type (a Behavior is never a Node, so it can't be an entity reference). Use int, double, bool, String, an enum, Vector2, Color, ImagePath, Sprite, SpriteAnimation or a Component type.

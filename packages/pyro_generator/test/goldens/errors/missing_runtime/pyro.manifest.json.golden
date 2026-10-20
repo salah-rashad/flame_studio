@@ -1,0 +1,34 @@
+{
+  "errors": [
+    {
+      "code": "missingRuntime",
+      "file": "pubspec.yaml",
+      "line": 1,
+      "message": "This package uses pyro_generator but doesn't depend on pyro_runtime, so the generated Registry can't compile. Add pyro_runtime to dependencies in pubspec.yaml."
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

@@ -1,0 +1,56 @@
+{
+  "errors": [],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    },
+    {
+      "acceptsBehaviors": false,
+      "fields": [
+        {
+          "declaredIn": "Used",
+          "default": 1,
+          "name": "counted",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Host",
+      "label": "Host",
+      "role": "component",
+      "source": "lib/case.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": [
+    {
+      "className": "Loose",
+      "code": "unusedEditable",
+      "field": "ignored",
+      "file": "lib/case.dart",
+      "line": 7,
+      "message": "@Editable on Loose.ignored has no effect: Loose has no @PyroBehavior or @PyroComponent annotation, and no annotated class extends it or mixes it in. Annotate it, or remove @Editable."
+    }
+  ]
+}

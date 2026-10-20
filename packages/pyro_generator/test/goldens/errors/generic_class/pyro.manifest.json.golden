@@ -1,0 +1,36 @@
+{
+  "errors": [
+    {
+      "className": "Box",
+      "code": "genericClass",
+      "file": "lib/case.dart",
+      "line": 6,
+      "message": "@PyroComponent class Box has type parameters, so a Scene can't say which version to create. Annotate a non-generic subclass.",
+      "typeId": "Box"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

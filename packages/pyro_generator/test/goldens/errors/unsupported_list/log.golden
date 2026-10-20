@@ -1,0 +1,1 @@
+SEVERE unsupportedFieldType lib/case.dart:8: @Editable field Host.path has type List<int>, which isn't a Field type (types with type arguments are not supported). Use int, double, bool, String, an enum, Vector2, Color, ImagePath, Sprite, SpriteAnimation or a Component type.

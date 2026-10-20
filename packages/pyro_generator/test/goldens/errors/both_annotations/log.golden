@@ -1,0 +1,1 @@
+SEVERE bothAnnotations lib/case.dart:7: Both has both @PyroBehavior and @PyroComponent. Keep the one that matches what it is: a Behavior or a Custom component.

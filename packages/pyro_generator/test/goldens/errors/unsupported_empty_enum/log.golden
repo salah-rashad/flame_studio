@@ -1,0 +1,1 @@
+SEVERE unsupportedFieldType lib/case.dart:10: @Editable field Host.pick has type Nothing?, which isn't a Field type (the enum has no values). Use int, double, bool, String, an enum, Vector2, Color, ImagePath, Sprite, SpriteAnimation or a Component type.

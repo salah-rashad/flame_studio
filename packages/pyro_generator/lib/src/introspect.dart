@@ -191,7 +191,9 @@ final class _ClassScan {
         'the Registry can create it.',
       );
     }
-    if (isBehavior && !behaviorChecker.isAssignableFrom(cls)) {
+    // With both annotations the role is unclear; bothAnnotations says so.
+    final oneRole = behavior == null || component == null;
+    if (oneRole && isBehavior && !behaviorChecker.isAssignableFrom(cls)) {
       _error(
         DiagnosticCode.notBehavior,
         '@PyroBehavior class $className doesn\'t extend Behavior from '
@@ -199,8 +201,8 @@ final class _ClassScan {
         'for a component.',
       );
     }
-    if (component != null &&
-        behavior == null &&
+    if (oneRole &&
+        component != null &&
         !positionComponentChecker.isAssignableFrom(cls)) {
       _error(
         DiagnosticCode.notPositionComponent,
@@ -343,7 +345,8 @@ final class _ClassScan {
         "so the Registry can't set it. Remove the modifier.",
       );
     }
-    if (field.isAbstract || field.isExternal) {
+    final concrete = !field.isAbstract && !field.isExternal;
+    if (!concrete) {
       error(
         DiagnosticCode.editableNotConcrete,
         '@Editable field $qualified is '
@@ -380,20 +383,21 @@ final class _ClassScan {
         'max, which apply only to int and double fields. Remove them.',
       );
     }
-    if (min != null && max != null && min > max) {
+    final rangeValid = min == null || max == null || min <= max;
+    if (!rangeValid) {
       error(
         DiagnosticCode.minAboveMax,
         '@Editable field $qualified has min $min above max $max. Swap them.',
       );
     }
     if (kind.mustBeNullable && !fieldClass.nullable) {
+      final why = kind == FieldKind.entityRef
+          ? 'an entity reference is resolved after the Scene is built'
+          : 'a ${fieldClass.element.name} is loaded by the Runtime';
       error(
         DiagnosticCode.fieldMustBeNullable,
         '@Editable field $qualified must be nullable '
-        '(${type.getDisplayString()}?): '
-        '${kind == FieldKind.entityRef ? 'an entity reference is resolved '
-                  'after the Scene is built' : 'a ${kind.manifestName} is '
-                  'loaded by the Runtime'}, and a Node without an Override '
+        '(${type.getDisplayString()}?): $why, and a Node without an Override '
         'keeps null.',
       );
     }
@@ -404,7 +408,7 @@ final class _ClassScan {
     );
     final initializer = node is VariableDeclaration ? node.initializer : null;
     final fieldDefault = readDefault(initializer, fieldClass);
-    if (!fieldDefault.hasInitializer && !fieldClass.nullable) {
+    if (concrete && !fieldDefault.hasInitializer && !fieldClass.nullable) {
       error(
         DiagnosticCode.fieldNoDefault,
         '@Editable field $qualified is not nullable and has no initializer, '
@@ -422,13 +426,15 @@ final class _ClassScan {
       error(
         DiagnosticCode.unreachableFieldType,
         "The type $typeName of @Editable field $qualified isn't exported by "
-        "any library ${owner.library.uri} imports, so the Registry can't "
-        "name it. Import $typeName's public library in that file.",
+        'any library ${packagePath(owner.library.uri, root)} imports, so the '
+        "Registry can't name it. Import $typeName's public library in that "
+        'file.',
       );
     }
 
     final number = fieldDefault.number;
     if (number != null &&
+        rangeValid &&
         ((min != null && number < min) || (max != null && number > max))) {
       diagnostics.add(
         Diagnostic(

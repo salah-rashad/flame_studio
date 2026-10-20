@@ -1,0 +1,1 @@
+SEVERE editableNotConcrete lib/case.dart:7: @Editable field Base.hp is abstract. Put @Editable on a concrete field with storage.

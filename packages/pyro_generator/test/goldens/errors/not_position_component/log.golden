@@ -1,0 +1,1 @@
+SEVERE notPositionComponent lib/case.dart:6: @PyroComponent class Plain doesn't extend PositionComponent, which Custom components must in v1 (Q50).

@@ -1,0 +1,37 @@
+{
+  "errors": [
+    {
+      "className": "Host",
+      "code": "minAboveMax",
+      "field": "speed",
+      "file": "lib/case.dart",
+      "line": 8,
+      "message": "@Editable field Host.speed has min 10 above max 1. Swap them.",
+      "typeId": "Host"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

@@ -1,0 +1,36 @@
+{
+  "errors": [
+    {
+      "className": "NotABehavior",
+      "code": "notBehavior",
+      "file": "lib/case.dart",
+      "line": 6,
+      "message": "@PyroBehavior class NotABehavior doesn't extend Behavior from flame_behaviors. Extend Behavior<YourEntity>, or use @PyroComponent for a component.",
+      "typeId": "NotABehavior"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

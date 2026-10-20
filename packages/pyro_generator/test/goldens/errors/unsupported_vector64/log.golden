@@ -1,0 +1,1 @@
+SEVERE unsupportedFieldType lib/case.dart:9: @Editable field Host.at has type Vector2, which isn't a Field type (use Flame's Vector2 (package:flame/components.dart), not vector_math_64's). Use int, double, bool, String, an enum, Vector2, Color, ImagePath, Sprite, SpriteAnimation or a Component type.

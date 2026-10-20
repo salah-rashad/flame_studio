@@ -11,7 +11,16 @@ const gamePackage = 'game';
 
 /// What one run of both builders produced.
 final class GeneratorRun {
-  GeneratorRun._(this.registry, this.manifest, this.fragments, this.log);
+  GeneratorRun._(
+    this.succeeded,
+    this.registry,
+    this.manifest,
+    this.fragments,
+    this.log,
+  );
+
+  /// Whether build_runner reported the build as successful.
+  final bool succeeded;
 
   /// `lib/pyro.g.dart`, or null if it wasn't written.
   final String? registry;
@@ -65,9 +74,13 @@ Future<GeneratorRun> runGenerator(
     readerWriter: readerWriter,
     isInput: (id) => id.startsWith('$gamePackage|'),
     onLog: (record) {
-      // Level.WARNING and above, without depending on package:logging.
-      if (record.level.value >= 900) {
-        log.add('${record.level.name} ${record.message}');
+      // Level.WARNING and above, without depending on package:logging. The
+      // aggregator also runs on the stand-in packages here (in a real build
+      // it applies only to the game); their records name the package, as in
+      // "PyroAggregateBuilder on flame|lib/$lib$:", and are skipped.
+      final [header, ...lines] = record.message.split('\n');
+      if (record.level.value >= 900 && !header.contains('|')) {
+        log.add('${record.level.name} ${lines.join('\n')}');
       }
     },
   );
@@ -86,6 +99,7 @@ Future<GeneratorRun> runGenerator(
   }
 
   return GeneratorRun._(
+    result.succeeded,
     read('lib/pyro.g.dart'),
     read('lib/pyro.manifest.json'),
     {

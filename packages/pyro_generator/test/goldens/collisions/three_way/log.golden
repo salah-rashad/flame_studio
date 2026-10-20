@@ -1,0 +1,1 @@
+SEVERE duplicateTypeId lib/a.dart:6: Type ID "Coin" is used by Coin (lib/a.dart:6) and Coin (lib/b.dart:6) and Gem (lib/c/coin.dart:6), so a Scene can't tell them apart; none of them is in the Registry. Give all but one an explicit id: in its annotation.

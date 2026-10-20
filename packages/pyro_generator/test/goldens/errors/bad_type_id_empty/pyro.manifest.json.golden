@@ -1,0 +1,36 @@
+{
+  "errors": [
+    {
+      "className": "Empty",
+      "code": "badTypeId",
+      "file": "lib/case.dart",
+      "line": 6,
+      "message": "The id \"\" of Empty is empty. Use a name like \"enemy.patrol\", or leave id out to use the class name.",
+      "typeId": ""
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

@@ -1,0 +1,58 @@
+{
+  "errors": [],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    },
+    {
+      "acceptsBehaviors": false,
+      "fields": [
+        {
+          "default": -1,
+          "max": 10,
+          "min": 0,
+          "name": "speed",
+          "nullable": false,
+          "type": "double"
+        }
+      ],
+      "id": "Host",
+      "label": "Host",
+      "role": "component",
+      "source": "lib/case.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": [
+    {
+      "className": "Host",
+      "code": "defaultOutOfRange",
+      "field": "speed",
+      "file": "lib/case.dart",
+      "line": 8,
+      "message": "The default -1 of @Editable field Host.speed is outside [0, 10]. The inspector still shows it; widen the range if the default is meant to be reachable.",
+      "typeId": "Host"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+SEVERE notBehavior lib/case.dart:6: @PyroBehavior class NotABehavior doesn't extend Behavior from flame_behaviors. Extend Behavior<YourEntity>, or use @PyroComponent for a component.

@@ -1,0 +1,1 @@
+SEVERE editableOnAccessor lib/case.dart:8: @Editable is on the getter Host.level. Put it on a plain field; react to the value in onLoad, after the Runtime has set every Override.

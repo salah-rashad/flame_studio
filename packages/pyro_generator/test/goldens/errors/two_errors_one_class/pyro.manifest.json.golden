@@ -1,0 +1,46 @@
+{
+  "errors": [
+    {
+      "className": "Host",
+      "code": "fieldFinal",
+      "field": "fixed",
+      "file": "lib/case.dart",
+      "line": 8,
+      "message": "@Editable field Host.fixed is final, so the Registry can't set it. Remove the modifier.",
+      "typeId": "Host"
+    },
+    {
+      "className": "Host",
+      "code": "unsupportedFieldType",
+      "field": "loot",
+      "file": "lib/case.dart",
+      "line": 11,
+      "message": "@Editable field Host.loot has type Map<String, int>, which isn't a Field type (types with type arguments are not supported). Use int, double, bool, String, an enum, Vector2, Color, ImagePath, Sprite, SpriteAnimation or a Component type.",
+      "typeId": "Host"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

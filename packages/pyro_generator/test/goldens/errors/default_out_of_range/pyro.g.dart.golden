@@ -1,0 +1,39 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND.
+// pyro_generator: the Registry of this package's annotated types.
+// ignore_for_file: type=lint
+
+import 'package:game/case.dart' as i0;
+import 'package:game/good.dart' as i1;
+import 'package:pyro_runtime/pyro_runtime.dart' as i2;
+
+/// Every Behavior and Custom component in this package, for the Runtime.
+final pyroRegistry = i2.PyroRegistry([
+  i2.RegistryType(
+    id: const i2.TypeId('Good'),
+    role: i2.TypeRole.component,
+    create: i1.Good.new,
+    fields: {
+      'value': i2.RegistryField(
+        name: 'value',
+        type: i2.FieldType.int,
+        nullable: false,
+        accepts: (v) => v is int,
+        set: (t, v) => (t as i1.Good).value = v as int,
+      ),
+    },
+  ),
+  i2.RegistryType(
+    id: const i2.TypeId('Host'),
+    role: i2.TypeRole.component,
+    create: i0.Host.new,
+    fields: {
+      'speed': i2.RegistryField(
+        name: 'speed',
+        type: i2.FieldType.double,
+        nullable: false,
+        accepts: (v) => v is double,
+        set: (t, v) => (t as i0.Host).speed = v as double,
+      ),
+    },
+  ),
+]);

@@ -1,0 +1,36 @@
+{
+  "errors": [
+    {
+      "className": "Shape",
+      "code": "abstractClass",
+      "file": "lib/case.dart",
+      "line": 6,
+      "message": "@PyroComponent class Shape is abstract, so the Registry can't create it. Annotate a concrete subclass instead.",
+      "typeId": "Shape"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

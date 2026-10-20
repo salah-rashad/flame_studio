@@ -1,0 +1,1 @@
+SEVERE fieldStatic lib/case.dart:8: @Editable field Host.shared is static. Make it an instance field: each Node has its own value.

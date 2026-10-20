@@ -1,0 +1,48 @@
+{
+  "errors": [
+    {
+      "className": "Grunt",
+      "code": "duplicateTypeId",
+      "file": "lib/a.dart",
+      "line": 6,
+      "message": "Type ID \"enemy\" is used by Grunt (lib/a.dart:6) and Brute (lib/b.dart:6), so a Scene can't tell them apart; none of them is in the Registry. Give all but one an explicit id: in its annotation.",
+      "related": [
+        {
+          "className": "Grunt",
+          "file": "lib/a.dart",
+          "line": 6
+        },
+        {
+          "className": "Brute",
+          "file": "lib/b.dart",
+          "line": 6
+        }
+      ],
+      "typeId": "enemy"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

@@ -54,18 +54,34 @@ jobs:
         if: runner.os == 'Linux'
         working-directory: apps/pyro
         run: dart run build_runner build -d && git diff --exit-code -- lib
+      # The generator's fixture game commits its Registry and Manifest;
+      # regenerating them from a fresh checkout must change nothing, on every
+      # OS (spec 003, SC-003).
+      - name: Check the fixture game's generated files
+        working-directory: packages/pyro_generator/fixture_game
+        run: |
+          dart run build_runner build -d
+          git diff --exit-code -- lib/pyro.g.dart lib/pyro.manifest.json
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed packages apps
       - name: Analyze pure-Dart packages
         run: dart analyze --fatal-infos packages/pyro_annotations packages/pyro_generator
       - name: Analyze Flutter packages and the app
-        run: flutter analyze --fatal-infos packages/pyro_runtime packages/pyro_ui apps/pyro
+        run: flutter analyze --fatal-infos packages/pyro_runtime packages/pyro_ui apps/pyro packages/pyro_generator/fixture_game
+      # Excluded files are still analyzed when named; the root options exclude
+      # **/*.g.dart, so the Registry is checked this way (SC-005).
+      - name: Analyze the fixture game's Registry
+        working-directory: packages/pyro_generator/fixture_game
+        run: flutter analyze --fatal-infos lib/pyro.g.dart
       - name: Test pyro_annotations
         working-directory: packages/pyro_annotations
         run: dart test
       - name: Test pyro_generator
         working-directory: packages/pyro_generator
         run: dart test
+      - name: Test the generator's fixture game
+        working-directory: packages/pyro_generator/fixture_game
+        run: flutter test
       - name: Test pyro_runtime
         working-directory: packages/pyro_runtime
         run: flutter test
@@ -137,6 +153,8 @@ jobs:
     #   3. Check the Manifest against its golden file.
     #   4. Load every example/ scene with flame_test against the generated
     #      Registry.
+    # The analyze-test job's fixture game steps (spec 003) are the pattern
+    # for steps 1, 2 and the analysis of example/lib/pyro.g.dart.
     name: Contract test (TODO)
     runs-on: ubuntu-24.04
     steps:

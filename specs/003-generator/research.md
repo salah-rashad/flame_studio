@@ -65,7 +65,7 @@ user's file (FR-005):
 | `PyroBehavior`, `PyroComponent`, `Editable`, `ImagePath` | `TypeChecker.typeNamed(X, inPackage: 'pyro_annotations')` (the generator imports the annotations, so a rename is a compile error) |
 | `Component`, `PositionComponent`, `Sprite`, `SpriteAnimation` | `TypeChecker.typeNamedLiterally(name, inPackage: 'flame')` |
 | `Behavior`, `EntityMixin` | `TypeChecker.typeNamedLiterally(name, inPackage: 'flame_behaviors')` |
-| `Vector2` | `TypeChecker.fromUrl('package:vector_math/src/vector_math/vector2.dart#Vector2')` |
+| `Vector2` | `TypeChecker.fromUrl('package:vector_math/vector_math.dart#Vector2')` (the class is a `part` of that library) |
 | `Color` | `TypeChecker.fromUrl('dart:ui#Color')` |
 
 **Rationale:**
@@ -74,8 +74,9 @@ user's file (FR-005):
   matched by package and name. *Verified:* `Component` (`lib/src/components/core/component.dart`),
   `PositionComponent`, `Sprite`, `SpriteAnimation` are declared in `flame` 1.38.2; `Behavior<Parent
   extends EntityMixin>` and `mixin EntityMixin on Component` in `flame_behaviors` 1.4.0.
-- `vector_math` declares **two** `Vector2` classes (`src/vector_math/` and
-  `src/vector_math_64/`); Flame imports `package:vector_math/vector_math.dart` everywhere
+- `vector_math` declares **two** `Vector2` classes, in part files of `vector_math.dart` and
+  `vector_math_64.dart` (*verified* while implementing: matching the part file's path matched
+  nothing, since an element's library is the library, not the part); Flame imports `package:vector_math/vector_math.dart` everywhere
   (*verified*), i.e. the 32-bit one. Matching by name would accept a `vector_math_64` field the
   Runtime can't assign a Flame `Vector2` to, so `Vector2` is matched by URL and a
   `vector_math_64` field is an unsupported Field type with a hint.

@@ -20,9 +20,12 @@ export 'src/components/position_component.dart';
 export 'src/sprite.dart';
 export 'src/sprite_animation.dart';
 ''',
+  // vector_math declares its classes in part files, as the real one does.
   'vector_math|lib/vector_math.dart':
-      "export 'src/vector_math/vector2.dart';\n",
+      "part 'src/vector_math/vector2.dart';\n",
   'vector_math|lib/src/vector_math/vector2.dart': '''
+part of '../../vector_math.dart';
+
 class Vector2 {
   Vector2(this.x, this.y);
   final double x;
@@ -30,8 +33,10 @@ class Vector2 {
 }
 ''',
   'vector_math|lib/vector_math_64.dart':
-      "export 'src/vector_math_64/vector2.dart';\n",
+      "part 'src/vector_math_64/vector2.dart';\n",
   'vector_math|lib/src/vector_math_64/vector2.dart': '''
+part of '../../vector_math_64.dart';
+
 class Vector2 {
   Vector2(this.x, this.y);
   final double x;

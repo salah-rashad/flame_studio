@@ -1,0 +1,265 @@
+{
+  "errors": [],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "doc": "Shows and hides its entity.",
+      "fields": [
+        {
+          "default": true,
+          "label": "Visible",
+          "name": "visible",
+          "nullable": false,
+          "type": "bool"
+        },
+        {
+          "default": -1,
+          "max": 10,
+          "min": -1,
+          "name": "times",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Blink",
+      "label": "Blink",
+      "role": "behavior",
+      "source": "lib/behaviors/blink.dart",
+      "supertypes": [
+        "Behavior"
+      ]
+    },
+    {
+      "acceptsBehaviors": false,
+      "category": "Enemies",
+      "doc": "A tougher enemy with a minion.",
+      "fields": [
+        {
+          "declaredIn": "Hurtable",
+          "default": 10,
+          "name": "health",
+          "nullable": false,
+          "type": "int"
+        },
+        {
+          "declaredIn": "Glows",
+          "default": 0.5,
+          "name": "glow",
+          "nullable": false,
+          "type": "double"
+        },
+        {
+          "default": null,
+          "name": "minion",
+          "nullable": true,
+          "refType": "enemy.base",
+          "type": "entityRef"
+        },
+        {
+          "default": 1,
+          "name": "rage",
+          "nullable": false,
+          "tooltip": "Bosses get angrier",
+          "type": "int"
+        }
+      ],
+      "id": "Boss",
+      "label": "Boss",
+      "role": "component",
+      "source": "lib/components/boss.dart",
+      "supertypes": [
+        "enemy.base",
+        "Hurtable",
+        "PositionComponent",
+        "Component"
+      ]
+    },
+    {
+      "acceptsBehaviors": false,
+      "doc": "A light, for the Color Field type (only real Flutter has dart:ui).",
+      "fields": [
+        {
+          "default": null,
+          "defaultSource": "const Color(0xFFFFFFFF)",
+          "name": "tint",
+          "nullable": false,
+          "type": "color"
+        },
+        {
+          "default": null,
+          "name": "glow",
+          "nullable": true,
+          "type": "color"
+        }
+      ],
+      "id": "Lamp",
+      "label": "Lamp",
+      "role": "component",
+      "source": "lib/components/lamp.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    },
+    {
+      "category": "Movement",
+      "doc": "Walks between two points.",
+      "fields": [
+        {
+          "default": 50,
+          "max": 400,
+          "min": 0,
+          "name": "speed",
+          "nullable": false,
+          "tooltip": "Pixels per second",
+          "type": "double"
+        },
+        {
+          "default": null,
+          "defaultSource": "Vector2(1, 0)",
+          "name": "direction",
+          "nullable": false,
+          "type": "vector2"
+        },
+        {
+          "default": "pingPong",
+          "name": "mode",
+          "nullable": false,
+          "type": "enum",
+          "values": [
+            "pingPong",
+            "loop"
+          ]
+        },
+        {
+          "default": null,
+          "name": "target",
+          "nullable": true,
+          "refType": "Player",
+          "type": "entityRef"
+        },
+        {
+          "default": null,
+          "name": "oldTarget",
+          "nullable": true,
+          "refType": "legacy.player",
+          "type": "entityRef"
+        },
+        {
+          "default": null,
+          "name": "hitEffect",
+          "nullable": true,
+          "type": "spriteAnimation"
+        },
+        {
+          "default": {
+            "asset": "assets/images/trail.png"
+          },
+          "name": "trail",
+          "nullable": false,
+          "type": "imagePath"
+        }
+      ],
+      "id": "Patrol",
+      "label": "Patrol",
+      "parentType": "PositionedEntity",
+      "role": "behavior",
+      "source": "lib/behaviors/patrol.dart",
+      "supertypes": [
+        "Behavior"
+      ]
+    },
+    {
+      "acceptsBehaviors": true,
+      "doc": "The player.",
+      "fields": [
+        {
+          "default": 3,
+          "name": "lives",
+          "nullable": false,
+          "type": "int"
+        },
+        {
+          "default": "p1",
+          "name": "nickname",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "icon",
+          "nullable": true,
+          "type": "sprite"
+        },
+        {
+          "default": null,
+          "name": "buddy",
+          "nullable": true,
+          "refType": "legacy.player",
+          "type": "entityRef"
+        }
+      ],
+      "id": "Player",
+      "label": "Player",
+      "preview": "assets/images/player.png",
+      "role": "component",
+      "source": "lib/components/player.dart",
+      "supertypes": [
+        "PositionedEntity",
+        "PositionComponent",
+        "Component"
+      ]
+    },
+    {
+      "acceptsBehaviors": false,
+      "category": "Enemies",
+      "doc": "A basic enemy.",
+      "fields": [
+        {
+          "declaredIn": "Hurtable",
+          "default": 10,
+          "name": "health",
+          "nullable": false,
+          "type": "int"
+        },
+        {
+          "declaredIn": "Glows",
+          "default": 0.5,
+          "name": "glow",
+          "nullable": false,
+          "type": "double"
+        }
+      ],
+      "id": "enemy.base",
+      "label": "Enemy",
+      "role": "component",
+      "source": "lib/components/enemy.dart",
+      "supertypes": [
+        "Hurtable",
+        "PositionComponent",
+        "Component"
+      ]
+    },
+    {
+      "acceptsBehaviors": false,
+      "doc": "The old player, kept under its own Type ID beside the new one, so the\nRegistry must name two classes called Player (FR-025).",
+      "fields": [
+        {
+          "default": null,
+          "name": "note",
+          "nullable": true,
+          "type": "string"
+        }
+      ],
+      "id": "legacy.player",
+      "label": "Player",
+      "role": "component",
+      "source": "lib/components/legacy/player.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

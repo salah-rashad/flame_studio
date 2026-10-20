@@ -71,9 +71,10 @@ const entityMixinChecker = TypeChecker.typeNamedLiterally(
 
 /// Matches the `Vector2` Flame uses. `vector_math` declares a second one in
 /// `vector_math_64`, which the Runtime can't assign a Flame vector to, so this
-/// one is matched by its library (research R3).
+/// one is matched by its library. Both are `part`s of their library, so the
+/// URL is the library's, not the part file's (research R3).
 const vector2Checker = TypeChecker.fromUrl(
-  'package:vector_math/src/vector_math/vector2.dart#Vector2',
+  'package:vector_math/vector_math.dart#Vector2',
 );
 
 /// Matches `dart:ui`'s `Color`.

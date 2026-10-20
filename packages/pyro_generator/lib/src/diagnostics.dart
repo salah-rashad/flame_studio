@@ -47,6 +47,10 @@ enum DiagnosticCode {
   /// An `@Editable` field's type isn't a v1 Field type.
   unsupportedFieldType(DiagnosticKind.error),
 
+  /// An `@Editable` field's type has a private name, which the Registry
+  /// can't write.
+  privateFieldType(DiagnosticKind.error),
+
   /// No import of the declaring library makes the field's type available.
   unreachableFieldType(DiagnosticKind.error),
 

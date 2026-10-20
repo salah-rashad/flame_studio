@@ -576,7 +576,7 @@ keep spike #2's shape and speed with the real rules, every v1 Field type and the
 reporting, and does it resolve across its wide dependency ranges?
 
 **Answer:** yes, with three findings below. The per-library scan plus `$lib$` aggregator of
-spike #2 is kept; all 24 diagnostic codes have a golden case; the fixture game
+spike #2 is kept; all 25 diagnostic codes have a golden case; the fixture game
 (`packages/pyro_generator/fixture_game`) builds against real Flame, its Registry analyzes clean
 and creates every type, and clean rebuilds are byte-identical.
 

@@ -86,6 +86,7 @@ Sorted by `file`, `line`, `code`, `typeId`, `field`.
 | `parentTypeNotClass` | error | A Behavior's parent type is a mixin or interface-only type. |
 | `missingRuntime` | error | The package doesn't depend on `pyro_runtime`. |
 | `unsupportedFieldType` | error | `@Editable` field of a type outside the v1 Field types. |
+| `privateFieldType` | error | `@Editable` field whose type has a private name, which the Registry can't write. |
 | `unreachableFieldType` | error | No import of the declaring library exports the field's type. |
 | `fieldNotPublic` | error | Private `@Editable` field. |
 | `fieldFinal` | error | Final or const `@Editable` field. |

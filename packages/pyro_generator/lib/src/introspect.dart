@@ -419,10 +419,19 @@ final class _ClassScan {
 
     final typeName = fieldClass.element.name!;
     final isCore = kind.isCore;
+    final isPrivateType = fieldClass.element.isPrivate;
+    if (isPrivateType) {
+      error(
+        DiagnosticCode.privateFieldType,
+        '@Editable field $qualified has the private type $typeName, which '
+        "the Registry can't name from another library. Make $typeName "
+        'public.',
+      );
+    }
     final typeImport = isCore
         ? null
         : importFor(fieldClass.element, [owner.library, cls.library], root);
-    if (!isCore && typeImport == null) {
+    if (!isCore && !isPrivateType && typeImport == null) {
       error(
         DiagnosticCode.unreachableFieldType,
         "The type $typeName of @Editable field $qualified isn't exported by "

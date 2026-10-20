@@ -53,7 +53,7 @@ imports in the Registry (FR-025); errors written into the Manifest before the bu
 (FR-020)
 
 **Scale/Scope**: games of up to ~1,000 libraries with ~150 annotated types (spike #2's largest
-run); 11 Field types; 22 error codes and 2 warning codes
+run); 11 Field types; 23 error codes and 2 warning codes
 
 ## Constitution Check
 

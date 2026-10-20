@@ -28,7 +28,7 @@ A field annotated `@Editable` in an annotated class or anywhere in its lineariza
 | Attribute | Rule |
 |---|---|
 | Declaration | public, instance, non-final, non-const, concrete, not a getter or setter (`fieldNotPublic`, `fieldStatic`, `fieldFinal`, `editableNotConcrete`, `editableOnAccessor`) |
-| Field type | one of the v1 Field types (research R5; `unsupportedFieldType`), importable through the declaring library's imports (`unreachableFieldType`) |
+| Field type | one of the v1 Field types (research R5; `unsupportedFieldType`), with a public name (`privateFieldType`), importable through the declaring library's imports (`unreachableFieldType`) |
 | Nullability | entity reference, `Sprite`, `SpriteAnimation` must be nullable (`fieldMustBeNullable`); any non-nullable field needs an initializer (`fieldNoDefault`) |
 | Range | `min`/`max` only on `int`/`double` (`rangeOnNonNumeric`); `min ≤ max` (`minAboveMax`); evaluated default within range, else a warning (`defaultOutOfRange`) |
 | Default | evaluated or source text (research R6) |

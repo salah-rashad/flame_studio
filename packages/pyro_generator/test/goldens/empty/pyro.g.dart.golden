@@ -1,0 +1,8 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND.
+// pyro_generator: the Registry of this package's annotated types.
+// ignore_for_file: type=lint
+
+import 'package:pyro_runtime/pyro_runtime.dart' as i0;
+
+/// Every Behavior and Custom component in this package, for the Runtime.
+final pyroRegistry = i0.PyroRegistry(const []);

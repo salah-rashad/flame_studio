@@ -1,0 +1,3 @@
+SEVERE fieldMustBeNullable lib/case.dart:12: @Editable field Host.target must be nullable (Good?): an entity reference is resolved after the Scene is built, and a Node without an Override keeps null.
+SEVERE fieldMustBeNullable lib/case.dart:15: @Editable field Host.icon must be nullable (Sprite?): a Sprite is loaded by the Runtime, and a Node without an Override keeps null.
+SEVERE fieldMustBeNullable lib/case.dart:18: @Editable field Host.fx must be nullable (SpriteAnimation?): a SpriteAnimation is loaded by the Runtime, and a Node without an Override keeps null.

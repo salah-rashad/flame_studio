@@ -1,0 +1,46 @@
+{
+  "errors": [
+    {
+      "className": "Host",
+      "code": "fieldNoDefault",
+      "field": "speed",
+      "file": "lib/case.dart",
+      "line": 8,
+      "message": "@Editable field Host.speed is not nullable and has no initializer, so a Node without an Override would have no value. Give it a default, or make it nullable.",
+      "typeId": "Host"
+    },
+    {
+      "className": "Host",
+      "code": "fieldNoDefault",
+      "field": "count",
+      "file": "lib/case.dart",
+      "line": 11,
+      "message": "@Editable field Host.count is not nullable and has no initializer, so a Node without an Override would have no value. Give it a default, or make it nullable.",
+      "typeId": "Host"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

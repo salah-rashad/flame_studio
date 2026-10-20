@@ -1,0 +1,1 @@
+SEVERE parentTypeNotClass lib/case.dart:8: The parent type Tough of Behavior Toughen isn't a class, so Pyro can't tell which Nodes accept it. Use the entity class it attaches to, as in Behavior<Enemy>.

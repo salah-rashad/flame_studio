@@ -1,0 +1,2 @@
+SEVERE privateFieldType lib/case.dart:12: @Editable field Host.mode has the private type _Mode, which the Registry can't name from another library. Make _Mode public.
+SEVERE privateFieldType lib/case.dart:15: @Editable field Host.marker has the private type _Marker, which the Registry can't name from another library. Make _Marker public.

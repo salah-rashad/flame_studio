@@ -1,0 +1,1 @@
+SEVERE missingRuntime pubspec.yaml:1: This package uses pyro_generator but doesn't depend on pyro_runtime, so the generated Registry can't compile. Add pyro_runtime to dependencies in pubspec.yaml.

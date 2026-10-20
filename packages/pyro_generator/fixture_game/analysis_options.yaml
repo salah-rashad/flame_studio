@@ -1,0 +1,11 @@
+# The root options exclude **/*.g.dart, and an including file can't undo that
+# (included excludes merge). CI analyzes lib/pyro.g.dart by naming it, which
+# analyzes a file even when it is excluded (spec 003, research R11).
+include:
+  - ../../../analysis_options.yaml
+  - package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # A fixture, not a library; its classes don't need public API docs.
+    public_member_api_docs: false

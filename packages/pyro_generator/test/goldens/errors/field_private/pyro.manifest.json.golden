@@ -1,0 +1,37 @@
+{
+  "errors": [
+    {
+      "className": "Host",
+      "code": "fieldNotPublic",
+      "field": "_secret",
+      "file": "lib/case.dart",
+      "line": 8,
+      "message": "@Editable field Host._secret is private. Make it public so the Registry can set it.",
+      "typeId": "Host"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

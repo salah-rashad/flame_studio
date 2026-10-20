@@ -1,0 +1,36 @@
+{
+  "errors": [
+    {
+      "className": "Toughen",
+      "code": "parentTypeNotClass",
+      "file": "lib/case.dart",
+      "line": 8,
+      "message": "The parent type Tough of Behavior Toughen isn't a class, so Pyro can't tell which Nodes accept it. Use the entity class it attaches to, as in Behavior<Enemy>.",
+      "typeId": "Toughen"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

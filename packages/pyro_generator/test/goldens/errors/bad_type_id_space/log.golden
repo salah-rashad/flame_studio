@@ -1,0 +1,1 @@
+SEVERE badTypeId lib/case.dart:6: The id "enemy base" of Spaced is not allowed: Type IDs contain no whitespace. Use a name like "enemy.patrol", or leave id out to use the class name.

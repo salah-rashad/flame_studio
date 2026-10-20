@@ -1,0 +1,1 @@
+SEVERE badConstructor lib/case.dart:6: @PyroComponent class Named needs an unnamed constructor that can be called with no arguments (optional parameters are fine), so the Registry can create it.

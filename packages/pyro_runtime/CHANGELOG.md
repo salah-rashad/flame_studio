@@ -1,5 +1,7 @@
 ## Unreleased
 
+- The Registry contract the generated `lib/pyro.g.dart` implements: `PyroRegistry`,
+  `RegistryType`, `RegistryField`, `TypeRole` and `FieldType`.
 - Scene format, `schemaVersion` 1: `SceneCodec.decode` and `SceneCodec.encode`, the immutable
   `Scene` and Node model (root, entity, sprite, rectangle and circle hitboxes, Custom
   components, unknown kinds kept whole), Overrides and Behavior attachments, `EntityRef` and

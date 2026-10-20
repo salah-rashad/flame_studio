@@ -1,0 +1,199 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND.
+// pyro_generator: the Registry of this package's annotated types.
+// ignore_for_file: type=lint
+
+import 'package:flame/components.dart' as i0;
+import 'package:game/behaviors/blink.dart' as i1;
+import 'package:game/behaviors/patrol.dart' as i2;
+import 'package:game/components/boss.dart' as i3;
+import 'package:game/components/coin.dart' as i4;
+import 'package:game/components/enemy.dart' as i5;
+import 'package:game/components/player.dart' as i6;
+import 'package:pyro_runtime/pyro_runtime.dart' as i7;
+
+/// Every Behavior and Custom component in this package, for the Runtime.
+final pyroRegistry = i7.PyroRegistry([
+  i7.RegistryType(
+    id: const i7.TypeId('Blink'),
+    role: i7.TypeRole.behavior,
+    create: i1.Blink.new,
+    fields: {
+      'visible': i7.RegistryField(
+        name: 'visible',
+        type: i7.FieldType.bool,
+        nullable: false,
+        accepts: (v) => v is bool,
+        set: (t, v) => (t as i1.Blink).visible = v as bool,
+      ),
+      'times': i7.RegistryField(
+        name: 'times',
+        type: i7.FieldType.int,
+        nullable: false,
+        accepts: (v) => v is int,
+        set: (t, v) => (t as i1.Blink).times = v as int,
+      ),
+    },
+  ),
+  i7.RegistryType(
+    id: const i7.TypeId('Boss'),
+    role: i7.TypeRole.component,
+    create: i3.Boss.new,
+    fields: {
+      'health': i7.RegistryField(
+        name: 'health',
+        type: i7.FieldType.int,
+        nullable: false,
+        accepts: (v) => v is int,
+        set: (t, v) => (t as i3.Boss).health = v as int,
+      ),
+      'glow': i7.RegistryField(
+        name: 'glow',
+        type: i7.FieldType.double,
+        nullable: false,
+        accepts: (v) => v is double,
+        set: (t, v) => (t as i3.Boss).glow = v as double,
+      ),
+      'health2': i7.RegistryField(
+        name: 'health2',
+        type: i7.FieldType.double,
+        nullable: false,
+        accepts: (v) => v is double,
+        set: (t, v) => (t as i3.Boss).health2 = v as double,
+      ),
+      'minion': i7.RegistryField(
+        name: 'minion',
+        type: i7.FieldType.entityRef,
+        nullable: true,
+        accepts: (v) => v == null || v is i5.Enemy,
+        set: (t, v) => (t as i3.Boss).minion = v as i5.Enemy?,
+      ),
+    },
+  ),
+  i7.RegistryType(
+    id: const i7.TypeId('Coin'),
+    role: i7.TypeRole.component,
+    create: i4.Coin.new,
+    fields: {
+      'value': i7.RegistryField(
+        name: 'value',
+        type: i7.FieldType.int,
+        nullable: false,
+        accepts: (v) => v is int,
+        set: (t, v) => (t as i4.Coin).value = v as int,
+      ),
+    },
+  ),
+  i7.RegistryType(
+    id: const i7.TypeId('Patrol'),
+    role: i7.TypeRole.behavior,
+    create: i2.Patrol.new,
+    fields: {
+      'speed': i7.RegistryField(
+        name: 'speed',
+        type: i7.FieldType.double,
+        nullable: false,
+        accepts: (v) => v is double,
+        set: (t, v) => (t as i2.Patrol).speed = v as double,
+      ),
+      'direction': i7.RegistryField(
+        name: 'direction',
+        type: i7.FieldType.vector2,
+        nullable: false,
+        accepts: (v) => v is i0.Vector2,
+        set: (t, v) => (t as i2.Patrol).direction = v as i0.Vector2,
+      ),
+      'mode': i7.RegistryField(
+        name: 'mode',
+        type: i7.FieldType.enumeration,
+        nullable: false,
+        values: i2.PatrolMode.values,
+        accepts: (v) => v is i2.PatrolMode,
+        set: (t, v) => (t as i2.Patrol).mode = v as i2.PatrolMode,
+      ),
+      'target': i7.RegistryField(
+        name: 'target',
+        type: i7.FieldType.entityRef,
+        nullable: true,
+        accepts: (v) => v == null || v is i6.Player,
+        set: (t, v) => (t as i2.Patrol).target = v as i6.Player?,
+      ),
+      'hitEffect': i7.RegistryField(
+        name: 'hitEffect',
+        type: i7.FieldType.spriteAnimation,
+        nullable: true,
+        accepts: (v) => v == null || v is i0.SpriteAnimation,
+        set: (t, v) => (t as i2.Patrol).hitEffect = v as i0.SpriteAnimation?,
+      ),
+      'trail': i7.RegistryField(
+        name: 'trail',
+        type: i7.FieldType.imagePath,
+        nullable: false,
+        accepts: (v) => v is i7.ImagePath,
+        set: (t, v) => (t as i2.Patrol).trail = v as i7.ImagePath,
+      ),
+    },
+  ),
+  i7.RegistryType(
+    id: const i7.TypeId('Player'),
+    role: i7.TypeRole.component,
+    create: i6.Player.new,
+    fields: {
+      'lives': i7.RegistryField(
+        name: 'lives',
+        type: i7.FieldType.int,
+        nullable: false,
+        accepts: (v) => v is int,
+        set: (t, v) => (t as i6.Player).lives = v as int,
+      ),
+      'nickname': i7.RegistryField(
+        name: 'nickname',
+        type: i7.FieldType.string,
+        nullable: false,
+        accepts: (v) => v is String,
+        set: (t, v) => (t as i6.Player).nickname = v as String,
+      ),
+      'icon': i7.RegistryField(
+        name: 'icon',
+        type: i7.FieldType.sprite,
+        nullable: true,
+        accepts: (v) => v == null || v is i0.Sprite,
+        set: (t, v) => (t as i6.Player).icon = v as i0.Sprite?,
+      ),
+      'note': i7.RegistryField(
+        name: 'note',
+        type: i7.FieldType.string,
+        nullable: true,
+        accepts: (v) => v == null || v is String,
+        set: (t, v) => (t as i6.Player).note = v as String?,
+      ),
+    },
+  ),
+  i7.RegistryType(
+    id: const i7.TypeId('enemy.base'),
+    role: i7.TypeRole.component,
+    create: i5.Enemy.new,
+    fields: {
+      'health': i7.RegistryField(
+        name: 'health',
+        type: i7.FieldType.int,
+        nullable: false,
+        accepts: (v) => v is int,
+        set: (t, v) => (t as i5.Enemy).health = v as int,
+      ),
+      'glow': i7.RegistryField(
+        name: 'glow',
+        type: i7.FieldType.double,
+        nullable: false,
+        accepts: (v) => v is double,
+        set: (t, v) => (t as i5.Enemy).glow = v as double,
+      ),
+      'health2': i7.RegistryField(
+        name: 'health2',
+        type: i7.FieldType.double,
+        nullable: false,
+        accepts: (v) => v is double,
+        set: (t, v) => (t as i5.Enemy).health2 = v as double,
+      ),
+    },
+  ),
+]);

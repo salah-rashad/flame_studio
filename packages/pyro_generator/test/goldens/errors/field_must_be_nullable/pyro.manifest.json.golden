@@ -1,0 +1,55 @@
+{
+  "errors": [
+    {
+      "className": "Host",
+      "code": "fieldMustBeNullable",
+      "field": "target",
+      "file": "lib/case.dart",
+      "line": 12,
+      "message": "@Editable field Host.target must be nullable (Good?): an entity reference is resolved after the Scene is built, and a Node without an Override keeps null.",
+      "typeId": "Host"
+    },
+    {
+      "className": "Host",
+      "code": "fieldMustBeNullable",
+      "field": "icon",
+      "file": "lib/case.dart",
+      "line": 15,
+      "message": "@Editable field Host.icon must be nullable (Sprite?): a Sprite is loaded by the Runtime, and a Node without an Override keeps null.",
+      "typeId": "Host"
+    },
+    {
+      "className": "Host",
+      "code": "fieldMustBeNullable",
+      "field": "fx",
+      "file": "lib/case.dart",
+      "line": 18,
+      "message": "@Editable field Host.fx must be nullable (SpriteAnimation?): a SpriteAnimation is loaded by the Runtime, and a Node without an Override keeps null.",
+      "typeId": "Host"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

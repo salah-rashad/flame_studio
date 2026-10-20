@@ -32,8 +32,15 @@ Future<void> main(List<String> args) async {
   final settle = Duration(milliseconds: int.parse(o['settle-ms'] as String));
   verbose = o['verbose'] as bool;
 
-  final manifest = File(p.join(project, 'lib/flame_studio.manifest.json'));
-  final registry = File(p.join(project, 'lib/flame_studio.g.dart'));
+  // A project generated with gen_project.dart --pyro (and built once) has
+  // the real generator's files (spec 003, research R13).
+  final pyro = File(p.join(project, 'lib/pyro.manifest.json')).existsSync();
+  final manifest = File(
+    p.join(project, pyro ? 'lib/pyro.manifest.json' : 'lib/flame_studio.manifest.json'),
+  );
+  final registry = File(
+    p.join(project, pyro ? 'lib/pyro.g.dart' : 'lib/flame_studio.g.dart'),
+  );
 
   final start = Stopwatch()..start();
   watcher = await Process.start(
@@ -175,10 +182,10 @@ Future<void> main(List<String> args) async {
     file: File(p.join(project, 'lib/behaviors/zz_new.dart')),
     create: true,
     edit: (_, n) => '''
-import 'package:studio_annotations/studio_annotations.dart';
+${pyro ? "import 'package:pyro_annotations/pyro_annotations.dart';" : "import 'package:studio_annotations/studio_annotations.dart';"}
 ${File(p.join(project, 'lib/flame_stub.dart')).existsSync() ? "import 'package:sample_game/flame_stub.dart';" : "import 'package:flame_behaviors/flame_behaviors.dart';"}
 
-@StudioBehavior()
+@${pyro ? 'PyroBehavior' : 'StudioBehavior'}()
 class NewBehavior$n extends Behavior<PositionedEntity> {
   @Editable()
   double speed = $n.0;

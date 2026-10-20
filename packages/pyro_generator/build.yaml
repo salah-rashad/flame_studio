@@ -1,0 +1,33 @@
+# Two builders, both applied to every package that depends on pyro_generator,
+# so a game needs no build.yaml of its own (spec 003, FR-027; research R2).
+builders:
+  # Per library: annotated classes and @Editable fields -> lib/**.pyro.json in
+  # the build cache. Skipped for libraries that mention no Pyro annotation.
+  pyro_scan:
+    import: "package:pyro_generator/builder.dart"
+    builder_factories: ["pyroScan"]
+    build_extensions: {".dart": [".pyro.json"]}
+    auto_apply: dependents
+    build_to: cache
+    runs_before: ["pyro_generator:pyro_aggregate"]
+    defaults:
+      options:
+        run_only_if_triggered: true
+
+  # $lib$: every fragment -> lib/pyro.g.dart and lib/pyro.manifest.json, both
+  # committed (Q68).
+  pyro_aggregate:
+    import: "package:pyro_generator/builder.dart"
+    builder_factories: ["pyroAggregate"]
+    build_extensions: {"$lib$": ["pyro.g.dart", "pyro.manifest.json"]}
+    required_inputs: [".pyro.json"]
+    auto_apply: dependents
+    build_to: source
+
+# Annotation triggers match by name. @Editable is included so a library whose
+# only Pyro annotation is @Editable is still scanned (FR-014a).
+triggers:
+  pyro_generator:pyro_scan:
+    - annotation PyroBehavior
+    - annotation PyroComponent
+    - annotation Editable

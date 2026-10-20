@@ -1,0 +1,2 @@
+SEVERE fieldNoDefault lib/case.dart:8: @Editable field Host.speed is not nullable and has no initializer, so a Node without an Override would have no value. Give it a default, or make it nullable.
+SEVERE fieldNoDefault lib/case.dart:11: @Editable field Host.count is not nullable and has no initializer, so a Node without an Override would have no value. Give it a default, or make it nullable.

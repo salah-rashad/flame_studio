@@ -1,0 +1,1 @@
+WARNING unusedEditable lib/case.dart:7: @Editable on Loose.ignored has no effect: Loose has no @PyroBehavior or @PyroComponent annotation, and no annotated class extends it or mixes it in. Annotate it, or remove @Editable.

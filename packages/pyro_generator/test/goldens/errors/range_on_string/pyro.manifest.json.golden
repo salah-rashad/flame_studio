@@ -1,0 +1,37 @@
+{
+  "errors": [
+    {
+      "className": "Host",
+      "code": "rangeOnNonNumeric",
+      "field": "name",
+      "file": "lib/case.dart",
+      "line": 8,
+      "message": "@Editable field Host.name is a string but has min or max, which apply only to int and double fields. Remove them.",
+      "typeId": "Host"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

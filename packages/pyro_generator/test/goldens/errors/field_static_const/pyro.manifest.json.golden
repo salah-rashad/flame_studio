@@ -1,0 +1,46 @@
+{
+  "errors": [
+    {
+      "className": "Host",
+      "code": "fieldFinal",
+      "field": "limit",
+      "file": "lib/case.dart",
+      "line": 8,
+      "message": "@Editable field Host.limit is const, so the Registry can't set it. Remove the modifier.",
+      "typeId": "Host"
+    },
+    {
+      "className": "Host",
+      "code": "fieldStatic",
+      "field": "limit",
+      "file": "lib/case.dart",
+      "line": 8,
+      "message": "@Editable field Host.limit is static. Make it an instance field: each Node has its own value.",
+      "typeId": "Host"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

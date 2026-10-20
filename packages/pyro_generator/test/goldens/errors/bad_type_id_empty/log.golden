@@ -1,0 +1,1 @@
+SEVERE badTypeId lib/case.dart:6: The id "" of Empty is empty. Use a name like "enemy.patrol", or leave id out to use the class name.

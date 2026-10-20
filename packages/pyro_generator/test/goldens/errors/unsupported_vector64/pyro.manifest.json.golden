@@ -1,0 +1,37 @@
+{
+  "errors": [
+    {
+      "className": "Host",
+      "code": "unsupportedFieldType",
+      "field": "at",
+      "file": "lib/case.dart",
+      "line": 9,
+      "message": "@Editable field Host.at has type Vector2, which isn't a Field type (use Flame's Vector2 (package:flame/components.dart), not vector_math_64's). Use int, double, bool, String, an enum, Vector2, Color, ImagePath, Sprite, SpriteAnimation or a Component type.",
+      "typeId": "Host"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

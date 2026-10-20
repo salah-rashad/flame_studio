@@ -1,0 +1,1 @@
+SEVERE fieldFinal lib/case.dart:8: @Editable field Host.fixed is final, so the Registry can't set it. Remove the modifier.

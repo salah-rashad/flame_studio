@@ -1,0 +1,56 @@
+{
+  "errors": [
+    {
+      "className": "Patrol",
+      "code": "badConstructor",
+      "file": "lib/a.dart",
+      "line": 6,
+      "message": "@PyroComponent class Patrol needs an unnamed constructor that can be called with no arguments (optional parameters are fine), so the Registry can create it.",
+      "typeId": "Patrol"
+    },
+    {
+      "className": "Patrol",
+      "code": "duplicateTypeId",
+      "file": "lib/a.dart",
+      "line": 6,
+      "message": "Type ID \"Patrol\" is used by Patrol (lib/a.dart:6) and Patrol (lib/b.dart:6), so a Scene can't tell them apart; none of them is in the Registry. Give all but one an explicit id: in its annotation.",
+      "related": [
+        {
+          "className": "Patrol",
+          "file": "lib/a.dart",
+          "line": 6
+        },
+        {
+          "className": "Patrol",
+          "file": "lib/b.dart",
+          "line": 6
+        }
+      ],
+      "typeId": "Patrol"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

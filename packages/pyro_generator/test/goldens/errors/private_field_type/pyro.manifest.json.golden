@@ -1,0 +1,46 @@
+{
+  "errors": [
+    {
+      "className": "Host",
+      "code": "privateFieldType",
+      "field": "mode",
+      "file": "lib/case.dart",
+      "line": 12,
+      "message": "@Editable field Host.mode has the private type _Mode, which the Registry can't name from another library. Make _Mode public.",
+      "typeId": "Host"
+    },
+    {
+      "className": "Host",
+      "code": "privateFieldType",
+      "field": "marker",
+      "file": "lib/case.dart",
+      "line": 15,
+      "message": "@Editable field Host.marker has the private type _Marker, which the Registry can't name from another library. Make _Marker public.",
+      "typeId": "Host"
+    }
+  ],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "Valid, so it must stay in both outputs.",
+      "fields": [
+        {
+          "default": 1,
+          "name": "value",
+          "nullable": false,
+          "type": "int"
+        }
+      ],
+      "id": "Good",
+      "label": "Good",
+      "role": "component",
+      "source": "lib/good.dart",
+      "supertypes": [
+        "PositionComponent",
+        "Component"
+      ]
+    }
+  ],
+  "warnings": []
+}

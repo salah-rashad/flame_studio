@@ -1,0 +1,1 @@
+SEVERE unreachableFieldType lib/case.dart:8: The type Sprite of @Editable field Host.icon isn't exported by any library lib/case.dart imports, so the Registry can't name it. Import Sprite's public library in that file.

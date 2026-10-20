@@ -1,1 +1,9 @@
 include: ../../analysis_options.yaml
+
+analyzer:
+  exclude:
+    # Golden inputs import stand-in packages that exist only in memory during
+    # the tests (spec 003, research R12).
+    - test/goldens/**
+    # A Flutter package, analyzed on its own with flutter analyze.
+    - fixture_game/**

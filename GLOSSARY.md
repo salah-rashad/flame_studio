@@ -71,12 +71,20 @@ _Avoid_: Class path, fully qualified name
 Whether a user type is a Behavior or a Custom component.
 _Avoid_: Kind (for types)
 
+**Parent type**:
+The Node type a Behavior requires (`Enemy` in `Behavior<Enemy>`); Pyro offers the Behavior only on Nodes of that type or a subtype.
+_Avoid_: Owner type, host type
+
 **Editable field**:
 A field of a user type that Pyro lets the developer set per Node.
 
 **Field type**:
 The value type of an Editable field (number, text, enum, vector, colour, asset reference, entity reference).
 _Avoid_: Kind (for fields)
+
+**Image path**:
+The Field type of an Editable field holding a project-root-relative image path, declared with `ImagePath` from `pyro_annotations`; a plain `String` field is always text.
+_Avoid_: Asset string
 
 **Override**:
 A value the developer explicitly set for an Editable field on a Node; it is saved in the Scene. A field with no Override takes its default from code.
@@ -89,6 +97,10 @@ _Avoid_: Type registry
 **Manifest**:
 Generated data describing the user's annotated types and their Editable fields, read by Pyro.
 _Avoid_: types.json
+
+**Generator error** / **Generator warning**:
+A broken build-time rule the Generator reports in the build log and the Manifest, naming the file, class and field. An error fails the build and leaves its class out of the Registry and the Manifest; a warning doesn't.
+_Avoid_: Lint (for these)
 
 **Type catalog**:
 Pyro's complete list of types it can offer: the user's types from the Manifest plus Flame's built-in Node kinds.

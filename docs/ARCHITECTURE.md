@@ -576,7 +576,8 @@ keep spike #2's shape and speed with the real rules, every v1 Field type and the
 reporting, and does it resolve across its wide dependency ranges?
 
 **Answer:** yes, with three findings below. The per-library scan plus `$lib$` aggregator of
-spike #2 is kept; all 25 diagnostic codes have a golden case; the fixture game
+spike #2 is kept; all 25 diagnostic codes have a golden case (26 since spec 004 added
+`unreachableParentType`); the fixture game
 (`packages/pyro_generator/fixture_game`) builds against real Flame, its Registry analyzes clean
 and creates every type, and clean rebuilds are byte-identical.
 
@@ -626,3 +627,56 @@ after the watcher starts pays the analyzer's warm-up (2.8 s on the M4 in spike #
 5. **Enum values named `int`, `double` and `bool` shadow the core types inside the enum body.**
    `FieldType` keeps those names (they match the Manifest); code that needs the core types sits
    outside the enum.
+
+## Runtime
+
+**Question:** does the Runtime ([`specs/004-runtime/`](../specs/004-runtime/spec.md)) load every
+Node kind and Field type into a Flame game through the generated Registry, Hot-swap only changed
+Scenes, and stay within SC-004's budgets?
+
+**Answer:** yes on everything the container could check; the reference-Mac timings and the manual
+Hot-swap run in a macOS app are still to do (tasks T038, T043). Before building, a test pinned
+every Flame fact the plan had only read from source (`test/loader/flame_assumptions_test.dart`):
+all held.
+
+| What | Result |
+|---|---|
+| Runtime tests (`flutter test` in `pyro_runtime`) | ✅ 331 pass |
+| Fixture game: a Scene loaded through `rootBundle` with the generated Registry | ✅ |
+| Generator goldens with `acceptsParent` | ✅ |
+| Release build free of Hot-swap code (SC-006) | to do on the reference Mac (T043) |
+
+Timings on the 1,000-Node benchmark Scene (`benchmark/load_benchmark_test.dart`), median (p95) of
+20 runs, `flutter test` (JIT, asserts on), image decoding excluded. **Linux early signal**, not
+the reference Mac (a 4-core Intel Xeon @ 2.1 GHz cloud container, Flutter 3.44.2, 2026-10-20):
+
+| | median ms | p95 ms | longest pause ms | budget (median) |
+|---|---|---|---|---|
+| Load | 16 | 22–25 | 26–29 | < 50 |
+| Hot-swap check, nothing changed | 0.05 | 0.08 | 0.3 | < 5 |
+| Hot-swap rebuild | 32 | 51–65 | 55–66 | < 100 |
+
+The "longest pause" is the longest stretch the isolate ran nothing else, so it couldn't draw a
+frame. With an in-memory asset source a load never waits on I/O and shows up whole: decoding the
+Scene took 6.7 ms of it here (2.3 ms on the M4, Scene format section above), building 1,000
+components the rest. Both pauses are over a 16 ms frame on this machine; whether that needs a
+limit, and the builder yielding between passes, is decided from the reference-Mac numbers
+(spec Clarifications, T043).
+
+**Findings**
+
+1. **A hitbox needs a positioned ancestor.** Flame throws "A ShapeHitbox needs a PositionComponent
+   ancestor" when a hitbox's parent isn't positioned, so a hitbox directly under a Scene's root
+   (a plain `Component`) can never work. The Runtime fails the load naming the Node (*Q115*); Pyro's
+   hierarchy should not offer that placement.
+2. **Flame's `Images` can't forget a failed load cleanly.** `Images.clear` on a failed entry
+   disposes it through `future.then`, which raises the original error again as an unhandled one
+   (spike #3 finding 3 saw the same). `AssetSource.bundle` therefore keeps its own `Future<Image>`
+   cache and drops a failed entry, so a fixed file loads on the next Hot-swap.
+3. **`removeAll` only queues the removal.** Until the next game tick a removed component is still
+   mounted, and its `mounted` future is already complete. The stale-reference watch attaches its
+   listeners only after `removed` completes; otherwise every swap would warn at once.
+4. **Re-adding a stale component re-mounts its subtree.** Each Node of it warns once, so adding
+   back a stale player that carries a stale child prints two warnings, as specified (once per
+   Node per rebuild).
+

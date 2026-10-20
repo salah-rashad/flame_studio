@@ -216,8 +216,9 @@ pyro/                      ← repo root (this folder)
 │  ├─ pyro_annotations/    ← pub.dev; pure Dart, no dependencies
 │  ├─ pyro_runtime/        ← pub.dev; shipped in games
 │  │  ├─ lib/src/scene/            ← model, JSON (de)serialization, migrations
-│  │  ├─ lib/src/loader/           ← PyroScene.load, AssetSource, Registry interface
-│  │  └─ lib/src/debug/            ← Hot-swap (onHotReload, content hash), debug only
+│  │  ├─ lib/src/animation/        ← .anim.json reader
+│  │  ├─ lib/src/assets/           ← AssetSource
+│  │  └─ lib/src/loader/           ← PyroScene.load, Registry interface, Hot-swap (debug only)
 │  ├─ pyro_generator/      ← pub.dev; dev dependency
 │  │  ├─ lib/builder.dart
 │  │  └─ lib/src/{introspect,registry_emitter,manifest_emitter}.dart
@@ -332,6 +333,7 @@ class MyGame extends FlameGame {
       registry: pyroRegistry,              // generated
       // onUnknownType: UnknownType.skip,    // default: throw (Q58)
       onReloaded: _lookUpNodes,              // re-run lookups after a Hot-swap (Q71)
+      // assets: AssetSource.bundle(),       // default: the game's bundle, one per Scene
     );
     world.add(scene);
     _lookUpNodes(scene);
@@ -348,21 +350,32 @@ class MyGame extends FlameGame {
 - **Non-invasive:** no base class, works in any `FlameGame` (*Q30*).
 - **Node names are not unique.** `find` throws if more than one Node matches and points to
   `findAll` or a path (`'enemies/goblin_1'`). The hierarchy panel warns about duplicate sibling
-  names (*Q51*).
+  names (*Q51*). A path is Node names joined by `/`: a Node and its nearest ancestors, at any
+  depth, or from the root's children with a leading `/`. `findAll` filters by name or path,
+  tag and component type. Lookups work as soon as `load` returns, before the Scene is mounted.
+- **Errors** are one `SceneLoadException` naming the Scene and, where they apply, the Node, Type
+  ID, field and asset path. A load fails on an Override that doesn't fit its field, a missing
+  reference target, a missing asset (*Q114*), a Behavior on a Node that can't hold it
+  (`RegistryType.acceptsParent`, *Q112*) and a hitbox directly under the root (*Q115*). An
+  Override for a field no code has is ignored with a debug warning.
 - **Unknown Type IDs** (class deleted, `id:` changed): `load` **throws** naming the scene, Node and
-  Type ID; `onUnknownType: skip` keeps the game running without that Node (*Q58*).
+  Type ID; `onUnknownType: skip` keeps the game running without that Node and everything under it,
+  or without that Behavior (*Q58, Q113*).
 - **Loading order:** construct all Nodes → assign Overrides and load asset fields → resolve entity
-  references (second pass) → add to the tree, so `onLoad` sees configured fields. ◇ proposed
+  references (second pass) → add to the tree, so `onLoad` sees configured fields. A failed load
+  leaves nothing behind ([`specs/004-runtime/`](../specs/004-runtime/spec.md)).
 - **Debug-only Hot-swap** (*Q66, Q67, Q72*): `PyroScene` overrides Flame's `onHotReload()`
   (Flame ≥ 1.36, debug builds only). On each hot reload it re-reads its scene file and every
-  `.anim.json` (and, from v0.2, prefab) it uses, and compares a content hash with what it loaded.
-  If nothing changed (e.g. a Dart-only reload), it does nothing. If something changed, it clears
-  those entries from Flame's `Images` / `AssetsCache` and **rebuilds the whole scene**, then calls
-  `onReloaded`. Runtime state of the scene's Nodes is lost; node-level patching comes in v0.4.
+  `.anim.json` (and, from v0.2, prefab) it uses, and compares the text with what it loaded
+  (*Q111*). If nothing changed (e.g. a Dart-only reload), it does nothing. If something changed,
+  it **rebuilds the whole scene** into the same `PyroScene` and calls `onReloaded`, once the new
+  Nodes are in place and before their own `onLoad`s run. A file that no longer loads leaves the
+  old Scene running with a debug error. Images aren't compared or reloaded (*Q72*). Runtime state
+  of the scene's Nodes is lost; node-level patching comes in v0.4.
 - **Stale references** (*Q71*, provisional "for now"): after a rebuild, references the game kept
   point at removed components. `onReloaded` is the documented way to re-run lookups, and in debug
-  builds the Runtime logs a warning the first time a removed Node from an earlier scene version is
-  used. ◇ proposed detection mechanism
+  builds the Runtime logs a warning the first time a removed Node from the last scene version is
+  moved or added back to a tree (*Q110*).
 - **Running without Pyro** (*Q64*): games launched from the IDE, CI or release builds load
   scenes normally. In debug, an IDE hot restart picks up saved scene changes; there is no Pyro
   Console. Nothing in the Runtime depends on Pyro.
@@ -749,7 +762,7 @@ sequenceDiagram
   (scene reload 60–250 ms); a Dart-only reload leaves the scene alone.
 - **Code changes (*Q61*):** Pyro watches `lib/` and hot-reloads automatically, waiting until
   `build_runner` reports idle so it never reloads a half-written `.g.dart`. Toggle in settings, on
-  by default. If an attached IDE also reloads, the duplicate reload is harmless (the content hash
+  by default. If an attached IDE also reloads, the duplicate reload is harmless (the content check
   stops a scene rebuild).
 - **Image changes (*Q72*):** images are not part of the hash. When an image the running game uses
   changes on disk, Pyro shows "Image changed: *Restart game*", which does a hot restart
@@ -847,7 +860,10 @@ before display (§9.3, *Q81*).
 ## 10. Asset pipeline
 
 - **Editor loads from disk** through an `AssetSource` interface (disk implementation in Pyro,
-  bundle implementation in games), so newly imported files appear instantly (*Q31*). Verified in
+  bundle implementation in games), so newly imported files appear instantly (*Q31*). As built
+  (spec 004): two methods, `loadText` and `loadImage`, keyed by project-relative path with no
+  prefix; `AssetSource.bundle()` reads the game's bundle with its own image cache and never
+  touches Flame's globals. Verified in
   spike #3: the disk side is an `AssetBundle` over the project folder plus a Pyro-owned image
   cache that frees an old image only after it's off screen; each Node records the files it read,
   and a file change rebuilds just those Nodes, ~75–200 ms from save to screen (*Q79*).

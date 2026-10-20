@@ -1,5 +1,7 @@
 ## Unreleased
 
+- Every Behavior in the Registry gets `acceptsParent`, from its `Behavior<T>`; a parent type
+  the Registry can't name is the new `unreachableParentType` error (24 errors in all).
 - The generator: a per-library scan and a `$lib$` aggregator write the Registry
   (`lib/pyro.g.dart`) and the Manifest (`lib/pyro.manifest.json`, `manifestVersion` 1) for
   every v1 Field type, with inherited and mixin fields, supertypes and parent types.

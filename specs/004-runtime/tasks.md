@@ -61,6 +61,10 @@ Deviations found while implementing, each also reflected in the code's comments:
 - **Hitboxes need a positioned parent (T022):** Flame refuses a hitbox without a
   `PositionComponent` ancestor, so a hitbox directly under the root fails the load naming the Node
   (spec edge case added).
+- **Open on the reference Mac:** T038 (manual Hot-swap in a macOS app) and T043 (timings and the
+  release-build check). Container (Linux, JIT) timings are in ARCHITECTURE.md "Runtime" as an
+  early signal. T046 is done except #8's estimate in §14 and phases.md, which waits on the
+  author (still 4 evenings there).
 - **Behavior parent types (T010):** a Behavior whose parent type is private or unreachable is the
   new Generator error `unreachableParentType` (golden case `errors/unreachable_parent_type`).
 
@@ -415,13 +419,13 @@ Registry and `rootBundle`
 
 **Purpose**: the budgets measured, documentation in sync, final checks
 
-- [ ] T042 [P] Write `rt/benchmark/load_benchmark_test.dart` (SC-004, quickstart §4). Reuse the 1,000-Node Scene generator from `rt/benchmark/scene_codec_benchmark.dart`: move it to `rt/benchmark/support/benchmark_scene.dart` and import it from both, with entities, sprites on 10 distinct images, hitboxes, and Custom components and Behaviors from a small benchmark Registry. Use a `MemoryAssetSource` with pre-made images (so image decoding is excluded). Report the median and p95 of 20 runs each for `PyroScene.load`, a no-op Hot-swap check (`contentChanged` on unchanged texts), and a full rebuild (load into a mounted Scene + swap). `expect` each median under 50 ms, 5 ms and 100 ms. Also record the longest synchronous pause of the isolate during a load and during a rebuild: run a `Timer.periodic(Duration.zero)` probe alongside and report the longest gap between its ticks. No `expect` on it yet (spec Clarifications).
+- [X] T042 [P] Write `rt/benchmark/load_benchmark_test.dart` (SC-004, quickstart §4). Reuse the 1,000-Node Scene generator from `rt/benchmark/scene_codec_benchmark.dart`: move it to `rt/benchmark/support/benchmark_scene.dart` and import it from both, with entities, sprites on 10 distinct images, hitboxes, and Custom components and Behaviors from a small benchmark Registry. Use a `MemoryAssetSource` with pre-made images (so image decoding is excluded). Report the median and p95 of 20 runs each for `PyroScene.load`, a no-op Hot-swap check (`contentChanged` on unchanged texts), and a full rebuild (load into a mounted Scene + swap). `expect` each median under 50 ms, 5 ms and 100 ms. Also record the longest synchronous pause of the isolate during a load and during a rebuild: run a `Timer.periodic(Duration.zero)` probe alongside and report the longest gap between its ticks. No `expect` on it yet (spec Clarifications).
 - [ ] T043 On the reference Mac, run T042 and quickstart §5 step 4 (the release build checked with `strings … | grep -c "couldn't Hot-swap"` → 0, SC-006). Record the table (including the longest pauses, and noting that the no-op figure times `contentChanged` alone, not the whole `onHotReload` call), the configuration (macOS, Apple M4, Flutter 3.44.2, `flutter test` JIT) and the release result. Then propose a pause limit to the author. Once they set it, add it to SC-004 and plan.md, add the `expect` to T042's benchmark, and if the limit needs it, make `scene_builder.dart` yield between passes (and every ~200 Nodes in pass 1), recording the limit as a decision in `docs/decisions.md`. Record all of this in a new "Runtime" section of `docs/ARCHITECTURE.md`, after the Generator section. If this can't run on the reference Mac in the implementing session, leave the task open and say so in the PR
-- [ ] T044 [P] Update `GLOSSARY.md` (plan.md, Documentation updates):
+- [X] T044 [P] Update `GLOSSARY.md` (plan.md, Documentation updates):
   - add **Asset source**, **Animation file** and **Stale reference**, each one line in the file's style;
   - add to **Entity** that its component in games is `PyroEntity`;
   - add to **Hot-swap** that it rebuilds only when the Scene's content changed.
-- [ ] T045 [P] Add decisions from Q109 to `docs/decisions.md`, each citing "Runtime spec, 2026-10-20":
+- [X] T045 [P] Add decisions from Q109 to `docs/decisions.md`, each citing "Runtime spec, 2026-10-20":
   - `SpriteAnimation` Overrides are `{"asset", "animation"}` with no `schemaVersion` bump (FR-034);
   - the stale-reference warning detects transform changes, re-adding and `PyroScene` API calls (amends Q71's ◇);
   - Hot-swap compares the kept file texts, with no hash (refines Q67);
@@ -434,8 +438,8 @@ Registry and `rootBundle`
   - §14 and phases.md: #8's estimate **as the author sets it** (plan.md suggests 4 → ~5; ask before writing numbers);
   - tick #8 in phases.md with a link to `specs/004-runtime/spec.md` and the Q numbers of T045;
   - update phases.md's status line and "Left" figures, and mark Phase 2 ✅ if its done-when holds.
-- [ ] T047 [P] Update `rt/README.md` (create it if absent): `PyroScene.load` with §6.2's example, lookups, `UnknownType.skip`, `onReloaded`, what Hot-swap needs (a debug build, Flame ≥ 1.36, a reload through `flutter run`), the asset source, and that Scenes load without Pyro (Q64). Add a `rt/CHANGELOG.md` entry for the loader, the `AssetRef` amendment and `acceptsParent`, saying that a `pyro.g.dart` generated before this version fails at startup with an `ArgumentError` naming the Behavior until `dart run build_runner build` regenerates it, and a `gen/CHANGELOG.md` entry for `acceptsParent`.
-- [ ] T048 Run the repository's checks:
+- [X] T047 [P] Update `rt/README.md` (create it if absent): `PyroScene.load` with §6.2's example, lookups, `UnknownType.skip`, `onReloaded`, what Hot-swap needs (a debug build, Flame ≥ 1.36, a reload through `flutter run`), the asset source, and that Scenes load without Pyro (Q64). Add a `rt/CHANGELOG.md` entry for the loader, the `AssetRef` amendment and `acceptsParent`, saying that a `pyro.g.dart` generated before this version fails at startup with an `ArgumentError` naming the Behavior until `dart run build_runner build` regenerates it, and a `gen/CHANGELOG.md` entry for `acceptsParent`.
+- [X] T048 Run the repository's checks:
   - `dart format --output=none --set-exit-if-changed packages apps`;
   - `dart analyze --fatal-infos packages/pyro_annotations packages/pyro_generator`;
   - `flutter analyze --fatal-infos packages/pyro_runtime packages/pyro_ui apps/pyro packages/pyro_generator/fixture_game`;
@@ -443,7 +447,7 @@ Registry and `rootBundle`
   - `dart test` in `gen/`, and `flutter test` in `rt/`, `game/` and `apps/pyro`;
   - in `game/`, `dart run build_runner build -d && git diff --exit-code -- lib/pyro.g.dart lib/pyro.manifest.json`;
   - walk through [quickstart.md](quickstart.md) §1–§3 and §6.
-- [ ] T049 Self-review the change against the constitution (plan.md, Constitution Check):
+- [X] T049 Self-review the change against the constitution (plan.md, Constitution Check):
   - `pyro_runtime`'s `pubspec.yaml` dependencies are unchanged;
   - every public member is documented;
   - every `SceneLoadException` and warning names the Scene and the Node;

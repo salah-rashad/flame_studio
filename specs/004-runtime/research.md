@@ -186,10 +186,11 @@ Reusing the Scene format's reader gives the same error quality for free.
 **Decision:** an `abstract interface class AssetSource` with two methods, `loadText(AssetPath)` and
 `loadImage(AssetPath)`, keyed by project-relative path (FR-030). `AssetSource.bundle([AssetBundle?
 bundle])` is the default. It resolves `bundle ?? rootBundle` once, then reads text with
-`loadString(path, cache: false)` and images through its own `Images(prefix: '', bundle:)` on that
-same bundle, so nothing goes through `Flame.images`,
-`Flame.assets` or `Flame.bundle`. A failed image load is cleared from that cache before the error
-is rethrown, so a later Hot-swap retries the file. `PyroScene.load` creates one bundle source per
+`loadString(path, cache: false)` and decodes images from that same bundle into its own
+`Future<Image>` cache, so nothing goes through `Flame.images`, `Flame.assets` or `Flame.bundle`.
+A failed image load is dropped from that cache, so a later Hot-swap retries the file.
+(Implementation: the plan's `Images(prefix: '')` was dropped because `Images.clear` on a failed
+entry raises the error again as an unhandled one; ARCHITECTURE.md "Runtime" finding 2.) `PyroScene.load` creates one bundle source per
 Scene when the caller passes none, and keeps it for the Scene's lifetime, Hot-swap rebuilds
 included (FR-031; images aren't reloaded, *Q72*). A caller-supplied source (Pyro's disk source in
 #4, a test source) owns its own caching (*Q79*).

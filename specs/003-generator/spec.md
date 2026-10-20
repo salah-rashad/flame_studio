@@ -171,8 +171,8 @@ the errors) and its Registry with golden files; check that the build reports fai
    again, **Then** the errors are gone from the Manifest and the fixed types reappear in both
    files; **When** nothing is fixed and the build runs again, **Then** the same errors are
    reported again rather than disappearing.
-10. **Given** an `@Editable` field in a class that has no Pyro annotation and is no annotated
-    class's superclass, **When** the build runs, **Then** it succeeds, and a warning naming the
+10. **Given** an `@Editable` field in a class or mixin that has no Pyro annotation and is no
+    annotated class's superclass or mixin, **When** the build runs, **Then** it succeeds, and a warning naming the
     class, the field and its file appears in the build log and the Manifest's `warnings`,
     suggesting `@PyroBehavior` or `@PyroComponent`.
 
@@ -324,8 +324,8 @@ Manifest update in `build_runner watch`, as spike #2 did.
   Behaviors.
 - **FR-014**: All errors in a build MUST be reported, not only the first; a class with any error
   MUST be left out of both outputs; the remaining valid classes MUST still be written.
-- **FR-014a**: An `@Editable` field in a class that has no Pyro annotation and is no annotated
-  class's superclass MUST produce a warning naming the class, the field and its file. Warnings
+- **FR-014a**: An `@Editable` field in a class or mixin that has no Pyro annotation and is no
+  annotated class's superclass or mixin MUST produce a warning naming the class, the field and its file. Warnings
   MUST NOT fail the build or leave any type out of either output.
 
 **Manifest**

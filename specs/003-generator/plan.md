@@ -123,15 +123,16 @@ packages/pyro_generator/
 │   ├── diagnostics.dart                     # Diagnostic, codes, messages, sort order
 │   ├── fragment.dart                        # ScanFragment JSON (de)serialization
 │   ├── aggregate_builder.dart               # $lib$ builder: merge, cross-library rules, write
-│   ├── manifest_emitter.dart                # Manifest JSON (sorted keys, number form)
+│   ├── manifest_json.dart                   # canonical JSON writer (sorted keys, number form)
+│   ├── manifest_emitter.dart                # Manifest object from the merged records
 │   └── registry_emitter.dart                # pyro.g.dart text + dart_style
 ├── test/
 │   ├── support/                             # stand-in flame / flame_behaviors / vector_math sources, harness
-│   ├── goldens/<case>/                      # sources + expected pyro.g.dart, pyro.manifest.json
+│   ├── goldens/<case>/                      # input/lib/ + pyro.g.dart.golden, pyro.manifest.json.golden, log.golden
 │   └── *_test.dart                          # quickstart §1
 └── fixture_game/                            # Flutter workspace member, publish_to: none
     ├── pubspec.yaml
-    ├── analysis_options.yaml                # root rules, but pyro.g.dart is analyzed
+    ├── analysis_options.yaml                # root rules; pyro.g.dart analyzed by naming it in CI
     ├── lib/                                 # annotated components and Behaviors, every Field type
     │   ├── pyro.g.dart                      # committed output
     │   └── pyro.manifest.json               # committed output
@@ -177,9 +178,9 @@ the published package by `.pubignore`; it is not Phase 3's `example/` game, whic
 - **Stale fragments.** Deleting the last annotation from a library must remove its fragment so
   the aggregator re-runs; spike #2 checked additions, not removals. `stability_test.dart` and
   quickstart §3 cover it.
-- **Fixture path.** CI's regenerate-and-diff step runs in `fixture_game`; Windows checkouts must
-  not alter the committed files' line endings, so `.gitattributes` marks them `-text` like the
-  Scene fixtures.
+- **Line endings.** The goldens and `fixture_game`'s committed outputs are compared byte for byte;
+  Windows checkouts must not alter them, so `.gitattributes` marks both `-text` like the Scene
+  fixtures.
 
 ## Complexity Tracking
 

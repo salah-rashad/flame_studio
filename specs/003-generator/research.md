@@ -291,9 +291,11 @@ still apply). It is formatted with `dart_style`'s `DartFormatter` at
 fields in Manifest order. With no types it holds only the runtime import and an empty registry,
 so a game that calls the Runtime compiles (US1 #9).
 
-The repository's `analysis_options.yaml` excludes `**/*.g.dart`; the fixture game gets its own
-`analysis_options.yaml` that includes the root rules but excludes only `build/`, so
-`flutter analyze` checks its committed `pyro.g.dart` (SC-005).
+The repository's `analysis_options.yaml` excludes `**/*.g.dart`, and an including file can't
+undo that: *verified*, included `exclude` lists merge, so a fixture options file with its own
+`exclude` still skips `pyro.g.dart`. A file named on the command line is analyzed even when
+excluded (*verified*), so CI runs `flutter analyze --fatal-infos lib/pyro.g.dart` in the
+fixture game (SC-005), and the fixture keeps the root's rules for parity.
 
 **Rationale:** the format with `dart_style` is what spike #2 did and keeps the committed file
 readable; `type=lint` is what freezed and json_serializable emit.
@@ -309,9 +311,10 @@ the latest version formats older code the same way for this file's constructs).
 1. **`pyro_generator` unit and golden tests** with `build_test`'s `testBuilders` running both
    builders on in-memory packages: the fixture sources, stand-in `flame`, `flame_behaviors` and
    `vector_math` libraries that declare the matched classes at their real paths, and
-   `pyro_annotations` read from its real `lib/` files. One golden pair
-   (`pyro.g.dart`, `pyro.manifest.json`) per case under `test/goldens/<case>/`, compared byte for
-   byte; `PYRO_UPDATE_GOLDENS=1 dart test` rewrites them. Cases: the full success fixture, one
+   `pyro_annotations` read from its real `lib/` files. Each case under
+   `test/goldens/<case>/` holds its sources in `input/lib/` and the expected
+   `pyro.g.dart.golden`, `pyro.manifest.json.golden` and `log.golden` (the `.golden` suffix keeps
+   them out of `dart format` and the analyzer), compared byte for byte; `PYRO_UPDATE_GOLDENS=1 dart test` rewrites them. Cases: the full success fixture, one
    per error and warning code, collisions (same class name, same explicit ID, erroneous plus
    valid), an empty package, inherited and mixin fields, and output stability (an unannotated
    edit and a body edit leave outputs unchanged; a tooltip edit changes only the Manifest).

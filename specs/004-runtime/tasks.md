@@ -44,12 +44,34 @@ the Scene's asset path, then names the Node as `"<name>" (<id>)` (or `(<id>)` wh
 
 ---
 
+## Implementation notes
+
+Deviations found while implementing, each also reflected in the code's comments:
+
+- **Fixtures in code (T016, T024, T030):** loader fixtures are Dart builders in
+  `rt/test/support/loader_fixtures.dart` written by `SceneCodec.encode`, not JSON files under
+  `rt/test/fixtures/loader/`, so they are canonical by construction. Raw text appears inline only
+  where a test needs malformed or damaged JSON.
+- **Animation errors (T014, T018):** every broken rule of an animation file, a newer
+  `schemaVersion` included, is the new `InvalidAnimationFile` (a `SceneFormatException`), because
+  `UnsupportedSchemaVersion`'s message speaks of a Scene.
+- **Image cache (T007, T008):** `AssetSource.bundle` keeps its own `Future<Image>` cache instead of
+  Flame's `Images`: `Images.clear` on a failed load raises a second, unhandled error (spike #3
+  finding 3).
+- **Hitboxes need a positioned parent (T022):** Flame refuses a hitbox without a
+  `PositionComponent` ancestor, so a hitbox directly under the root fails the load naming the Node
+  (spec edge case added).
+- **Behavior parent types (T010):** a Behavior whose parent type is private or unreachable is the
+  new Generator error `unreachableParentType` (golden case `errors/unreachable_parent_type`).
+
+---
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: pin the Flame facts the design reads from source, and the test support every story
 uses
 
-- [ ] T001 Write `rt/test/loader/flame_assumptions_test.dart`, one `testWithFlameGame` per fact research marks *read* (plan.md, Risks: "Read, not run"):
+- [X] T001 Write `rt/test/loader/flame_assumptions_test.dart`, one `testWithFlameGame` per fact research marks *read* (plan.md, Risks: "Read, not run"):
   1. a concrete subclass of `PositionedEntity` can be created and holds a `Behavior<PositionedEntity>`;
   2. `RectangleHitbox(position: Vector2(4, 2), size: Vector2(24, 30))` and `CircleHitbox(radius: 5, position: Vector2.zero())` keep their size and radius after being mounted under a 100×100 `PositionComponent` (no fill-parent);
   3. `game.onHotReload()` calls `onHotReload` on a mounted child and on a child added but not yet loaded, and not on a component that was never added;
@@ -60,13 +82,13 @@ uses
   8. `Images(prefix: '', bundle: b).load('assets/images/a.png')` asks `b` for exactly `assets/images/a.png`.
 
   If any fact fails, stop and update research.md (R3, R4, R7, R8, R11 or R12) and the affected tasks before going on.
-- [ ] T002 [P] Write the test support in `rt/test/support/`:
+- [X] T002 [P] Write the test support in `rt/test/support/`:
   - `images.dart`: `Future<Image> makeImage(int width, int height)` via `PictureRecorder` → `toImage`, filled with one colour;
   - `memory_asset_source.dart`: `MemoryAssetSource implements AssetSource`, holding `Map<String, String> texts` and `Map<String, Image> images` (both mutable, so Hot-swap tests can change them). It counts every call (`textReads`, `imageReads`, each a `Map<String, int>`) and throws `FlutterError('Unable to load asset: "<path>"')` for an unknown path, as `rootBundle` does;
   - `scene_text.dart`: `String sceneJson({...})`, small builders that write Scene JSON for tests through `SceneCodec.encode`, so tests never hand-write canonical form.
 
   `AssetSource` itself comes in T008. Write this file against the contract and let it compile once T008 lands.
-- [ ] T003 [P] Add `packages/pyro_generator/fixture_game/assets/** -text` to `.gitattributes`, under the spec 003 comment, extended with "and the fixture game's Scene and animation files (spec 004)". Create `rt/test/fixtures/loader/` with a `README.md`: one line per fixture saying which acceptance scenario it serves, filled in as fixtures are added
+- [X] T003 [P] Add `packages/pyro_generator/fixture_game/assets/** -text` to `.gitattributes`, under the spec 003 comment, extended with "and the fixture game's Scene and animation files (spec 004)". Create `rt/test/fixtures/loader/` with a `README.md`: one line per fixture saying which acceptance scenario it serves, filled in as fixtures are added
 
 ---
 
@@ -79,20 +101,20 @@ Registry, and a `PyroScene.load` that loads a root-only Scene
 
 ### Tests for the foundation
 
-- [ ] T004 [P] Extend `rt/test/scene/overrides_test.dart` for T009 (FR-034, research R13):
+- [X] T004 [P] Extend `rt/test/scene/overrides_test.dart` for T009 (FR-034, research R13):
   - `AssetRef.fromJson` accepts `{"asset": "a.png"}` (`animation` null) and `{"asset": "a.anim.json", "animation": "walk"}`;
   - it returns null for an empty `animation`, a non-string `animation`, a third key, `{"animation": "walk"}` alone, and an empty `asset`;
   - `toJson` writes `animation` only when set;
   - equality and `hashCode` include `animation`.
 
   Add to `rt/test/scene/round_trip_test.dart` a fixture whose Behavior holds `{"animation": "walk", "asset": "assets/anims/goblin.anim.json"}` and round-trips byte for byte, plus one whose value has a third key and stays a plain JSON value.
-- [ ] T005 [P] Extend `rt/test/loader/registry_test.dart` for T010 (research R6):
+- [X] T005 [P] Extend `rt/test/loader/registry_test.dart` for T010 (research R6):
   - a Behavior `RegistryType` keeps its `acceptsParent` and it is called as given;
   - `PyroRegistry` throws an `ArgumentError` naming the Type ID for a Behavior without `acceptsParent`, and for a Custom component with one.
-- [ ] T006 [P] Write `rt/test/loader/load_exception_test.dart` for T011:
+- [X] T006 [P] Write `rt/test/loader/load_exception_test.dart` for T011:
   - `toString()` starts with the Scene path and includes the Node as `"name" (id)`, the `TypeId.field`, the asset path, the message, and the cause's `toString()` on its own line;
   - it omits every part that is null.
-- [ ] T007 [P] Write `rt/test/assets/asset_source_test.dart` for T008 with a fake `AssetBundle` that records each key and `cache` flag:
+- [X] T007 [P] Write `rt/test/assets/asset_source_test.dart` for T008 with a fake `AssetBundle` that records each key and `cache` flag:
   - `AssetSource.bundle(fake).loadText('assets/scenes/a.scene.json')` asks for that exact key with `cache: false`;
   - `loadImage('assets/images/a.png')` asks for that exact key (no `assets/images/` prefix), and returns the same `Image` on a second call without a second bundle read;
   - an image load that fails rethrows, and a second call reads the bundle again (the failure isn't cached);
@@ -100,27 +122,27 @@ Registry, and a `PyroScene.load` that loads a root-only Scene
 
 ### Implementation for the foundation
 
-- [ ] T008 [P] Implement `rt/lib/src/assets/asset_source.dart` per [contracts/runtime-api.md § Assets](contracts/runtime-api.md#assets) and research R8:
+- [X] T008 [P] Implement `rt/lib/src/assets/asset_source.dart` per [contracts/runtime-api.md § Assets](contracts/runtime-api.md#assets) and research R8:
   - `abstract interface class AssetSource` with `loadText` and `loadImage`;
   - `factory AssetSource.bundle([AssetBundle? bundle])` returning a private `_BundleAssetSource`. It resolves `final b = bundle ?? rootBundle;` once and uses `b` for both: text with `b.loadString(path, cache: false)` and images through its own `Images(prefix: '', bundle: b)`, never `Flame.bundle`. When `Images.load` throws, it calls `images.clear(path)` before rethrowing.
 
   Document that the source owns its images. Make T007 pass.
-- [ ] T009 Amend `AssetRef` in `rt/lib/src/scene/overrides.dart` per [contracts/runtime-api.md § Amended: AssetRef](contracts/runtime-api.md#amended-assetref-spec-001-contract):
+- [X] T009 Amend `AssetRef` in `rt/lib/src/scene/overrides.dart` per [contracts/runtime-api.md § Amended: AssetRef](contracts/runtime-api.md#amended-assetref-spec-001-contract):
   - add `const AssetRef(this.path, {this.animation})`;
   - `fromJson` accepts exactly the two shapes;
   - `toJson`, `==`, `hashCode` and `toString` include `animation`;
   - check that the canonical writer needs no change (keys are sorted already).
 
   In the same commit, update the Field type table in `specs/001-scene-format/contracts/scene-file-v1.md` (a `SpriteAnimation` row with `{"asset": path, "animation": name}`, the asset row limited to `ImagePath` and `Sprite`, and under "Reading rules" that a colour's hex digits are accepted in either case and written upper case), the written-form table in `specs/003-generator/research.md` R5 (the `spriteAnimation` row), and project-plan §7.1's "Override values" bullet, each with "(spec 004, FR-034)". Make T004 pass.
-- [ ] T010 Add `acceptsParent` to `RegistryType` in `rt/lib/src/loader/registry.dart` per [contracts/runtime-api.md § Amended: RegistryType](contracts/runtime-api.md#amended-registrytype-spec-003-contract), with `PyroRegistry`'s two new `ArgumentError` checks. In the same commit:
+- [X] T010 Add `acceptsParent` to `RegistryType` in `rt/lib/src/loader/registry.dart` per [contracts/runtime-api.md § Amended: RegistryType](contracts/runtime-api.md#amended-registrytype-spec-003-contract), with `PyroRegistry`'s two new `ArgumentError` checks. In the same commit:
   - in `gen/lib/src/registry_emitter.dart`, emit `acceptsParent: (parent) => parent is <T>,` for every Behavior, where `<T>` is the Behavior's type argument written with the same import prefix the emitter uses for field types, or `EntityMixin` from `flame_behaviors` when the Behavior has no type argument or uses `EntityMixin`. Add `flame_behaviors` to the Registry's imports when it is needed;
   - regenerate the goldens (`PYRO_UPDATE_GOLDENS=1`) and review that the only change is the added line;
   - run `dart run build_runner build -d` in `game/` to regenerate `game/lib/pyro.g.dart`;
   - update `specs/003-generator/contracts/registry-api.md` to match.
 
   Make T005 pass and keep `gen/` and `game/` tests green.
-- [ ] T011 [P] Implement `rt/lib/src/loader/load_exception.dart`: `final class SceneLoadException implements Exception` with exactly the fields of [contracts/runtime-api.md § Errors](contracts/runtime-api.md#errors) (`scene`, `nodeId`, `nodeName`, `typeId`, `field`, `asset`, `message`, `cause`, `causeStackTrace`) and the `toString` of T006. Make T006 pass.
-- [ ] T012 Write `rt/test/support/test_registry.dart`, a hand-written `PyroRegistry testRegistry` (research R15) over small test classes in the same file:
+- [X] T011 [P] Implement `rt/lib/src/loader/load_exception.dart`: `final class SceneLoadException implements Exception` with exactly the fields of [contracts/runtime-api.md § Errors](contracts/runtime-api.md#errors) (`scene`, `nodeId`, `nodeName`, `typeId`, `field`, `asset`, `message`, `cause`, `causeStackTrace`) and the `toString` of T006. Make T006 pass.
+- [X] T012 Write `rt/test/support/test_registry.dart`, a hand-written `PyroRegistry testRegistry` (research R15) over small test classes in the same file:
   - **Behaviors:**
     - `AllFields extends Behavior<PositionedEntity>` with one Editable-style public field per Field type: `int count = 1`, `double speed = 50`, `bool active = true`, `String label = 'x'`, `Mode mode = Mode.a` (`enum Mode { a, b }`), `Vector2 direction = Vector2(1, 0)`, `Color tint = const Color(0xFFFFFFFF)`, `ImagePath icon = const ImagePath('assets/images/default.png')`, `Sprite? sprite`, `SpriteAnimation? effect`, `Component? target`, and a nullable `int? maybe`. It records `onLoad` calls and the field values seen in `onLoad` into a static log;
     - `EnemyOnly extends Behavior<Enemy>`;
@@ -132,7 +154,7 @@ Registry, and a `PyroScene.load` that loads a root-only Scene
     - `BadSetter extends PositionComponent`, whose field setter throws.
 
   Each `RegistryType` has `accepts` and `set` written as the Generator would, and `acceptsParent` for Behaviors.
-- [ ] T013 Implement the loader skeleton:
+- [X] T013 Implement the loader skeleton:
   - `rt/lib/src/loader/built_scene.dart`: `BuiltScene`, `NodeEntry` and the internal `SkippedItem` and `UnusedOverride` records per [data-model.md § BuiltScene](data-model.md#builtscene-internal), with `path` for messages (names from the root joined by `/`, `#<id>` for an unnamed Node);
   - `rt/lib/src/loader/pyro_scene.dart`: `UnknownType`, `SceneReloaded` and `final class PyroScene extends Component`, with a private constructor and `static Future<PyroScene> load(String path, {required PyroRegistry registry, UnknownType onUnknownType = UnknownType.error, SceneReloaded? onReloaded, AssetSource? assets})`. `load`:
     1. reads the text through the source (`AssetSource.bundle()` when none is given);
@@ -161,23 +183,23 @@ property and every field value (spec US1)
 
 ### Tests for User Story 1
 
-- [ ] T014 [P] [US1] Write `rt/test/animation/animation_file_test.dart` for T018–T019, one case per rule of [contracts/anim-file-v1.md](contracts/anim-file-v1.md):
+- [X] T014 [P] [US1] Write `rt/test/animation/animation_file_test.dart` for T018–T019, one case per rule of [contracts/anim-file-v1.md](contracts/anim-file-v1.md):
   - §7.2's example reads;
   - `offset` and `spacing` default to `[0, 0]`, and `loop` to `true`;
   - refused: a newer `schemaVersion` (`UnsupportedSchemaVersion` naming 1), duplicate keys (with line and column), missing `image`, `grid.cellSize` or `animations`, an empty `animations`, empty `frames`, a negative frame, both or neither of `stepTime` and `stepTimes`, `stepTimes` of the wrong length, a step time ≤ 0, a `cellSize` ≤ 0;
   - unknown keys are ignored;
   - frame → cell: on a 100×64 image with `cellSize [32, 32]`, `offset [2, 0]` and `spacing [1, 0]`, there are 3 columns, frame 4 is at (35, 32), and frame 6 is out of range (an error naming the file, the animation and the frame);
   - `toSpriteAnimation` gives each frame its `srcPosition`, `srcSize` and step time.
-- [ ] T015 [P] [US1] Write `rt/test/loader/field_values_test.dart` for T020, one group per row of [research R5](research.md#r5-converting-override-values) against `testRegistry`'s `AllFields` fields:
+- [X] T015 [P] [US1] Write `rt/test/loader/field_values_test.dart` for T020, one group per row of [research R5](research.md#r5-converting-override-values) against `testRegistry`'s `AllFields` fields:
   - **accepted:** `80` and `80.5` for `double`; `2` and `2.0` for `int`; enum names; `[1, 0]` for `Vector2`; `"#FFFF8800"` and `"#ffff8800"` for `Color` (both → `Color(0xFFFF8800)`); `{"asset": …}` for `ImagePath` (an `ImagePath`, nothing loaded); `null` for a nullable field;
   - **mismatches:** `1.5` for `int`, `"x"` for `bool`, `"c"` for `Mode`, `[1]`, `[1, "a"]`, `"#FF8800"`, `"FFFF8800"`, `null` for `count`, `{"asset": …, "animation": …}` for `Sprite`, `{"asset": …}` for `SpriteAnimation`. Each one's mismatch names the field, the written value (cut at 80 characters with `…`) and the expected Field type.
-- [ ] T016 [US1] Add fixtures under `rt/test/fixtures/loader/`, written with `scene_text.dart` where possible and listed in its README:
+- [X] T016 [US1] Add fixtures under `rt/test/fixtures/loader/`, written with `scene_text.dart` where possible and listed in its README:
   - `all_kinds.scene.json`: root → entity `goblin_1` (`Patrol`-like `AllFields` Behavior, tag `enemy`) → sprite with region, and a rectangle hitbox with every prop; a circle hitbox with a custom anchor `[0.25, 0.75]`; a Custom `Player` with `maxHealth` and `tint` Overrides;
   - `all_fields.scene.json`: one entity with `AllFields` and an Override for every field, including `sprite`, `effect` (`assets/anims/fx.anim.json`, `walk`) and `target` → `player`;
   - `references.scene.json`: a forward reference, a reference to the root, a self reference and an A↔B cycle;
   - `repaired.scene.json`: an orphan and a Node under two parents (copy the damage pattern from `rt/test/scene/tree_repair_test.dart`);
   - `assets/anims/fx.anim.json` with `walk` and `idle`.
-- [ ] T017 [US1] Write `rt/test/loader/build_test.dart` (extending T013's file) for T020–T024, with a `MemoryAssetSource` serving the fixtures and `makeImage` images. One test per US1 acceptance scenario:
+- [X] T017 [US1] Write `rt/test/loader/build_test.dart` (extending T013's file) for T020–T024, with a `MemoryAssetSource` serving the fixtures and `makeImage` images. One test per US1 acceptance scenario:
   1. the tree mirrors `childIds` order with the right component classes (`PyroEntity`, `SpriteComponent`, `RectangleHitbox`, `CircleHitbox`, `Player`);
   2. every transform (named and custom anchors);
   3. sprite with and without a region (`srcPosition`, `srcSize`);
@@ -191,26 +213,26 @@ property and every field value (spec US1)
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Implement `rt/lib/src/animation/animation_file.dart` (`AnimationFile`, `AnimationGrid`, `AnimationClip`, all immutable with `final` fields) and `rt/lib/src/animation/animation_codec.dart` (`AnimationCodec.decode(String text, {required String path})`) per [data-model.md § AnimationFile](data-model.md#animationfile-internal-modellibsrcanimation) and [contracts/anim-file-v1.md](contracts/anim-file-v1.md):
+- [X] T018 [P] [US1] Implement `rt/lib/src/animation/animation_file.dart` (`AnimationFile`, `AnimationGrid`, `AnimationClip`, all immutable with `final` fields) and `rt/lib/src/animation/animation_codec.dart` (`AnimationCodec.decode(String text, {required String path})`) per [data-model.md § AnimationFile](data-model.md#animationfile-internal-modellibsrcanimation) and [contracts/anim-file-v1.md](contracts/anim-file-v1.md):
   - reuse `rt/lib/src/scene/json/strict_reader.dart` for duplicate keys and positions;
   - reuse `UnsupportedSchemaVersion` and `InvalidSchemaVersion` from `rt/lib/src/scene/errors.dart`, adding a `SceneFormatException` subclass only if no existing one fits a broken rule, documented like its siblings;
   - the rules are: "`frames` non-empty, each ≥ 0", "exactly one of `stepTime` (> 0) or `stepTimes` (each > 0, same length as `frames`)", "`loop` defaults to `true`", "`offset`, `spacing` default to `[0, 0]`, both ≥ 0", "`cellSize` both > 0".
-- [ ] T019 [US1] Implement `rt/lib/src/animation/sprite_sheet.dart`: `SpriteAnimation toSpriteAnimation(AnimationFile file, String name, Image image)`. It computes columns and rows as in [contracts/anim-file-v1.md § Frames](contracts/anim-file-v1.md#frames), throws a `RangeError`-based error naming the file, the animation and the frame when a frame is out of range, and uses `SpriteAnimation.spriteList` or `.variableSpriteList` (research R7). Make T014 pass.
-- [ ] T020 [P] [US1] Implement `rt/lib/src/loader/field_values.dart`: a pure `FieldConversion convert(RegistryField field, Object? written)` returning a value, a deferred request (asset: `(path, animation?)`; reference: `NodeId`) or a mismatch with its message parts, per research R5. Accept colours with `RegExp(r'^#[0-9A-Fa-f]{8}$')`. Make T015 pass.
-- [ ] T021 [P] [US1] Implement `rt/lib/src/loader/pyro_entity.dart` (`class PyroEntity extends PositionedEntity`, constructor per [contracts/runtime-api.md](contracts/runtime-api.md#built-in-node-components), documented as the `entity` Node's component) and `rt/lib/src/loader/builtin_nodes.dart`, which maps each built-in kind to its complete component per research R3:
+- [X] T019 [US1] Implement `rt/lib/src/animation/sprite_sheet.dart`: `SpriteAnimation toSpriteAnimation(AnimationFile file, String name, Image image)`. It computes columns and rows as in [contracts/anim-file-v1.md § Frames](contracts/anim-file-v1.md#frames), throws a `RangeError`-based error naming the file, the animation and the frame when a frame is out of range, and uses `SpriteAnimation.spriteList` or `.variableSpriteList` (research R7). Make T014 pass.
+- [X] T020 [P] [US1] Implement `rt/lib/src/loader/field_values.dart`: a pure `FieldConversion convert(RegistryField field, Object? written)` returning a value, a deferred request (asset: `(path, animation?)`; reference: `NodeId`) or a mismatch with its message parts, per research R5. Accept colours with `RegExp(r'^#[0-9A-Fa-f]{8}$')`. Make T015 pass.
+- [X] T021 [P] [US1] Implement `rt/lib/src/loader/pyro_entity.dart` (`class PyroEntity extends PositionedEntity`, constructor per [contracts/runtime-api.md](contracts/runtime-api.md#built-in-node-components), documented as the `entity` Node's component) and `rt/lib/src/loader/builtin_nodes.dart`, which maps each built-in kind to its complete component per research R3:
   - `Anchor` from `NodeAnchor` (a named anchor → the Flame constant of the same name, custom → `Anchor(x, y)`);
   - `CollisionType` from `NodeCollisionType` by name;
   - `Vector2` from `Vec2`;
   - hitboxes always get an explicit position and size or radius;
   - a sprite Node gets a `SpriteComponent` with its transform and no sprite, plus a helper that pass 2 calls with the loaded image to set `Sprite(image, srcPosition:, srcSize:)` (research R3).
-- [ ] T022 [US1] Implement `rt/lib/src/loader/scene_builder.dart`, the four passes of [research R4](research.md#r4-the-four-pass-build) for the success path. It takes a decoded `Scene`, a `PyroRegistry`, an `AssetSource`, an `UnknownType`, the Scene's `AssetPath` and a required `Component root` (the `PyroScene` the build is for), and returns a `BuiltScene`:
+- [X] T022 [US1] Implement `rt/lib/src/loader/scene_builder.dart`, the four passes of [research R4](research.md#r4-the-four-pass-build) for the success path. It takes a decoded `Scene`, a `PyroRegistry`, an `AssetSource`, an `UnknownType`, the Scene's `AssetPath` and a required `Component root` (the `PyroScene` the build is for), and returns a `BuiltScene`:
   1. **construct:** depth first in `childIds` order. Built-in kinds come from T021; `custom` Nodes and Behaviors are created through `RegistryType.create()`. Collect `AssetRequest`s deduplicated by path, noting the first Node and field that asked;
   2. **configure:** `Future.wait` over every request (images by `loadImage`; animation files by `loadText` + `AnimationCodec.decode` + `loadImage` of their `image`, each file parsed once). Record each text read in `texts`. Then set each sprite Node's `sprite` (T021's helper), Custom components' transforms and every non-reference Override via T020 and `RegistryField.set`;
   3. **resolve:** set reference Overrides from `componentsById` (the root → the `root` argument);
   4. **attach:** `add` Behaviors and children in Scene order, then build `entries` in tree order.
 
   Error paths stay minimal here (throw `SceneLoadException` with the message parts available); US2 completes them.
-- [ ] T023 [US1] Wire T022 into `PyroScene.load` in `rt/lib/src/loader/pyro_scene.dart`: build first, then create the `PyroScene` and `addAll(built.children)`. `componentsById[rootId]` must be the returned `PyroScene`, so create the instance first, pass it as `root`, and keep it private until `load` completes. Export `PyroEntity` from `rt/lib/pyro_runtime.dart`, and re-export `Behavior` and `EntityMixin` from `flame_behaviors` (contracts/runtime-api.md, Exports). Make T017 pass.
+- [X] T023 [US1] Wire T022 into `PyroScene.load` in `rt/lib/src/loader/pyro_scene.dart`: build first, then create the `PyroScene` and `addAll(built.children)`. `componentsById[rootId]` must be the returned `PyroScene`, so create the instance first, pass it as `root`, and keep it private until `load` completes. Export `PyroEntity` from `rt/lib/pyro_runtime.dart`, and re-export `Behavior` and `EntityMixin` from `flame_behaviors` (contracts/runtime-api.md, Exports). Make T017 pass.
 
 **Checkpoint**: Phase 2 of phases.md's done-when for the Runtime holds: every fixture Scene loads in
 `flame_test` with the hand-written Registry (SC-001)

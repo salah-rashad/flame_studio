@@ -298,6 +298,9 @@ assets come back.
   after every Node exists.
 - **A Custom component that changes its own transform or children in `onLoad`**: its code wins.
   The Runtime has already applied the Scene's values and doesn't re-apply them.
+- **A hitbox directly under the root**: the load fails naming the Node. Flame needs a hitbox inside
+  a positioned component (an entity, sprite or Custom component) that owns its collisions, and
+  refuses one without (found while implementing, 2026-10-20).
 - **Hitboxes in a game without collision detection**: they load. Detecting collisions stays the
   game's job (Flame's `HasCollisionDetection`), as in hand-written Flame code.
 - **A hot reload while the Scene isn't mounted** (loaded but not added, or removed): Flame doesn't

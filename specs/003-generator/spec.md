@@ -67,6 +67,9 @@ parses the Manifest (#6) and the build_runner watcher Pyro runs (#11) are separa
   only for changes an older reader would misread (a new Field type or role, a changed meaning or
   shape); readers ignore unknown keys, so new optional keys don't change it. Pyro refuses a newer
   version with *Update Pyro* and keeps the last Manifest it could read.
+- Q: What happens when `min` is above `max`, or a constant default lies outside `[min, max]`?
+  → A: `min` above `max` is a build error; a default outside the range is a warning (it is often
+  deliberate, like `-1` for "off"), and the inspector still shows the real default.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -272,7 +275,8 @@ Manifest update in `build_runner watch`, as spike #2 did.
   `@PyroComponent` MUST accept the same plus an optional preview image path (*§6.1*).
 - **FR-003**: `@Editable` MUST accept optional minimum, maximum, tooltip and label. Minimum and
   maximum apply to numeric fields only; giving them on another Field type is an error naming the
-  field.
+  field. A minimum above the maximum is an error naming the field and both values; a constant
+  default outside `[min, max]` is a warning naming the field, the default and the range.
 - **FR-004**: The annotations MUST be usable in `const` context and MUST NOT carry behavior; they
   only describe.
 
@@ -406,8 +410,9 @@ Manifest update in `build_runner watch`, as spike #2 did.
   type, both roles, explicit IDs, parent types, supertypes and inherited fields, and one fixture
   per build-time rule (at least Type ID collision, unsupported field and bad constructor), each
   compared byte for byte with its Registry and Manifest goldens.
-- **SC-002**: 100% of the build-time rules in FR-003 and FR-006 to FR-012 have an error fixture, and every
-  error message names the file and the class (and field, where there is one).
+- **SC-002**: 100% of the build-time rules in FR-003, FR-006 to FR-012 and FR-014a have an error
+  or warning fixture, and every message names the file and the class (and field, where there is
+  one).
 - **SC-003**: Building the fixture packages twice from a clean cache, on macOS, Linux and
   Windows in CI, produces byte-identical outputs every time.
 - **SC-004**: In `build_runner watch` on a mid-size Flame project (300 files, 42 annotated), the

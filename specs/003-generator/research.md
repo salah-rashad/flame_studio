@@ -103,7 +103,7 @@ from Flame (needs Flame resolved in the generator's own tests and on the plain V
 | `@PyroBehavior` not a `Behavior` | `notBehavior` |
 | Explicit `id:` empty or containing whitespace | `badTypeId` |
 | Behavior's parent type is a mixin or interface-only type, not a class | `parentTypeNotClass` |
-| `pyro_runtime` isn't in the package's resolved packages (`BuildStep.packageConfig`; checked once, by the aggregator) | `missingRuntime` |
+| `pyro_runtime`'s library can't be read from the package (`BuildStep.canRead`; checked once, by the aggregator) | `missingRuntime` |
 
 Recorded per type: Type ID, role, label (class name by default), category, doc comment (`///`
 markers stripped, lines joined with `\n`, trimmed), `source` (package-relative path of the

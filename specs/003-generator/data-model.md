@@ -84,7 +84,7 @@ The aggregator reads every fragment (sorted by path) and:
 2. Drops every record with `valid: false` (its errors are already in the fragment).
 3. Collects every `ClassKey` in any record's linearization; each holder not in that set →
    `unusedEditable` warning.
-4. Checks `pyro_runtime` is in the package's resolved packages → else `missingRuntime`.
+4. Checks `package:pyro_runtime/pyro_runtime.dart` can be read → else `missingRuntime`.
 5. Sorts types by Type ID and diagnostics by `file`, `line`, `code`, `typeId`, `field`.
 6. Writes `lib/pyro.manifest.json` and `lib/pyro.g.dart` (build_runner skips the write when the
    bytes are unchanged), then logs errors (`log.severe`) and warnings (`log.warning`).

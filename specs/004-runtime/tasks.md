@@ -63,8 +63,7 @@ Deviations found while implementing, each also reflected in the code's comments:
   (spec edge case added).
 - **Open on the reference Mac:** T038 (manual Hot-swap in a macOS app) and T043 (timings and the
   release-build check). Container (Linux, JIT) timings are in ARCHITECTURE.md "Runtime" as an
-  early signal. T046 is done except #8's estimate in §14 and phases.md, which waits on the
-  author (still 4 evenings there).
+  early signal. #8's estimate is 5 evenings, set by the author (Q116).
 - **Behavior parent types (T010):** a Behavior whose parent type is private or unreachable is the
   new Generator error `unreachableParentType` (golden case `errors/unreachable_parent_type`).
 
@@ -432,7 +431,7 @@ Registry and `rootBundle`
   - `RegistryType.acceptsParent` checks Behavior parents at load (extends Q57);
   - under `UnknownType.skip` an unknown Custom component or kind is dropped with its subtree (details Q58);
   - missing assets fail a game's load.
-- [ ] T046 Update `docs/project-plan.md` and `docs/phases.md` in one commit (phases.md sync rule):
+- [X] T046 Update `docs/project-plan.md` and `docs/phases.md` in one commit (phases.md sync rule):
   - §6.2: the API as built (`PyroScene.load`'s parameters, `find` and `findAll` path rules, `UnknownType`), the loading order no longer ◇ proposed, that `onReloaded` runs before the new Nodes' `onLoad`s, and the stale-reference mechanism of T045;
   - §10: `AssetSource` as built (two methods, bundle default, no prefix);
   - §14 and phases.md: #8's estimate **as the author sets it** (plan.md suggests 4 → ~5; ask before writing numbers);

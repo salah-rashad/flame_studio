@@ -21,8 +21,7 @@ export 'src/sprite.dart';
 export 'src/sprite_animation.dart';
 ''',
   // vector_math declares its classes in part files, as the real one does.
-  'vector_math|lib/vector_math.dart':
-      "part 'src/vector_math/vector2.dart';\n",
+  'vector_math|lib/vector_math.dart': "part 'src/vector_math/vector2.dart';\n",
   'vector_math|lib/src/vector_math/vector2.dart': '''
 part of '../../vector_math.dart';
 

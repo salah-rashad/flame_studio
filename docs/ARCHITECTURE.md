@@ -521,3 +521,50 @@ Dart (research R5), so no `flutter test` fallback was needed.
    break a cycle when that ID only hangs off the cycle. The repair instead follows listing
    parents up from it until a Node repeats and attaches the smallest ID on that cycle
    (`tree_repair.dart`; fixture `damaged/cycle_with_tail`).
+
+## Document model
+
+**Question:** do snapshot undo and the Document's file handling keep editing instant and memory
+modest on a 1,000-Node Scene ([`specs/002-document-model/`](../specs/002-document-model/spec.md):
+SC-005, a one-Node transaction, undo or redo under 1 ms; SC-006, a 200-step history under
+2 MB), and does opening or saving keep the UI isolate free?
+
+**Answer:** yes. Measured with `apps/pyro/benchmark/document_benchmark_test.dart`
+(`flutter test --enable-vmservice`, so JIT numbers, an upper bound for the release build) on a
+1,000-Node Scene of entities, each with a sprite and a rectangle hitbox.
+
+| What | Result | Budget |
+|---|---|---|
+| One-Node transaction (`replaceNode`), median (p95) | 8 µs (43 µs) | < 1 ms |
+| Undo, redo, median | < 1 µs | < 1 ms |
+| Open, total / longest pause of the calling isolate | 42 ms / 3 ms | pause < 16 ms |
+| Save, total / longest pause of the calling isolate | 24 ms / 4 ms | pause < 16 ms |
+| 200-step history, beyond the Scene and the opening state | 909 KB | < 2 MB |
+
+Memory comes from a heap snapshot (`HeapSnapshotGraph` through the VM service): the bytes the
+history reaches that neither the Scene (525 KB) nor its opening state (142 KB more) reaches.
+Measured 2026-10-19 on the reference machine (Apple M4, macOS 26.2, Flutter 3.44.2).
+
+**Findings**
+
+1. **Snapshot undo can't stay under 10% of the Scene, which SC-006 first asked for.** Each
+   one-Node step keeps its new Node (about 0.6 KB here), so 200 steps on 1,000 Nodes cost about
+   20% before any map overhead; with `fast_immutable_collections`' automatic flushing turned
+   off the history was 130 KB (25%). With the default flushing (a full flat copy of the map
+   every 50 counted operations, reads included, which keeps lookups O(1)) it is 909 KB. SC-006
+   is now "under 2 MB" (spec clarification, 2026-10-19); diff-based undo would hold far less
+   and is a possible later enhancement (*Q99*).
+2. **`Isolate.run` costs latency, not frames.** Decoding a 1,000-Node Scene takes about 2.3 ms
+   (Scene format section above), but open takes 42 ms in total because of the isolate's start
+   and the transfer back. The calling isolate pauses for at most 3–4 ms, so the editor keeps
+   drawing. For typical Scenes, decoding in place would also fit in a frame; the injected
+   `Offload` makes either choice a one-line change.
+3. **In this workspace, spike #4's code-generator versions don't resolve on Flutter 3.44.2.**
+   `pyro_annotations` and `pyro_generator` depend on `test`, and the `test` versions that match
+   `flutter_test`'s pinned `test_api` 0.7.11 cap analyzer below 13 (the lock holds 12.1.0).
+   freezed 4.0.0-dev.3 and riverpod_generator 4.0.9 need analyzer ≥ 13; the working set is
+   freezed 3.2.6-dev.1, riverpod_generator 4.0.4, flutter_riverpod 3.3.2 and build_runner
+   2.15.1 (spec 002, research R1). Flutter 3.47.x (Dart 3.13) would allow stable freezed 4.x.
+4. **freezed needs `map`/`when` off for a class whose only factory is private**, or the generated
+   code fails to compile (`SceneDocument`, which has no public constructor so that only the
+   tree-safe edits make new states).

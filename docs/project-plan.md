@@ -582,12 +582,16 @@ The format is fixed now; the grid slicer that writes it ships in v0.1.1 (*Q65*).
 
 ### 8.1 Document model (*Q21, Q23*)
 
-- `SceneDocument` = immutable, **flat normalized map** `NodeId → Node`, each Node holding
-  `parentId` and ordered `childIds` in memory (only `childIds` is persisted, *Q47*). Built with
-  **freezed**.
-- For structural sharing on large scenes, back the map with an immutable collection
-  (e.g. `fast_immutable_collections`' `IMap`) instead of copying a `Map` on every edit. ◇ proposed
+- `SceneDocument` = immutable, **flat normalized map** `NodeId → Node` over the Runtime's own Node
+  classes, plus a parent index `NodeId → parent` beside it (only ordered `childIds` is persisted,
+  *Q47*). Built with **freezed**, compared by **identity**: an edit that changes nothing returns
+  the same object, so "not identical" means "changed".
+- Structural sharing comes from `fast_immutable_collections`' `IMap`: an edit keeps every
+  untouched Node as the same object, which the reconciler and `select` rely on.
+- Four tree-safe edits (add, remove with its subtree, move, replace) are the only way to a new
+  state; `replaceNode` refuses changed children.
 - Selection, camera, panel sizes and hover live **outside** the document (*Q25*).
+- Built in [`specs/002-document-model/`](../specs/002-document-model/spec.md) (`apps/pyro/lib/document/`).
 
 ### 8.2 Transactions and history (*Q22*)
 
@@ -598,15 +602,24 @@ doc.transact('Move 3 nodes', (d) => d.moveNodes(ids, delta), coalesceKey: gestur
 - Every mutation goes through a named transaction; **no other way to change the document**.
 - History = list of document snapshots with labels. Undo/redo = move the pointer. Correct by
   construction (no hand-written reverts).
-- **Coalescing:** transactions with the same `coalesceKey` (a drag, a slider scrub, typing in one
-  field) merge into one history entry.
-- The **dirty flag** = current snapshot ≠ last saved snapshot.
-- **Recovery file only** (*Q55*): Pyro periodically writes a recovery copy outside the
-  scene file, at an interval set in Settings (*Q85*); after a crash, the next launch offers *Restore*. It never writes the real scene file
-  without the user saving, because the running game would hot-swap half-finished edits. Undo
-  history is not persisted across sessions.
-- Scene files are written **atomically** (temp file + rename) so a hot reload never syncs a
-  half-written file. ◇ proposed
+- **Coalescing:** transactions with the same `coalesceKey` in a row (a drag, a slider scrub,
+  typing in one field) merge into one history entry with the first one's label; any other
+  transaction, an undo, a redo or a save ends the run.
+- History keeps 200 steps; memory stays under 2 MB for 200 one-Node steps on 1,000 Nodes
+  (*Q99*).
+- The **dirty flag** = current snapshot ≠ last saved snapshot, by identity. A Scene repaired on
+  open, or restored from a recovery copy, has no saved snapshot until it is saved (*Q96*).
+- **Recovery file only** (*Q55*): Pyro writes a recovery copy every 30 s while a Scene with a
+  file path has unsaved changes (a Settings value from Phase 7, *Q85*), in its application
+  support folder and never in the project, pruned after 30 days (*Q97*); after a crash, the next
+  launch offers *Restore*. It never writes the real scene file without the user saving, because
+  the running game would hot-swap half-finished edits. Undo history is not persisted across
+  sessions.
+- Scene files are written **atomically** (temp file, flush, rename) so a hot reload never syncs
+  a half-written file.
+- A save is refused if the file changed on disk since it was opened or saved (content digest);
+  the editor can force it (*Q95*). It is also refused while the Runtime's readable
+  `schemaVersion` is unknown or too old (*Q49, Q98*).
 
 ### 8.3 Viewport and reconciler (*Q16, Q24*)
 

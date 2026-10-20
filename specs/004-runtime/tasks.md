@@ -345,7 +345,7 @@ reload again and check that nothing was rebuilt (spec US4)
 
 ### Tests for User Story 4
 
-- [ ] T033 [P] [US4] Write `rt/test/loader/hot_swap_test.dart` for T035–T036. Each test mounts a Scene loaded from a `MemoryAssetSource`, changes `texts` (or not), calls `game.onHotReload()`, then awaits a `@visibleForTesting Future<void> get pendingCheck` on the `PyroScene` and `game.update(0)`:
+- [X] T033 [P] [US4] Write `rt/test/loader/hot_swap_test.dart` for T035–T036. Each test mounts a Scene loaded from a `MemoryAssetSource`, changes `texts` (or not), calls `game.onHotReload()`, then awaits a `@visibleForTesting Future<void> get pendingCheck` on the `PyroScene` and `game.update(0)`:
   - **changed Scene** (US4 #1, #6): new components, the same `PyroScene` object in the same parent, `onReloaded` called once with it, and lookups return new components;
   - **unchanged** (US4 #2): no `onReloaded`, the same component objects, and `textReads` up by exactly one per file;
   - **changed animation file only** (US4 #3): rebuilds, and the new animation's step time is used;
@@ -354,7 +354,7 @@ reload again and check that nothing was rebuilt (spec US4)
   - **two `onHotReload` calls back to back with different texts:** checks don't overlap (a source whose `loadText` completes only when the test says so), and the Scene ends on the second text;
   - **a Scene loaded but never added** to the game: `game.onHotReload()` reads nothing;
   - **SC-003:** 100 reloads alternating changed and unchanged texts give exactly 50 rebuilds and 50 `onReloaded` calls.
-- [ ] T034 [P] [US4] Write `rt/test/loader/stale_reference_test.dart` for T037:
+- [X] T034 [P] [US4] Write `rt/test/loader/stale_reference_test.dart` for T037:
   - after a rebuild, changing a removed Node's `position` prints one warning naming the Scene, the Node (`"player" (9b2e)`) and `onReloaded`, and changing it again prints nothing more;
   - re-adding a removed component to the game prints one warning;
   - the swap itself, `removeFromParent` and `game.update` print nothing (plan.md, Risks: `Transform2D` listeners);
@@ -364,15 +364,15 @@ reload again and check that nothing was rebuilt (spec US4)
 
 ### Implementation for User Story 4
 
-- [ ] T035 [US4] Implement the change check in `rt/lib/src/loader/hot_swap.dart` per [research R11](research.md#r11-hot-swap): `Future<bool> contentChanged(AssetSource source, Map<AssetPath, String> texts)`. It re-reads every path in `texts` through `source.loadText` and compares with `==`. A read failure counts as changed, so the rebuild reports it.
-- [ ] T036 [US4] Override `onHotReload` in `PyroScene` (`rt/lib/src/loader/pyro_scene.dart`):
+- [X] T035 [US4] Implement the change check in `rt/lib/src/loader/hot_swap.dart` per [research R11](research.md#r11-hot-swap): `Future<bool> contentChanged(AssetSource source, Map<AssetPath, String> texts)`. It re-reads every path in `texts` through `source.loadText` and compares with `==`. A read failure counts as changed, so the rebuild reports it.
+- [X] T036 [US4] Override `onHotReload` in `PyroScene` (`rt/lib/src/loader/pyro_scene.dart`):
   - call `super.onHotReload()`, then, only `if (kDebugMode)`, chain `_checkForChanges()` onto a private `Future<void> _pending` (expose it as `@visibleForTesting pendingCheck`);
   - `_checkForChanges`: if `contentChanged` (T035) finds no change, stop. Otherwise read and decode the Scene and run `SceneBuilder` with the kept Registry, policy and source and `root: this`, so root references resolve to the same instance;
   - on failure, `debugPrint` one error starting `══ Pyro couldn't Hot-swap <path> ══` with the cause and keep the current build (FR-026);
   - on success, swap synchronously: `removeAll` the old root children, `addAll` the new, replace the build (index, `texts`), warn about repairs, skips and unused Overrides as in `load`, start the stale watch (T037), then call `onReloaded?.call(this)`.
 
   Make T033 pass.
-- [ ] T037 [US4] Implement `StaleWatch` in `rt/lib/src/loader/hot_swap.dart` per [research R12](research.md#r12-stale-reference-warning) and [data-model.md § StaleWatch](data-model.md#stalewatch-internal-debug-only):
+- [X] T037 [US4] Implement `StaleWatch` in `rt/lib/src/loader/hot_swap.dart` per [research R12](research.md#r12-stale-reference-warning) and [data-model.md § StaleWatch](data-model.md#stalewatch-internal-debug-only):
   - for each removed entry's component, once `component.removed` completes (research R12: before that, `mounted` is an already-completed future), it attaches a `transform` listener (only for `PositionComponent`s) and a `mounted.then` callback that checks the watch is still open;
   - `fire` prints `══ Pyro: <path> was Hot-swapped, but game code still uses Node "<name>" (<id>) from before ══`, followed by "Re-run lookups in onReloaded (PyroScene.load).", then detaches that Node;
   - `close()` detaches everything.

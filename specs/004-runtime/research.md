@@ -122,8 +122,8 @@ by R13). The result is checked with `RegistryField.accepts` before `set`:
 
 T009 adds the case-insensitive read to the Scene contract's reading rules, so Pyro's own reader
 (#5) accepts the same values. Anything else is a `SceneLoadException` naming the Scene, the Node,
-the Type ID, the field, the
-written value (shortened to 80 characters) and the expected Field type (FR-011). An Override for
+the Type ID, the field, the written value (shortened to 80 characters) and the expected Field type
+(FR-011). An Override for
 a field the `RegistryType` doesn't list is skipped and collected for one debug warning per load
 (FR-012).
 

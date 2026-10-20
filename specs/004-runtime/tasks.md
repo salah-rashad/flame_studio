@@ -395,16 +395,16 @@ memory source. Check that the same paths are requested and the same assets come 
 
 ### Tests for User Story 5
 
-- [ ] T039 [P] [US5] Add to `rt/test/loader/build_test.dart`:
+- [X] T039 [P] [US5] Add to `rt/test/loader/build_test.dart`:
   - loading `all_kinds.scene.json` through a `MemoryAssetSource` and through `AssetSource.bundle(fakeBundle)` (serving the same files) requests the same set of paths, all project-relative with no prefix (US5 #1);
   - with a caller's source, `Flame.images` and `Flame.assets` stay empty and `Flame.bundle` is never read (US5 #2; assert on their cache keys before and after);
   - a Scene with three sprites and a `Sprite` field on one image calls `loadImage` for it exactly once (US5 #3, FR-031);
   - after a Hot-swap rebuild, the image isn't loaded again (Q72).
-- [ ] T040 [P] [US5] Add `game/assets/scenes/fixture.scene.json`, `game/assets/images/sheet.png` (a 64×32 PNG, two 32×32 cells, generated once with a short script in the scratchpad and committed) and `game/assets/anims/sheet.anim.json`. The Scene uses `game/`'s real annotated types: an entity with one of its Behaviors and every Override that Behavior's fields allow, a sprite, a hitbox and a Custom component. Declare the three folders under `flutter: assets:` in `game/pubspec.yaml`. Write `game/test/load_test.dart`: `PyroScene.load('assets/scenes/fixture.scene.json', registry: pyroRegistry)` with the default source in a `testWithFlameGame`, checking a field value, a lookup and the sprite's image size (quickstart §3).
+- [X] T040 [P] [US5] Add `game/assets/scenes/fixture.scene.json`, `game/assets/images/sheet.png` (a 64×32 PNG, two 32×32 cells, generated once with a short script in the scratchpad and committed) and `game/assets/anims/sheet.anim.json`. The Scene uses `game/`'s real annotated types: an entity with one of its Behaviors and every Override that Behavior's fields allow, a sprite, a hitbox and a Custom component. Declare the three folders under `flutter: assets:` in `game/pubspec.yaml`. Write `game/test/load_test.dart`: `PyroScene.load('assets/scenes/fixture.scene.json', registry: pyroRegistry)` with the default source in a `testWithFlameGame`, checking a field value, a lookup and the sprite's image size (quickstart §3).
 
 ### Implementation for User Story 5
 
-- [ ] T041 [US5] Make T039 and T040 pass. Expected changes are small: request deduplication in pass 1 is T022's, and image ownership is T008's. Fix whatever T039 exposes in `rt/lib/src/loader/scene_builder.dart` or `rt/lib/src/assets/asset_source.dart`, and document on `PyroScene.load` that one bundle source is created per Scene and kept across Hot-swaps (research R8)
+- [X] T041 [US5] Make T039 and T040 pass. Expected changes are small: request deduplication in pass 1 is T022's, and image ownership is T008's. Fix whatever T039 exposes in `rt/lib/src/loader/scene_builder.dart` or `rt/lib/src/assets/asset_source.dart`, and document on `PyroScene.load` that one bundle source is created per Scene and kept across Hot-swaps (research R8)
 
 **Checkpoint**: all Runtime tests pass; `game/`'s load test passes with the real generated
 Registry and `rootBundle`

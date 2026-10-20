@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "boss": {
+      "fields": {
+        "minion": {
+          "ref": "enemy"
+        },
+        "rage": 3
+      },
+      "kind": "custom",
+      "name": "boss",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [200, 50],
+        "scale": [1, 1],
+        "size": [64, 64]
+      },
+      "type": "Boss"
+    },
+    "enemy": {
+      "fields": {
+        "glow": 0.75,
+        "health": 4
+      },
+      "kind": "custom",
+      "name": "grunt",
+      "tags": [
+        "enemy"
+      ],
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [150, 50],
+        "scale": [1, 1],
+        "size": [32, 32]
+      },
+      "type": "enemy.base"
+    },
+    "hitbox": {
+      "kind": "rectangleHitbox",
+      "name": "body",
+      "props": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "collisionType": "active",
+        "isSolid": false,
+        "position": [2, 2],
+        "size": [28, 44]
+      }
+    },
+    "lamp": {
+      "fields": {
+        "tint": "#FFFFCC00"
+      },
+      "kind": "custom",
+      "name": "lamp",
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [10, 10],
+        "scale": [1, 1],
+        "size": [8, 8]
+      },
+      "type": "Lamp"
+    },
+    "player": {
+      "behaviors": [
+        {
+          "fields": {
+            "direction": [0, 1],
+            "hitEffect": {
+              "animation": "walk",
+              "asset": "assets/anims/sheet.anim.json"
+            },
+            "mode": "loop",
+            "speed": 80,
+            "target": {
+              "ref": "player"
+            },
+            "trail": {
+              "asset": "assets/images/sheet.png"
+            }
+          },
+          "type": "Patrol"
+        },
+        {
+          "type": "Blink"
+        }
+      ],
+      "childIds": [
+        "hitbox",
+        "sprite"
+      ],
+      "fields": {
+        "icon": {
+          "asset": "assets/images/sheet.png"
+        },
+        "lives": 5
+      },
+      "kind": "custom",
+      "name": "player",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [64, 128],
+        "scale": [1, 1],
+        "size": [32, 48]
+      },
+      "type": "Player"
+    },
+    "root": {
+      "childIds": [
+        "player",
+        "enemy",
+        "boss",
+        "lamp"
+      ],
+      "kind": "root"
+    },
+    "sprite": {
+      "kind": "sprite",
+      "name": "sprite",
+      "props": {
+        "image": "assets/images/sheet.png",
+        "srcPosition": [32, 0],
+        "srcSize": [32, 32]
+      },
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [32, 32]
+      }
+    }
+  }
+}

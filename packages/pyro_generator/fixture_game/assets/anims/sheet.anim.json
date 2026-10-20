@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "animations": {
+    "walk": {
+      "frames": [0, 1],
+      "loop": true,
+      "stepTime": 0.1
+    }
+  },
+  "grid": {
+    "cellSize": [32, 32]
+  },
+  "image": "assets/images/sheet.png"
+}

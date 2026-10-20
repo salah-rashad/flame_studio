@@ -1,12 +1,15 @@
-import 'dart:ui';
+import 'dart:convert';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/flame.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pyro_runtime/pyro_runtime.dart';
 
+import '../support/images.dart';
 import '../support/loader_fixtures.dart';
 import '../support/scene_text.dart';
 import '../support/test_registry.dart';
@@ -252,4 +255,96 @@ void main() {
       expect(game.children.whereType<PyroScene>(), hasLength(2));
     });
   });
+
+  group('US5', () {
+    test('#1 the bundle and a memory source get the same project-relative '
+        'paths', () async {
+      final memory = await sourceFor(allFieldsScene());
+      await PyroScene.load(scenePath, registry: testRegistry, assets: memory);
+      final bundle = _RecordingBundle(memory.texts, await makePng(64, 32));
+      await PyroScene.load(
+        scenePath,
+        registry: testRegistry,
+        assets: AssetSource.bundle(bundle),
+      );
+      expect(bundle.keys.toSet(), {
+        ...memory.textReads.keys,
+        ...memory.imageReads.keys,
+      });
+      expect(bundle.keys, everyElement(startsWith('assets/')));
+    });
+
+    test("#2 a caller's source is the only thing read", () async {
+      final source = await sourceFor(allKindsScene());
+      await PyroScene.load(scenePath, registry: testRegistry, assets: source);
+      expect(Flame.images.containsKey(sheet), isFalse);
+    });
+
+    test('#3 an image used by several Nodes and fields is read once', () async {
+      final source = await sourceFor(
+        sceneJson([
+          RootNode(id: const NodeId('root'), childIds: const [NodeId('e')]),
+          EntityNode(
+            id: const NodeId('e'),
+            name: 'e',
+            transform: at(0, 0),
+            childIds: const [NodeId('s1'), NodeId('s2'), NodeId('s3')],
+            behaviors: [
+              BehaviorAttachment(
+                type: const TypeId('AllFields'),
+                fields: Overrides(const {
+                  'sprite': {'asset': sheet},
+                  'effect': {'asset': fxAnim, 'animation': 'walk'},
+                }),
+              ),
+            ],
+          ),
+          for (final id in ['s1', 's2', 's3'])
+            SpriteNode(
+              id: NodeId(id),
+              name: id,
+              transform: at(0, 0),
+              image: const AssetPath(sheet),
+            ),
+        ]),
+      );
+      await PyroScene.load(scenePath, registry: testRegistry, assets: source);
+      expect(source.imageReads, {sheet: 1});
+    });
+
+    testWithFlameGame('a Hot-swap decodes no image again (Q72)', (game) async {
+      final memory = await sourceFor(allKindsScene());
+      final bundle = _RecordingBundle(memory.texts, await makePng(64, 32));
+      final scene = await PyroScene.load(
+        scenePath,
+        registry: testRegistry,
+        assets: AssetSource.bundle(bundle),
+      );
+      await game.ensureAdd(scene);
+      memory.texts[scenePath] = allKindsScene().replaceFirst('320', '321');
+      game.onHotReload();
+      await scene.pendingCheck;
+      expect(scene.find<PyroEntity>('goblin_1').position.x, 321);
+      expect(bundle.keys.where((k) => k == sheet), hasLength(1));
+    });
+  });
+}
+
+/// A bundle serving [texts] and one PNG for every other key, recording
+/// each key read.
+final class _RecordingBundle extends CachingAssetBundle {
+  _RecordingBundle(this.texts, this.png);
+
+  final Map<String, String> texts;
+  final Uint8List png;
+  final List<String> keys = [];
+
+  @override
+  Future<ByteData> load(String key) async {
+    keys.add(key);
+    final text = texts[key];
+    return text == null
+        ? ByteData.sublistView(png)
+        : ByteData.sublistView(Uint8List.fromList(utf8.encode(text)));
+  }
 }

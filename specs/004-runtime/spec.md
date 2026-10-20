@@ -433,7 +433,9 @@ assets come back.
 - **FR-025**: If it changed, the Scene MUST drop the cached data of the changed files, build the
   new content completely, and only then swap: remove every old Node component, add the new ones,
   and call `onReloaded` with itself. The `PyroScene` stays the same object in the same parent.
-  Images aren't compared and their caches aren't cleared (*Q72*).
+  `onReloaded` runs once the new Nodes are in the tree and lookups return them, before their own
+  `onLoad`s have run, as after `load`. Images aren't compared and their caches aren't cleared
+  (*Q72*).
 - **FR-026**: If the new content fails to load, the Scene MUST keep the old Nodes running, MUST
   NOT call `onReloaded`, and MUST print a debug error naming the Scene and the cause.
 - **FR-027**: Rebuilds MUST NOT overlap. A reload that arrives during a rebuild is handled after
@@ -511,8 +513,8 @@ assets come back.
   and nested paths. Every ambiguous or failed lookup's error lists the matching paths or what was
   searched.
 - **SC-006**: In a release build, the Hot-swap code paths are absent from the compiled game
-  (checked against a build of a fixture game), and a loaded Scene adds no per-frame cost beyond
-  its components.
+  (checked against a release build of a small app that loads a Scene), and a loaded Scene adds no
+  per-frame cost beyond its components.
 
 ## Assumptions
 

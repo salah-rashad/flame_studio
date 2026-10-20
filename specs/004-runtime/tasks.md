@@ -111,7 +111,7 @@ Registry, and a `PyroScene.load` that loads a root-only Scene
   - `toJson`, `==`, `hashCode` and `toString` include `animation`;
   - check that the canonical writer needs no change (keys are sorted already).
 
-  In the same commit, update the Field type table in `specs/001-scene-format/contracts/scene-file-v1.md` (a `SpriteAnimation` row with `{"asset": path, "animation": name}`, and the asset row limited to `ImagePath` and `Sprite`), the written-form table in `specs/003-generator/research.md` R5 (the `spriteAnimation` row), and project-plan §7.1's "Override values" bullet, each with "(spec 004, FR-034)". Make T004 pass.
+  In the same commit, update the Field type table in `specs/001-scene-format/contracts/scene-file-v1.md` (a `SpriteAnimation` row with `{"asset": path, "animation": name}`, the asset row limited to `ImagePath` and `Sprite`, and under "Reading rules" that a colour's hex digits are accepted in either case and written upper case), the written-form table in `specs/003-generator/research.md` R5 (the `spriteAnimation` row), and project-plan §7.1's "Override values" bullet, each with "(spec 004, FR-034)". Make T004 pass.
 - [ ] T010 Add `acceptsParent` to `RegistryType` in `rt/lib/src/loader/registry.dart` per [contracts/runtime-api.md § Amended: RegistryType](contracts/runtime-api.md#amended-registrytype-spec-003-contract), with `PyroRegistry`'s two new `ArgumentError` checks. In the same commit:
   - in `gen/lib/src/registry_emitter.dart`, emit `acceptsParent: (parent) => parent is <T>,` for every Behavior, where `<T>` is the Behavior's type argument written with the same import prefix the emitter uses for field types, or `EntityMixin` from `flame_behaviors` when the Behavior has no type argument or uses `EntityMixin`. Add `flame_behaviors` to the Registry's imports when it is needed;
   - regenerate the goldens (`PYRO_UPDATE_GOLDENS=1`) and review that the only change is the added line;
@@ -126,7 +126,7 @@ Registry, and a `PyroScene.load` that loads a root-only Scene
     - `EnemyOnly extends Behavior<Enemy>`;
     - `Throwing`, whose constructor throws `StateError('boom')`.
   - **Custom components:**
-    - `Player extends PositionedEntity` with `int maxHealth = 3`, `Color tint`;
+    - `Player extends PositionedEntity` with `int maxHealth = 3`, `Color tint = const Color(0xFFFF8800)`;
     - `Enemy extends PositionedEntity`;
     - `Plain extends PositionComponent` (no `EntityMixin`);
     - `BadSetter extends PositionComponent`, whose field setter throws.
@@ -394,7 +394,7 @@ Registry and `rootBundle`
 **Purpose**: the budgets measured, documentation in sync, final checks
 
 - [ ] T042 [P] Write `rt/benchmark/load_benchmark_test.dart` (SC-004, quickstart §4). Reuse the 1,000-Node Scene generator from `rt/benchmark/scene_codec_benchmark.dart`: move it to `rt/benchmark/support/benchmark_scene.dart` and import it from both, with entities, sprites on 10 distinct images, hitboxes, and Custom components and Behaviors from a small benchmark Registry. Use a `MemoryAssetSource` with pre-made images (so image decoding is excluded). Report the median and p95 of 20 runs each for `PyroScene.load`, a no-op Hot-swap check (`contentChanged` on unchanged texts), and a full rebuild (load into a mounted Scene + swap). `expect` each median under 50 ms, 5 ms and 100 ms. Also record the longest synchronous pause of the isolate during a load and during a rebuild: run a `Timer.periodic(Duration.zero)` probe alongside and report the longest gap between its ticks. No `expect` on it yet (spec Clarifications).
-- [ ] T043 On the reference Mac, run T042 and quickstart §5 step 4 (the release build checked with `strings … | grep -c "couldn't Hot-swap"` → 0, SC-006). Record the table (including the longest pauses), the configuration (macOS, Apple M4, Flutter 3.44.2, `flutter test` JIT) and the release result. Then propose a pause limit to the author. Once they set it, add it to SC-004 and plan.md, add the `expect` to T042's benchmark, and if the limit needs it, make `scene_builder.dart` yield between passes (and every ~200 Nodes in pass 1), recording the limit as a decision in `docs/decisions.md`. Record all of this in a new "Runtime" section of `docs/ARCHITECTURE.md`, after the Generator section. If this can't run on the reference Mac in the implementing session, leave the task open and say so in the PR
+- [ ] T043 On the reference Mac, run T042 and quickstart §5 step 4 (the release build checked with `strings … | grep -c "couldn't Hot-swap"` → 0, SC-006). Record the table (including the longest pauses, and noting that the no-op figure times `contentChanged` alone, not the whole `onHotReload` call), the configuration (macOS, Apple M4, Flutter 3.44.2, `flutter test` JIT) and the release result. Then propose a pause limit to the author. Once they set it, add it to SC-004 and plan.md, add the `expect` to T042's benchmark, and if the limit needs it, make `scene_builder.dart` yield between passes (and every ~200 Nodes in pass 1), recording the limit as a decision in `docs/decisions.md`. Record all of this in a new "Runtime" section of `docs/ARCHITECTURE.md`, after the Generator section. If this can't run on the reference Mac in the implementing session, leave the task open and say so in the PR
 - [ ] T044 [P] Update `GLOSSARY.md` (plan.md, Documentation updates):
   - add **Asset source**, **Animation file** and **Stale reference**, each one line in the file's style;
   - add to **Entity** that its component in games is `PyroEntity`;
@@ -407,12 +407,12 @@ Registry and `rootBundle`
   - under `UnknownType.skip` an unknown Custom component or kind is dropped with its subtree (details Q58);
   - missing assets fail a game's load.
 - [ ] T046 Update `docs/project-plan.md` and `docs/phases.md` in one commit (phases.md sync rule):
-  - §6.2: the API as built (`PyroScene.load`'s parameters, `find` and `findAll` path rules, `UnknownType`), the loading order no longer ◇ proposed, and the stale-reference mechanism of T045;
+  - §6.2: the API as built (`PyroScene.load`'s parameters, `find` and `findAll` path rules, `UnknownType`), the loading order no longer ◇ proposed, that `onReloaded` runs before the new Nodes' `onLoad`s, and the stale-reference mechanism of T045;
   - §10: `AssetSource` as built (two methods, bundle default, no prefix);
   - §14 and phases.md: #8's estimate **as the author sets it** (plan.md suggests 4 → ~5; ask before writing numbers);
   - tick #8 in phases.md with a link to `specs/004-runtime/spec.md` and the Q numbers of T045;
   - update phases.md's status line and "Left" figures, and mark Phase 2 ✅ if its done-when holds.
-- [ ] T047 [P] Update `rt/README.md` (create it if absent): `PyroScene.load` with §6.2's example, lookups, `UnknownType.skip`, `onReloaded`, what Hot-swap needs (a debug build, Flame ≥ 1.36, a reload through `flutter run`), the asset source, and that Scenes load without Pyro (Q64). Add a `rt/CHANGELOG.md` entry for the loader, the `AssetRef` amendment and `acceptsParent`, and a `gen/CHANGELOG.md` entry for `acceptsParent`.
+- [ ] T047 [P] Update `rt/README.md` (create it if absent): `PyroScene.load` with §6.2's example, lookups, `UnknownType.skip`, `onReloaded`, what Hot-swap needs (a debug build, Flame ≥ 1.36, a reload through `flutter run`), the asset source, and that Scenes load without Pyro (Q64). Add a `rt/CHANGELOG.md` entry for the loader, the `AssetRef` amendment and `acceptsParent`, saying that a `pyro.g.dart` generated before this version fails at startup with an `ArgumentError` naming the Behavior until `dart run build_runner build` regenerates it, and a `gen/CHANGELOG.md` entry for `acceptsParent`.
 - [ ] T048 Run the repository's checks:
   - `dart format --output=none --set-exit-if-changed packages apps`;
   - `dart analyze --fatal-infos packages/pyro_annotations packages/pyro_generator`;
@@ -446,7 +446,8 @@ Registry and `rootBundle`
   lookup methods only
 - **US4 (Phase 6)**: after US1. T036 reuses US2's warnings, so finish T028 first
 - **US5 (Phase 7)**: after US1. T040 needs T010's regenerated Registry
-- **Polish (Phase 8)**: after all stories; T042 after US4
+- **Polish (Phase 8)**: after all stories; T042 after US4. T044 (glossary) ships in the same PR as
+  the code that introduces its terms (constitution I), never in a later one
 
 ### Within Each Story
 

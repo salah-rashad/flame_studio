@@ -120,7 +120,9 @@ by R13). The result is checked with `RegistryField.accepts` before `set`:
 | `entityRef` | `{"ref": id}` | the target's component (pass 3) |
 | any, when nullable | `null` | `null` |
 
-Anything else is a `SceneLoadException` naming the Scene, the Node, the Type ID, the field, the
+T009 adds the case-insensitive read to the Scene contract's reading rules, so Pyro's own reader
+(#5) accepts the same values. Anything else is a `SceneLoadException` naming the Scene, the Node,
+the Type ID, the field, the
 written value (shortened to 80 characters) and the expected Field type (FR-011). An Override for
 a field the `RegistryType` doesn't list is skipped and collected for one debug warning per load
 (FR-012).
@@ -255,7 +257,9 @@ called in debug mode.
    (FR-026);
 4. on success swaps synchronously: `removeAll` of the old root children, `addAll` of the new ones,
    index and kept texts replaced. Then it starts stale-reference tracking (R12) and calls
-   `onReloaded(this)` (FR-025).
+   `onReloaded(this)` (FR-025). As after `load`, the new Nodes are in the tree but their `onLoad`s
+   run later, on the next game tick, so `onReloaded` sees configured fields, not `onLoad` state;
+   `SceneReloaded`'s doc says so.
 
 **Rationale:** keeping the text and comparing it exactly is simpler than hashing and can't
 collide. The memory cost is one copy of the files (a 1,000-Node Scene is ~365 KB, ARCHITECTURE.md

@@ -18,6 +18,11 @@ enum UnknownType {
 }
 
 /// Called after a Hot-swap rebuilt [scene]; re-run lookups here (Q71).
+///
+/// The new Nodes are in [scene] and lookups return them, but their own
+/// `onLoad`s haven't run yet, just as after [PyroScene.load] returns. Read
+/// their Editable fields and transforms here, not state they set up in
+/// `onLoad`.
 typedef SceneReloaded = void Function(PyroScene scene);
 
 /// A loaded Scene: the Flame component standing for its root Node.

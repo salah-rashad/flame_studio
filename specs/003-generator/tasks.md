@@ -167,7 +167,7 @@ expected Registry out of `dart format` and the analyzer; `gen/analysis_options.y
 
 **Independent Test**: on a synthetic mid-size project, measure the time from a save to the Manifest update in `build_runner watch`, as spike #2 did (spec US4)
 
-- [ ] T044 [US4] Adapt spike #2's harness (spikes are exempt from the constitution) in `spikes/02_generator/bench/bin/gen_project.dart`: a `--pyro` flag that depends on the workspace's `pyro_annotations` and `pyro_generator` by path, emits `@PyroBehavior`/`@PyroComponent`/`@Editable` with `ImagePath` and the other preview Field types, and watches `lib/pyro.manifest.json` and `lib/pyro.g.dart` in `bench/bin/measure.dart` instead of the `flame_studio.*` files (research R13)
+- [X] T044 [US4] Adapt spike #2's harness (spikes are exempt from the constitution) in `spikes/02_generator/bench/bin/gen_project.dart`: a `--pyro` flag that depends on the workspace's `pyro_annotations` and `pyro_generator` by path, emits `@PyroBehavior`/`@PyroComponent`/`@Editable` with `ImagePath` and the other preview Field types, and watches `lib/pyro.manifest.json` and `lib/pyro.g.dart` in `bench/bin/measure.dart` instead of the `flame_studio.*` files (research R13)
 - [ ] T045 [US4] On the reference Mac (macOS, Apple M4, Flutter 3.44.2), generate 300 files / 42 annotated with `--pyro`, build once, and run `measure.dart --runs 5` (quickstart §4); pass if the median "Manifest updated" time for an annotated save is under 3 s (SC-004). Record the table, the configuration and the first-save time in `docs/ARCHITECTURE.md` under a new "Generator" section next to spike #2's results. If this can't run on the reference Mac in the implementing session, leave the task open and say so in the PR
 
 **Checkpoint**: SC-004 measured and recorded

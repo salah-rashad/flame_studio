@@ -7,8 +7,11 @@
 //                            core_000 transitively (worst case for edits)
 //   util/util_NNN.dart       unannotated leaves, imported by nobody
 //   systems/system_NNN.dart  unannotated, import a few core files + flame
-//   behaviors/behavior_NNN.dart    @StudioBehavior
-//   components/component_NNN.dart  @StudioComponent
+//   behaviors/behavior_NNN.dart    @StudioBehavior (@PyroBehavior with --pyro)
+//   components/component_NNN.dart  @StudioComponent (@PyroComponent with --pyro)
+//
+// --pyro uses the workspace's real pyro_annotations, pyro_runtime and
+// pyro_generator instead of the spike's stand-ins (spec 003, research R13).
 import 'dart:io';
 
 import 'package:args/args.dart';
@@ -27,6 +30,10 @@ void main(List<String> args) {
           'dart: pure Dart with Flame-shaped stubs (newest build_runner).',
     )
     ..addFlag(
+      'pyro',
+      help: "Use the workspace's real Pyro packages (flutter flavor only)",
+    )
+    ..addFlag(
       'triggers',
       defaultsTo: true,
       help: 'run_only_if_triggered for the scanner (off = scan every file)',
@@ -36,6 +43,19 @@ void main(List<String> args) {
   final total = int.parse(o['files'] as String);
   final annotated = int.parse(o['annotated'] as String);
   final flutter = o['flavor'] == 'flutter';
+  final pyro = o['pyro'] as bool;
+  if (pyro && !flutter) {
+    stderr.writeln('--pyro needs the flutter flavor (pyro_runtime is Flutter).');
+    exit(64);
+  }
+  final annotations = pyro
+      ? "import 'package:pyro_annotations/pyro_annotations.dart';"
+      : "import 'package:studio_annotations/studio_annotations.dart';";
+  final behaviorAnnotation = pyro ? 'PyroBehavior' : 'StudioBehavior';
+  final componentAnnotation = pyro ? 'PyroComponent' : 'StudioComponent';
+  final scanBuilder = pyro
+      ? 'pyro_generator:pyro_scan'
+      : 'studio_generator:studio_scan';
 
   final rest = total - annotated;
   final core = (rest * 0.3).round();
@@ -52,6 +72,7 @@ void main(List<String> args) {
   final spike = p.dirname(here);
   String rel(String sub) =>
       p.relative(p.join(spike, sub), from: out).replaceAll(r'\', '/');
+  String pkg(String name) => rel('../../packages/$name');
 
   File(p.join(out, 'pubspec.yaml')).writeAsStringSync('''
 name: sample_game
@@ -67,20 +88,36 @@ ${flutter ? '''  flame: ^1.38.2
   flame_behaviors: ^1.4.0
   flutter:
     sdk: flutter
-''' : ''}  studio_annotations:
+''' : ''}${pyro ? '''  pyro_annotations:
+    path: ${pkg('pyro_annotations')}
+  pyro_runtime:
+    path: ${pkg('pyro_runtime')}
+''' : '''  studio_annotations:
     path: ${rel('studio_annotations')}
-
+'''}
 dev_dependencies:
   build_runner: ${flutter ? '">=2.14.0 <3.0.0"' : '^2.17.1'}
-  studio_generator:
+${pyro ? '''  pyro_generator:
+    path: ${pkg('pyro_generator')}
+
+# The workspace packages depend on each other by version (they aren't on
+# pub.dev yet), so path dependencies on them need overrides.
+dependency_overrides:
+  pyro_annotations:
+    path: ${pkg('pyro_annotations')}
+  pyro_runtime:
+    path: ${pkg('pyro_runtime')}
+  pyro_generator:
+    path: ${pkg('pyro_generator')}
+''' : '''  studio_generator:
     path: ${rel('studio_generator')}
-''');
+'''}''');
 
   File(p.join(out, 'build.yaml')).writeAsStringSync('''
 targets:
   \$default:
     builders:
-      studio_generator:studio_scan:
+      $scanBuilder:
         options:
           run_only_if_triggered: ${o['triggers']}
 ''');
@@ -121,12 +158,12 @@ ${_body('System${_n(i)}', i)}
   for (var i = 0; i < components; i++) {
     _write(lib.path, 'components/component_${_n(i)}.dart', '''
 $flameImports
-import 'package:studio_annotations/studio_annotations.dart';
+$annotations
 
 import '../core/core_${_n(core - 1 - (i % 5))}.dart';
 
 /// Synthetic component $i.
-@StudioComponent(category: 'Group ${i % 4}')
+@$componentAnnotation(category: 'Group ${i % 4}')
 class Component${_n(i)} extends PositionedEntity {
   @Editable(min: 0, max: 10)
   int lives = $i;
@@ -145,7 +182,7 @@ class Component${_n(i)} extends PositionedEntity {
     final target = 'Component${_n(i % components)}';
     _write(lib.path, 'behaviors/behavior_${_n(i)}.dart', '''
 $flameImports
-import 'package:studio_annotations/studio_annotations.dart';
+$annotations
 
 import '../components/component_${_n(i % components)}.dart';
 import '../core/core_${_n(core - 1 - (i % 7))}.dart';
@@ -153,7 +190,7 @@ import '../core/core_${_n(core - 1 - (i % 7))}.dart';
 enum Mode${_n(i)} { a, b, c }
 
 /// Synthetic behavior $i.
-@StudioBehavior(category: 'Group ${i % 6}')
+@$behaviorAnnotation(category: 'Group ${i % 6}')
 class Behavior${_n(i)} extends Behavior<PositionedEntity> {
   @Editable(min: 0, max: 400, tooltip: 'Speed $i')
   double speed = ${i + 1}.0;

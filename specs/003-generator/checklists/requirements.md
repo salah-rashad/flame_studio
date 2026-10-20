@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -38,5 +38,5 @@
   fixture layout) is left to the plan.
 - SC-004 names build_runner watch and a reference Mac because that is the constitution's
   measured budget (III) and the spike #2 baseline.
-- Open: FR-011 (which Field types this item supports) and FR-012 (how an image-path field is
-  declared). Both await the author's answer before `/speckit-plan`.
+- FR-011 and FR-012 were resolved on 2026-10-20 (every v1 Field type now; `ImagePath` from
+  `pyro_annotations`); see the spec's Clarifications. All items pass.

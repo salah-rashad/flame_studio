@@ -41,6 +41,20 @@ parses the Manifest (#6) and the build_runner watcher Pyro runs (#11) are separa
   fields they have, and which Behaviors fit which Nodes.
 - **CI** (the contract test, #12): regenerates both files and fails if the committed ones differ.
 
+## Clarifications
+
+### Session 2026-10-20
+
+- Q: Which Field types does this item support: only the preview's (`int`, `double`, `bool`,
+  `String`, enum, `Vector2`, image path), or every v1 Field type? → A: Every v1 Field type, in
+  both the Manifest and the Registry: `Color`, entity references, `Sprite` and `SpriteAnimation`
+  as well. The preview's inspector still shows the extra types read-only (#5), but games can use
+  them from the start, matching #8's full scope (asset loading, two-pass references). Phase 7's
+  "#7 Generator: the rest of the v1 Field types" (~2 evenings) moves into this item.
+- Q: How does a developer declare an image-path field? → A: With a small path type from
+  `pyro_annotations` (`ImagePath`), which keeps that package free of dependencies, makes asset
+  fields easy to spot in code, and lets the Generator tell an image path from ordinary text.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Annotate a Behavior and see it described (Priority: P1)
@@ -70,13 +84,15 @@ and the Manifest with their golden files.
 3. **Given** an annotation with an explicit `id:`, **When** the build runs, **Then** that is the
    Type ID in both files, and renaming the class or moving its file doesn't change either file's
    Type ID entries (*ADR 0002*).
-4. **Given** Editable fields of each preview Field type (`int`, `double`, `bool`, `String`, an
-   enum, `Vector2`, an image path), **When** the build runs, **Then** each appears in the
-   Manifest with its Field type, its annotation options (minimum, maximum, tooltip, label), and
-   for enums the value names in declaration order, and the Registry can set each one.
+4. **Given** Editable fields of each v1 Field type (`int`, `double`, `bool`, `String`, an enum,
+   `Vector2`, `Color`, `ImagePath`, `Sprite`, `SpriteAnimation`, and a `Component` subtype as an
+   entity reference), **When** the build runs, **Then** each appears in the Manifest with its
+   Field type, its annotation options (minimum, maximum, tooltip, label), for enums the value
+   names in declaration order and for entity references the referenced type, and the Registry
+   can set each one.
 5. **Given** an Editable field whose initializer is a constant (a literal, an enum value, a
-   negative number), **When** the build runs, **Then** the Manifest records the evaluated value
-   as the default; **Given** a non-constant initializer (`Vector2(1, 0)`), **Then** the default
+   negative number, `const ImagePath('assets/images/fx.png')`), **When** the build runs, **Then**
+   the Manifest records the evaluated value as the default; **Given** a non-constant initializer (`Vector2(1, 0)`), **Then** the default
    is empty and the initializer's source text is recorded for display (*§7.3*).
 6. **Given** a Behavior declared as `Behavior<Enemy>`, **When** the build runs, **Then** the
    Manifest records `Enemy` (by Type ID if `Enemy` is annotated, by class name otherwise) as its
@@ -207,6 +223,12 @@ Manifest update in `build_runner watch`, as spike #2 did.
 - **An enum Editable field whose enum has no values**: an unsupported field error.
 - **A nullable Editable field** (`Player? target`, `String? note`): allowed; recorded as nullable
   with an empty default when it has no initializer.
+- **An entity reference to a built-in Flame type** (`SpriteComponent? icon`): allowed; the
+  referenced type is recorded by class name, and Pyro matches it against the built-in Node kinds'
+  hand-written supertypes (*Q57*).
+- **An entity reference to `Component` itself**: allowed; any Node can be referenced.
+- **A `String` field holding a path**: plain text; only `ImagePath` (or `Sprite`,
+  `SpriteAnimation`) makes a field an asset reference.
 - **A field name that shadows an inherited Editable field**: listed once, with the subclass's
   declaration.
 - **Two errors in one class**: both are reported; the class is left out once.
@@ -225,7 +247,7 @@ Manifest update in `build_runner watch`, as spike #2 did.
 **Annotations (`pyro_annotations`)**
 
 - **FR-001**: `pyro_annotations` MUST provide `@PyroBehavior`, `@PyroComponent` and `@Editable`,
-  with no package dependencies (*Q44*).
+  and the `ImagePath` type (FR-012), with no package dependencies (*Q44*).
 - **FR-002**: `@PyroBehavior` MUST accept an optional label, category and explicit Type ID.
   `@PyroComponent` MUST accept the same plus an optional preview image path (*§6.1*).
 - **FR-003**: `@Editable` MUST accept optional minimum, maximum, tooltip and label. Minimum and
@@ -253,15 +275,17 @@ Manifest update in `build_runner watch`, as spike #2 did.
 - **FR-010**: An `@Editable` field MUST be a public, non-final, non-const, non-static instance
   field of a supported Field type, and MUST have an initializer unless it is nullable; otherwise
   the build fails with an error naming the class, the field, its declared type and the rule.
-- **FR-011**: The supported Field types MUST be [NEEDS CLARIFICATION: which Field types this item
-  fully supports — only the preview's (`int`, `double`, `bool`, `String`, enum, `Vector2`, image
-  path), with `Color`, entity reference, `Sprite` and `SpriteAnimation` deferred to Phase 7, or
-  every v1 Field type now (*§6.1, Q12*)?]. Any other type, including `Map` and `List`, fails the
-  build with an error pointing at the field.
-- **FR-012**: An image-path field MUST be declared as [NEEDS CLARIFICATION: how a developer marks
-  an Editable field as an image path — a `String` field with an asset option on `@Editable`, a
-  dedicated path type from `pyro_annotations`, or only through Flame's `Sprite` type?], and its
-  value MUST be a project-root-relative asset path, as in the Scene format (*Q27, Q91*).
+- **FR-011**: The supported Field types MUST be every v1 Field type (*§6.1, Q12*): `int`,
+  `double`, `bool`, `String`, enums, `Vector2`, `Color`, asset references (`ImagePath`, `Sprite`,
+  `SpriteAnimation`) and entity references (a `Component` or any subtype of it), each in both the
+  Manifest and the Registry. Any other type, including `Map` and `List`, fails the build with an
+  error pointing at the field.
+- **FR-012**: An image-path field MUST be declared with the `ImagePath` type from
+  `pyro_annotations`, a const-constructible wrapper around a project-root-relative asset path as
+  in the Scene format (*Q27, Q91*). A plain `String` field is always text, never an asset
+  reference.
+- **FR-012a**: For an entity reference, the Manifest MUST record the referenced type: by Type ID
+  when it is annotated, by class name otherwise (*Q57*).
 - **FR-013**: A class MUST include the Editable fields it inherits from its superclasses, whether
   or not those are annotated, listed superclass first, then in declaration order.
 - **FR-014**: All errors in a build MUST be reported, not only the first; a class with any error
@@ -348,7 +372,7 @@ Manifest update in `build_runner watch`, as spike #2 did.
   type, both roles, explicit IDs, parent types, supertypes and inherited fields, and one fixture
   per build-time rule (at least Type ID collision, unsupported field and bad constructor), each
   compared byte for byte with its Registry and Manifest goldens.
-- **SC-002**: 100% of the build-time rules in FR-006 to FR-012 have an error fixture, and every
+- **SC-002**: 100% of the build-time rules in FR-003 and FR-006 to FR-012 have an error fixture, and every
   error message names the file and the class (and field, where there is one).
 - **SC-003**: Building the fixture packages twice from a clean cache, on macOS, Linux and
   Windows in CI, produces byte-identical outputs every time.
@@ -362,7 +386,10 @@ Manifest update in `build_runner watch`, as spike #2 did.
 
 ## Assumptions
 
-- **Scope** is the early preview's part of #7 (*§14*); the Pyro side that parses the Manifest
+- **Scope** is the early preview's part of #7 (*§14*) plus every remaining v1 Field type, which
+  §14 and phases.md had deferred to Phase 7 (Clarifications, 2026-10-20). §14, phases.md and
+  `decisions.md` are updated to match when this feature is implemented, as specs 001 and 002 did;
+  the inspector's editors for those types stay in Phase 7 (#5). The Pyro side that parses the Manifest
   (#6), the Runtime loader that uses the Registry (#8), Pyro's watcher and lock probe (#11) and
   the CI contract job on `example/` (#12) are separate items. Prefab instances, animations and
   `@RenamedFrom` (dropped by *Q45*) are out of scope.

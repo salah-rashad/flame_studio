@@ -27,5 +27,6 @@ dependencies:
 # Never depends on pyro_runtime or Flutter (Q44).
 
 dev_dependencies:
+  build_config: ^1.1.0
   build_test: ^3.5.0
   test: ^1.25.0

@@ -63,6 +63,10 @@ parses the Manifest (#6) and the build_runner watcher Pyro runs (#11) are separa
 - Q: What happens to `@Editable` on a class that has no Pyro annotation and isn't a superclass of
   an annotated class? → A: A build warning, in the build log and in a separate `warnings` list in
   the Manifest; the build still succeeds and no type is left out.
+- Q: When does `manifestVersion` go up, and what does Pyro do with a newer one? → A: It goes up
+  only for changes an older reader would misread (a new Field type or role, a changed meaning or
+  shape); readers ignore unknown keys, so new optional keys don't change it. Pyro refuses a newer
+  version with *Update Pyro* and keeps the last Manifest it could read.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -319,6 +323,11 @@ Manifest update in `build_runner watch`, as spike #2 did.
 
 - **FR-015**: The Generator MUST write `lib/pyro.manifest.json` with `manifestVersion`, the list
   of types, the list of errors and the list of warnings (*§7.3*).
+- **FR-015a**: `manifestVersion` starts at 1 and MUST go up only with a change an older reader
+  would misread: a new Field type or role, or a changed meaning or shape of an existing key. New
+  optional keys MUST NOT change it, and readers MUST ignore keys they don't know. Pyro (#6)
+  refuses a Manifest with a newer version, asking the developer to update Pyro, and keeps the
+  last Manifest it could read.
 - **FR-016**: Each type MUST record its Type ID, role, label (the class name when none is given),
   category, source path relative to the package root, doc comment, supertypes and fields. A
   Behavior MUST also record its required parent type; a Custom component MUST also record whether

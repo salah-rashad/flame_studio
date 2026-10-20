@@ -57,6 +57,9 @@ parses the Manifest (#6) and the build_runner watcher Pyro runs (#11) are separa
 - Q: Must entity-reference, `Sprite` and `SpriteAnimation` fields be nullable? → A: Yes; a
   non-nullable one fails the build with an error naming the field. "No Override" means `null`.
   `ImagePath` fields may be either, since a path can have a `const` default.
+- Q: Can `@Editable` go on a setter or a getter/setter pair, or only on plain fields? → A: Plain
+  fields only in v0.1; `@Editable` on a getter or setter fails the build with an error naming it.
+  Developers react to values in `onLoad`, after the Runtime has set every Override.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -141,7 +144,7 @@ the errors) and its Registry with golden files; check that the build reports fai
    that isn't a Component), **When** the build runs, **Then** it fails with an error naming the
    class, the field, its type and its file, and the class is left out of both files.
 4. **Given** an `@Editable` field that is private, final, const, static, or non-nullable
-   with no initializer, **When** the build runs, **Then** it fails with an error naming the field
+   with no initializer, or `@Editable` on a getter or setter, **When** the build runs, **Then** it fails with an error naming the field
    and the rule.
 5. **Given** a non-nullable `@Editable` entity-reference, `Sprite` or `SpriteAnimation` field
    (`Player target = Player();`), **When** the build runs, **Then** it fails with an error naming
@@ -281,6 +284,8 @@ Manifest update in `build_runner watch`, as spike #2 did.
 - **FR-010**: An `@Editable` field MUST be a public, non-final, non-const, non-static instance
   field of a supported Field type, and MUST have an initializer unless it is nullable; otherwise
   the build fails with an error naming the class, the field, its declared type and the rule.
+  `@Editable` on a getter or setter (including a getter/setter pair) fails the build with an
+  error naming the class and the accessor.
 - **FR-011**: The supported Field types MUST be every v1 Field type (*§6.1, Q12*): `int`,
   `double`, `bool`, `String`, enums, `Vector2`, `Color`, asset references (`ImagePath`, `Sprite`,
   `SpriteAnimation`) and entity references (a `Component` or any subtype of it), each in both the

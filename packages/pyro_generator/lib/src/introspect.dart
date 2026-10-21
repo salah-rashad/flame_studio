@@ -90,6 +90,8 @@ List<InterfaceElement> linearize(InterfaceElement element) {
 
 final _whitespace = RegExp(r'\s');
 
+const _flameBehaviorsImport = 'package:flame_behaviors/flame_behaviors.dart';
+
 final class _ClassScan {
   _ClassScan(this.cls, this.behavior, this.component, this.step, this.root);
 
@@ -145,6 +147,8 @@ final class _ClassScan {
               className: className,
               role: isBehavior ? 'behavior' : 'component',
               fields: [for (final f in fields) f.registry],
+              parentClass: _registryParent?.name,
+              parentImport: _registryParent?.import,
             )
           : null,
     );
@@ -221,9 +225,14 @@ final class _ClassScan {
     }
   }
 
+  /// The class a Behavior's `acceptsParent` tests, and where the Registry
+  /// imports it from; set by [_parentType], null for Custom components.
+  ({String name, String import})? _registryParent;
+
   /// The required parent type of a Behavior, or null for any entity.
   String? _parentType() {
     if (!isBehavior) return null;
+    _registryParent = (name: 'EntityMixin', import: _flameBehaviorsImport);
     InterfaceType? behaviorType;
     for (final supertype in cls.allSupertypes) {
       if (behaviorChecker.isExactly(supertype.element)) {
@@ -244,6 +253,22 @@ final class _ClassScan {
       );
       return null;
     }
+    final import = element.isPrivate
+        ? null
+        : importFor(element, [cls.library], root);
+    if (import == null) {
+      _error(
+        DiagnosticCode.unreachableParentType,
+        'The parent type ${element.name} of Behavior $className is '
+        '${element.isPrivate ? 'private' : "not exported by any library "
+                  "${packagePath(cls.library.uri, root)} imports"}, so the '
+        "Registry can't check that a Node accepts $className. "
+        '${element.isPrivate ? 'Make ${element.name} public.' : "Import "
+                  "${element.name}'s public library in that file."}',
+      );
+      return null;
+    }
+    _registryParent = (name: element.name!, import: import);
     return typeIdOrName(element);
   }
 

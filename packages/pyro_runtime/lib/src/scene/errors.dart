@@ -193,3 +193,21 @@ final class UnwritableValue extends SceneFormatException {
         'can be saved in a Scene';
   }
 }
+
+/// An animation file (`*.anim.json`) that can't be read: a broken rule of
+/// its contract (spec 004, contracts/anim-file-v1.md), including a newer
+/// `schemaVersion`. Malformed JSON and duplicate keys are reported as
+/// [MalformedJson] and [DuplicateKey], as for Scenes.
+final class InvalidAnimationFile extends SceneFormatException {
+  /// Creates the error for the file at [path], described by [reason].
+  const InvalidAnimationFile(this.path, this.reason);
+
+  /// The animation file's asset path.
+  final String path;
+
+  /// What is wrong.
+  final String reason;
+
+  @override
+  String get message => 'Animation file $path: $reason';
+}

@@ -99,6 +99,7 @@ final class RegistryType {
     required this.role,
     required this.create,
     required this.fields,
+    this.acceptsParent,
   });
 
   /// The type's Type ID (*Q45*).
@@ -113,6 +114,15 @@ final class RegistryType {
   /// The Editable fields by name, in the Manifest's order.
   final Map<String, RegistryField> fields;
 
+  /// For a Behavior, whether it can be attached to `parent`: whether
+  /// `parent` is the type argument of its `Behavior<T>`. Null for Custom
+  /// components.
+  ///
+  /// The Runtime checks it when it attaches Behaviors, because
+  /// `flame_behaviors` only asserts the parent type in debug builds, after
+  /// mounting.
+  final bool Function(Component parent)? acceptsParent;
+
   @override
   String toString() => 'RegistryType($id, ${role.name})';
 }
@@ -124,8 +134,11 @@ final class RegistryType {
 final class PyroRegistry {
   /// A Registry of [types].
   ///
-  /// Throws an [ArgumentError] naming the Type ID if two types share one;
-  /// the generator never emits that, but a hand-written Registry might.
+  /// Throws an [ArgumentError] naming the Type ID if two types share one,
+  /// if a Behavior has no [RegistryType.acceptsParent], or if a Custom
+  /// component has one. The generator never emits these, but a hand-written
+  /// Registry might, and a Registry generated before `acceptsParent` existed
+  /// lacks it (regenerate it with `dart run build_runner build`).
   PyroRegistry(Iterable<RegistryType> types) : _types = _byId(types);
 
   final Map<TypeId, RegistryType> _types;
@@ -134,6 +147,18 @@ final class PyroRegistry {
     final sorted = [...types]..sort((a, b) => a.id.compareTo(b.id));
     final byId = <TypeId, RegistryType>{};
     for (final type in sorted) {
+      final isBehavior = type.role == TypeRole.behavior;
+      if (isBehavior != (type.acceptsParent != null)) {
+        throw ArgumentError.value(
+          type.id,
+          'types',
+          isBehavior
+              ? 'The Behavior "${type.id}" has no acceptsParent; regenerate '
+                    'lib/pyro.g.dart with `dart run build_runner build`'
+              : 'The Custom component "${type.id}" has an acceptsParent, '
+                    'which only Behaviors have',
+        );
+      }
       if (byId.containsKey(type.id)) {
         throw ArgumentError.value(
           type.id,

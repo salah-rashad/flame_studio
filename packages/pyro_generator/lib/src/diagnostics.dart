@@ -41,6 +41,11 @@ enum DiagnosticCode {
   /// A Behavior's parent type is a mixin or interface-only type.
   parentTypeNotClass(DiagnosticKind.error),
 
+  /// A Behavior's parent type is private, or no import of the Behavior's
+  /// library makes it available, so the Registry can't name it in
+  /// `acceptsParent`.
+  unreachableParentType(DiagnosticKind.error),
+
   /// The package doesn't depend on `pyro_runtime`.
   missingRuntime(DiagnosticKind.error),
 

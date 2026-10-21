@@ -144,7 +144,7 @@ the Runtime passes to the Registry:
 | `Color` | `color` | `"#AARRGGBB"` | `Color` |
 | `ImagePath` | `imagePath` | `{"asset": path}` | `ImagePath` |
 | `Sprite` | `sprite` | `{"asset": path}` | `Sprite` |
-| `SpriteAnimation` | `spriteAnimation` | `{"asset": path}` | `SpriteAnimation` |
+| `SpriteAnimation` | `spriteAnimation` | `{"asset": path, "animation": name}` (spec 004, FR-034) | `SpriteAnimation` |
 | `Component` or a subtype that isn't a `Behavior` | `entityRef` | `{"ref": Node ID}` | the Component |
 
 Errors, all naming the class, the field and the declaring file (FR-010, FR-011, FR-011a):

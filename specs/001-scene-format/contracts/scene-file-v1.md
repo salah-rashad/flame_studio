@@ -157,10 +157,12 @@ to the code default is still written. Values by Field type:
 | enum | value name | `"pingPong"` |
 | `Vector2` | `[x, y]` | `[1, 0]` |
 | `Color` | `"#AARRGGBB"`, upper-case hex | `"#FFFF8800"` |
-| asset reference | `{"asset": path}` | `{"asset": "assets/images/fx.png"}` |
+| asset reference (`ImagePath`, `Sprite`) | `{"asset": path}` | `{"asset": "assets/images/fx.png"}` |
+| `SpriteAnimation` | `{"asset": path, "animation": name}`: an `.anim.json` file and one of its animations (spec 004, FR-034) | `{"animation": "walk", "asset": "assets/anims/goblin.anim.json"}` |
 | entity reference | `{"ref": Node ID}` | `{"ref": "9b2e"}` |
 
-A reader that knows the Field type coerces numbers: a `double` field accepts `80`.
+A reader that knows the Field type coerces numbers: a `double` field accepts `80`. It also accepts
+a colour's hex digits in either case; Pyro writes them upper case (spec 004, FR-034).
 
 ## Canonical form
 

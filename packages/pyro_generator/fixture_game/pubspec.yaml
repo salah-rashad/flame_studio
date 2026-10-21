@@ -24,7 +24,14 @@ dependencies:
 # (FR-027).
 dev_dependencies:
   build_runner: ^2.15.1
+  flame_test: ^2.0.0
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
   pyro_generator: ^0.0.1
+
+flutter:
+  assets:
+    - assets/anims/
+    - assets/images/
+    - assets/scenes/

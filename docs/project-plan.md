@@ -216,8 +216,9 @@ pyro/                      ← repo root (this folder)
 │  ├─ pyro_annotations/    ← pub.dev; pure Dart, no dependencies
 │  ├─ pyro_runtime/        ← pub.dev; shipped in games
 │  │  ├─ lib/src/scene/            ← model, JSON (de)serialization, migrations
-│  │  ├─ lib/src/loader/           ← PyroScene.load, AssetSource, Registry interface
-│  │  └─ lib/src/debug/            ← Hot-swap (onHotReload, content hash), debug only
+│  │  ├─ lib/src/animation/        ← .anim.json reader
+│  │  ├─ lib/src/assets/           ← AssetSource
+│  │  └─ lib/src/loader/           ← PyroScene.load, Registry interface, Hot-swap (debug only)
 │  ├─ pyro_generator/      ← pub.dev; dev dependency
 │  │  ├─ lib/builder.dart
 │  │  └─ lib/src/{introspect,registry_emitter,manifest_emitter}.dart
@@ -332,6 +333,7 @@ class MyGame extends FlameGame {
       registry: pyroRegistry,              // generated
       // onUnknownType: UnknownType.skip,    // default: throw (Q58)
       onReloaded: _lookUpNodes,              // re-run lookups after a Hot-swap (Q71)
+      // assets: AssetSource.bundle(),       // default: the game's bundle, one per Scene
     );
     world.add(scene);
     _lookUpNodes(scene);
@@ -348,21 +350,32 @@ class MyGame extends FlameGame {
 - **Non-invasive:** no base class, works in any `FlameGame` (*Q30*).
 - **Node names are not unique.** `find` throws if more than one Node matches and points to
   `findAll` or a path (`'enemies/goblin_1'`). The hierarchy panel warns about duplicate sibling
-  names (*Q51*).
+  names (*Q51*). A path is Node names joined by `/`: a Node and its nearest ancestors, at any
+  depth, or from the root's children with a leading `/`. `findAll` filters by name or path,
+  tag and component type. Lookups work as soon as `load` returns, before the Scene is mounted.
+- **Errors** are one `SceneLoadException` naming the Scene and, where they apply, the Node, Type
+  ID, field and asset path. A load fails on an Override that doesn't fit its field, a missing
+  reference target, a missing asset (*Q114*), a Behavior on a Node that can't hold it
+  (`RegistryType.acceptsParent`, *Q112*) and a hitbox directly under the root (*Q115*). An
+  Override for a field no code has is ignored with a debug warning.
 - **Unknown Type IDs** (class deleted, `id:` changed): `load` **throws** naming the scene, Node and
-  Type ID; `onUnknownType: skip` keeps the game running without that Node (*Q58*).
+  Type ID; `onUnknownType: skip` keeps the game running without that Node and everything under it,
+  or without that Behavior (*Q58, Q113*).
 - **Loading order:** construct all Nodes → assign Overrides and load asset fields → resolve entity
-  references (second pass) → add to the tree, so `onLoad` sees configured fields. ◇ proposed
+  references (second pass) → add to the tree, so `onLoad` sees configured fields. A failed load
+  leaves nothing behind ([`specs/004-runtime/`](../specs/004-runtime/spec.md)).
 - **Debug-only Hot-swap** (*Q66, Q67, Q72*): `PyroScene` overrides Flame's `onHotReload()`
   (Flame ≥ 1.36, debug builds only). On each hot reload it re-reads its scene file and every
-  `.anim.json` (and, from v0.2, prefab) it uses, and compares a content hash with what it loaded.
-  If nothing changed (e.g. a Dart-only reload), it does nothing. If something changed, it clears
-  those entries from Flame's `Images` / `AssetsCache` and **rebuilds the whole scene**, then calls
-  `onReloaded`. Runtime state of the scene's Nodes is lost; node-level patching comes in v0.4.
+  `.anim.json` (and, from v0.2, prefab) it uses, and compares the text with what it loaded
+  (*Q111*). If nothing changed (e.g. a Dart-only reload), it does nothing. If something changed,
+  it **rebuilds the whole scene** into the same `PyroScene` and calls `onReloaded`, once the new
+  Nodes are in place and before their own `onLoad`s run. A file that no longer loads leaves the
+  old Scene running with a debug error. Images aren't compared or reloaded (*Q72*). Runtime state
+  of the scene's Nodes is lost; node-level patching comes in v0.4.
 - **Stale references** (*Q71*, provisional "for now"): after a rebuild, references the game kept
   point at removed components. `onReloaded` is the documented way to re-run lookups, and in debug
-  builds the Runtime logs a warning the first time a removed Node from an earlier scene version is
-  used. ◇ proposed detection mechanism
+  builds the Runtime logs a warning the first time a removed Node from the last scene version is
+  moved or added back to a tree (*Q110*).
 - **Running without Pyro** (*Q64*): games launched from the IDE, CI or release builds load
   scenes normally. In debug, an IDE hot restart picks up saved scene changes; there is no Pyro
   Console. Nothing in the Runtime depends on Pyro.
@@ -482,7 +495,8 @@ full contract, including every Field type's written form, is
 - **Built-in Node properties are written in full** (*Q89*): `transform` on entities, sprites and
   Custom components; `props` on sprites (`image`, optional `srcPosition`/`srcSize`) and hitboxes.
 - **Override values** use one written form per Field type (*Q91*): colours as `"#AARRGGBB"`,
-  asset references as `{"asset": path}`, entity references as `{"ref": Node ID}`.
+  asset references as `{"asset": path}`, a `SpriteAnimation` as `{"asset": path, "animation":
+  name}` (spec 004, FR-034), entity references as `{"ref": Node ID}`.
 - **Damaged trees are repaired on read** and reported (*Q93*); a new Node kind, Field type or
   required key bumps `schemaVersion` (*Q90*).
 - **Entity references** point only to Nodes in the same scene and not inside a Prefab instance in
@@ -748,7 +762,7 @@ sequenceDiagram
   (scene reload 60–250 ms); a Dart-only reload leaves the scene alone.
 - **Code changes (*Q61*):** Pyro watches `lib/` and hot-reloads automatically, waiting until
   `build_runner` reports idle so it never reloads a half-written `.g.dart`. Toggle in settings, on
-  by default. If an attached IDE also reloads, the duplicate reload is harmless (the content hash
+  by default. If an attached IDE also reloads, the duplicate reload is harmless (the content check
   stops a scene rebuild).
 - **Image changes (*Q72*):** images are not part of the hash. When an image the running game uses
   changes on disk, Pyro shows "Image changed: *Restart game*", which does a hot restart
@@ -846,7 +860,10 @@ before display (§9.3, *Q81*).
 ## 10. Asset pipeline
 
 - **Editor loads from disk** through an `AssetSource` interface (disk implementation in Pyro,
-  bundle implementation in games), so newly imported files appear instantly (*Q31*). Verified in
+  bundle implementation in games), so newly imported files appear instantly (*Q31*). As built
+  (spec 004): two methods, `loadText` and `loadImage`, keyed by project-relative path with no
+  prefix; `AssetSource.bundle()` reads the game's bundle with its own image cache and never
+  touches Flame's globals. Verified in
   spike #3: the disk side is an `AssetBundle` over the project folder plus a Pyro-owned image
   cache that frees an old image only after it's off screen; each Node records the files it read,
   and a file change rebuilds just those Nodes, ~75–200 ms from save to screen (*Q79*).
@@ -971,7 +988,7 @@ Pyro stops issuing reloads while an IDE is attached) remains the escape hatch. F
 The goal is to prove, in a developer's own project, that Pyro does a real task more easily
 than editing Dart by hand, as early as possible. **Breadth and polish are cut; document integrity,
 the generator/Runtime contract and data preservation are not.** The final v0.1 scope is unchanged
-(*Q82* amends *Q65* and supersedes *Q73*); the early preview is a subset of it, ~47 of the ~93
+(*Q82* amends *Q65* and supersedes *Q73*); the early preview is a subset of it, ~48 of the ~93.5
 evenings.
 
 **The task testers do:** open their own Flame project, place an entity with a sprite and a hitbox,
@@ -987,13 +1004,13 @@ attach a custom Behavior and tweak its fields, press Play and see the change in 
 | 5 | Inspector | Transform; editors for `int`, `double`, `bool`, `String`, enum, `Vector2` and an asset-path dropdown; Override markers + *Reset to default* (on `PrPropertyRow`, `PrNumberProperty`, `PrVector2Property`). Other Field types (`Color`, entity reference, `Sprite`, `SpriteAnimation`) show **read-only and round-trip untouched** | Remaining Field type editors, multi-select "mixed" values (v0.1.1) | 2.5 |
 | 6 | Built-in Node kinds | Entity, sprite, rectangle and circle hitboxes, placeholders | The remaining hitbox kind | 2 |
 | 7 | Generator | Introspection, Type IDs + collisions, supertypes, Registry + Manifest emitters, error reporting, goldens, for every v1 Field type (*Q100*) | Nothing; the inspector's editors for the remaining Field types are item 5's | 6.5 |
-| 8 | Runtime | Full: loader, two-pass references, assets, lookup API, unknown-type handling, Hot-swap | | 4 |
+| 8 | Runtime | Full: loader, two-pass references, assets, lookup API, unknown-type handling, Hot-swap (*Q116*) | | 5 |
 | 9 | Behaviors in the inspector | Add/remove, compatibility filtering, Missing behavior state (so nothing is lost) | Reorder, Missing behavior polish | 2 |
 | 11 | Play | Run on the macOS desktop target by default (Hot-swap there verified in the vertical slice, ~0.5, *Q88*), daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, *Attach debugger* copying the current URI, image-restart toast | Device list + emulator boot, Attach info file, `launch.json`, unauthenticated mode | 4 |
 | 12 | CI contract test | As in v0.1, turned on in the vertical slice (*Q88*) | | 1 |
 | 13 | `example/` game | A skeleton for the vertical slice and the contract test: one annotated Behavior, one custom component, one Scene, macOS target (*Q88*) | The small sample game | 0.5 |
 | 14 | Design system (core, *Q84, Q87*) | Foundations (interaction states, field box, panel focus, icons, gallery skeleton, test config) and the widgets whose behaviour items 3 and 5 would otherwise build in the panels: `PrTreeRow`, `PrPropertyRow`, `PrNumberProperty`, `PrVector2Property` | The other 25 components, the EditorShell, goldens (all since built ahead of the preview, which uses them throughout, *Q87*) | 5.5 |
-| | **Total** | | | **~47** |
+| | **Total** | | | **~48** |
 
 Not in the early preview: the asset browser and pubspec sync (10), the `example/` game beyond its
 skeleton (13), the rest of the visual design (14; see the row above), signing and notarization (15; testers build from
@@ -1040,7 +1057,7 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 | 5 | Inspector: transform + field editors for all v1 Field types, Override markers + *Reset to default* | 4.5 |
 | 6 | Built-in Node kinds: entity, sprite, 3 hitbox kinds, placeholders | 2.5 |
 | 7 | Generator: introspection, Type IDs + collisions, supertypes, Registry + Manifest emitters, error reporting, goldens | 6.5 |
-| 8 | Runtime: loader, two-pass references, asset loading, lookup API, unknown-type handling, Hot-swap (`onHotReload`, hash, `onReloaded`) | 4.5 |
+| 8 | Runtime: loader, two-pass references, asset loading, lookup API, unknown-type handling, Hot-swap (`onHotReload`, content check, `onReloaded`) | 5 |
 | 9 | Behaviors in the inspector: add/remove/reorder, compatibility filtering, Missing behavior UI | 3 |
 | 10 | Asset browser + pubspec sync (incl. subfolders) | 2.5 |
 | 11 | Play: device list + emulator boot, daemon client, Console, Hot-swap trigger, auto code reload, build_runner lock/external mode, Attach (current URI, info file, launch.json, unauthenticated mode), lifecycle, image-restart toast | 9 |
@@ -1049,20 +1066,20 @@ setup failed, and whether they would use it over editing Dart. Decide the respon
 | 14 | Design system in `pyro_ui` (*Q83, Q84*): tokens and theme (done), shared foundations, the 29 components, EditorShell, 60 icons, gallery app, widget tests and goldens ([`ui-components-plan.md`](ui-components-plan.md)) | 23 |
 | 15 | Signing, notarization, release pipeline, pub.dev publishing of `pyro_annotations`, `pyro_runtime` and `pyro_generator` | 3 |
 | 16 | README, Getting Started (incl. Attach and the CI check, §7.3), demo video, `ARCHITECTURE.md` polish | 3 |
-| | **Total** | **~93** |
+| | **Total** | **~93.5** |
 
 **Moved to v0.1.1 (*Q65*):** grid slicer and the animated sprite Node kind (~6), rename with
 reference rewriting (~1.5), multi-select "mixed" values (~2).
 
-**Reality check:** ~93 evenings at 3/week ≈ **31 weeks (~7 months)** before overrun, ~9 months
+**Reality check:** ~93.5 evenings at 3/week ≈ **31 weeks (~7 months)** before overrun, ~9 months
 with a 1.3× overrun, against the original ~4-month target. Item 14 grew from 4 to ~23 when its
 components were estimated one by one (*Q84*); ~2.5 of that can move to v0.1.1 if needed (colour
 picker popover, NumberProperty expressions, goldens, SplitButton; `ui-components-plan.md` §8.1).
 
-**Early preview (*Q82*):** the v0.1 table above is the final scope. A subset of it (~47 evenings)
+**Early preview (*Q82*):** the v0.1 table above is the final scope. A subset of it (~48 evenings)
 ships first as the early preview described in the section above; the previous full-scope
 developer preview (*Q65*, *Q73*) is replaced by it. Feedback from the early preview is folded
-into the remaining ~46 evenings, so the order of the deferred items is open until then.
+into the remaining ~45.5 evenings, so the order of the deferred items is open until then.
 
 Build order after the early preview: 10 → the deferred parts of items 1–9 and 11 → 15 → the
 rest of 13 → 14 (final pass against the design; the goldens exist) → 16 (*Q88*). Pyro's UI depends on the Pyro components (`Pr` widgets) for everything,
@@ -1090,7 +1107,7 @@ the early preview included (*Q87*), so there is no switch onto the design system
 |---|---|---|---|
 | Hot-swap with an attached IDE depends on private flutter_tools/engine interfaces (`--project-root`, `_flutter.setAssetBundlePath`) | Medium | High (Attach workflow) | Spike #1 settled the mechanism (*Q74*); re-check on each Flutter stable release; fallback: Pyro stops reloading while an IDE is attached |
 | Hot-swap rebuild loses runtime state and leaves stale references in game code | High (by design in v0.1) | Medium | Content-hash check; `onReloaded` + debug warning (*Q71*); node-level patching in v0.4 |
-| Scope/time overrun (solo, evenings) | **High** | Medium | Cuts to v0.1.1; early preview (~47 evenings, *Q82, Q84, Q88, Q100*); strict non-goals; estimates in §14 |
+| Scope/time overrun (solo, evenings) | **High** | Medium | Cuts to v0.1.1; early preview (~48 evenings, *Q82, Q84, Q88, Q100, Q116*); strict non-goals; estimates in §14 |
 | `build_runner` too slow on large projects | Medium | Medium | Spike #2; `triggers` so unannotated files are skipped; show "generating" state |
 | Flame / `flame_behaviors` breaking changes | Medium | Medium | Latest-minor-only policy; CI against Flame stable; Runtime kept small |
 | Pyro and project Runtime versions drift | Medium | Medium | `pubspec.lock` compatibility check; never write an unreadable `schemaVersion` (*Q49*) |

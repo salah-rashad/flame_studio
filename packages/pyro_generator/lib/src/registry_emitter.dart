@@ -15,6 +15,7 @@ String emitRegistry(List<({String typeId, RegistryEntry entry})> types) {
     for (final field in entry.fields) {
       if (field.typeImport case final uri?) uris.add(uri);
     }
+    if (entry.parentImport case final uri?) uris.add(uri);
   }
   final sorted = uris.toList()..sort();
   final prefixes = {for (var i = 0; i < sorted.length; i++) sorted[i]: 'i$i'};
@@ -68,9 +69,12 @@ String emitRegistry(List<({String typeId, RegistryEntry entry})> types) {
           ..writeln('set: (t, v) => (t as $cls).${field.name} = v as $type$q,')
           ..writeln('),');
       }
-      out
-        ..writeln('},')
-        ..writeln('),');
+      out.writeln('},');
+      if (entry.parentClass case final parent?) {
+        final parentType = '${prefixes[entry.parentImport]}.$parent';
+        out.writeln('acceptsParent: (parent) => parent is $parentType,');
+      }
+      out.writeln('),');
     }
     out.writeln(']);');
   }

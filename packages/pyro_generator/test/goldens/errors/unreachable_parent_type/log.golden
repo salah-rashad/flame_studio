@@ -1,0 +1,1 @@
+SEVERE unreachableParentType lib/case.dart:7: The parent type _Boss of Behavior Taunt is private, so the Registry can't check that a Node accepts Taunt. Make _Boss public.

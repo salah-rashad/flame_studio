@@ -5,6 +5,8 @@
 packages/pyro_runtime/test/fixtures/** -text
 
 # The generator's golden files and the fixture game's committed outputs are
-# compared byte for byte (spec 003); git must not rewrite their line endings.
+# compared byte for byte (spec 003), and so are the fixture game's Scene and
+# animation files (spec 004); git must not rewrite their line endings.
 packages/pyro_generator/test/goldens/** -text
 packages/pyro_generator/fixture_game/lib/pyro.* -text
+packages/pyro_generator/fixture_game/assets/** -text

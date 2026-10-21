@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Phase 2 in progress: Scene format (2026-10-18), #2 Document model (2026-10-19) and #7 Generator (2026-10-20) done |
+| **Status** | Phase 2 done (2026-10-20): Scene format, #2 Document model, #7 Generator and #8 Runtime. Phase 3 (vertical slice) is next |
 | **Source of truth** | [`project-plan.md`](project-plan.md) §14 owns scope, estimates and build order; this file only groups that order into phases and tracks progress |
 | **Sync rule** | When §14 changes (an item, an estimate, the order), change this file in the same commit. When a step here is finished, tick it here; §14 changes only if its scope or estimate changed |
 
@@ -22,7 +22,7 @@ it). A phase starts only when the one before it is done, except for the tasks un
 ```mermaid
 flowchart LR
   P0["Phase 0<br/>De-risking spikes ✅"] --> P1["Phase 1<br/>Foundations ✅"]
-  P1 --> P2["Phase 2<br/>Data contract 🔶"]
+  P1 --> P2["Phase 2<br/>Data contract ✅"]
   P2 --> P3["Phase 3<br/>Vertical slice ⬜"]
   P3 --> P4["Phase 4<br/>Editor ⬜"]
   P4 --> P5["Phase 5<br/>Play ⬜"]
@@ -37,24 +37,24 @@ flowchart LR
 |---|---|---|---|---|
 | 0 — De-risking spikes | v0.0 spikes #1–#3 | ~4 (outside the totals) | 0 | ✅ |
 | 1 — Foundations | #0 repo setup, #14 design system (all of it) | 3 + 23 | 0 | ✅ |
-| 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 15 | 4 | 🔶 |
+| 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 16 | 0 | ✅ |
 | 3 — Vertical slice | `example/` skeleton (part of #13), #12 contract test, first slice of #11 | 1.5 + (in #11) | 1.5 | ⬜ |
 | 4 — Editor | #1 preview part with the editor window, #6, #4, #3, #5, #9 | 18 | 18 | ⬜ |
 | 5 — Play | Rest of #11 preview part, README recipe | 4 | 4 | ⬜ |
-| **Early preview** | | **~64.5** | **~27.5** | |
+| **Early preview** | | **~65.5** | **~23.5** | |
 | 6 — Testers and feedback | 5–8 testers, response table | — | — | ⬜ |
-| 7 — v0.1 breadth | #10, then the deferred parts of #1–#6, #8, #9 and #11 | 21 | 21 | ⬜ |
+| 7 — v0.1 breadth | #10, then the deferred parts of #1–#6, #9 and #11 | 20.5 | 20.5 | ⬜ |
 | 8 — Release | #15 with pub.dev, rest of #13, #14 final pass, #16 | 7.5 | 7.5 | ⬜ |
-| **v0.1** | | **~93** | **~56** | |
+| **v0.1** | | **~93.5** | **~51.5** | |
 
-**Left to the early preview:** ~27.5 evenings ≈ 9 weeks, ~13 weeks with a 1.4× overrun.
-**Left to v0.1:** ~56 evenings ≈ 19 weeks, ~26 weeks with a 1.4× overrun.
+**Left to the early preview:** ~23.5 evenings ≈ 8 weeks, ~11 weeks with a 1.4× overrun.
+**Left to v0.1:** ~51.5 evenings ≈ 17 weeks, ~24 weeks with a 1.4× overrun.
 
-§14 counts the early preview as ~47 evenings. The ~64.5 above is larger because Phase 1 holds all
+§14 counts the early preview as ~48 evenings. The ~65.5 above is larger because Phase 1 holds all
 ~23 evenings of #14, while §14 puts only a ~5.5-evening core in the preview. The other ~17.5 were
 built ahead of the preview, so the preview's panels use the Pyro components throughout (*Q84,
-Q87*). The ~37 done are the repo setup, the whole design system, the Document model and the
-Generator. The spikes come on top.
+Q87*). The ~42 done are the repo setup, the whole design system, the Document model, the
+Generator and the Runtime. The spikes come on top.
 
 ---
 
@@ -84,7 +84,7 @@ Throwaway code in `spikes/`, findings in [`ARCHITECTURE.md`](ARCHITECTURE.md) (*
 **Done when:** the Riverpod spike has settled the provider layout of §8.5 well enough to start
 Phase 2. ✅
 
-## Phase 2 — Data contract 🔶
+## Phase 2 — Data contract ✅
 
 The file formats and the code on both sides of them, all headless (no editor UI). Integrity is
 never cut here (*Q82*). The scene model and its JSON live in `pyro_runtime`, so the app and games
@@ -106,12 +106,15 @@ share one format (§5); that comes first, because #2 and #8 both build on it.
   emitters into `lib/` (*Q68*; no `build.yaml` needed in games, *Q107*), errors and warnings in
   the Manifest, for **every** v1 Field type (*Q100*); the Registry contract in `pyro_runtime`.
   §6.1, §7.3, §9.2; [`specs/003-generator/`](../specs/003-generator/spec.md) (*Q100–Q108*)
-- [ ] **#8 Runtime** (4, full scope): `PyroScene.load` with the two-pass loading order (it reads
+- [x] **#8 Runtime** (5, full scope, *Q116*): `PyroScene.load` with the four-pass loading order (it reads
   each Scene with `SceneCodec.decode` and calls `warnAboutRepairs` after it, FR-024a), building
-  the built-in Node kinds and custom ones through the Registry, `AssetSource` and asset fields
-  (the *Q78* loader), lookup API (`find`, `findAll`, paths), unknown-type handling (*Q58*),
-  Hot-swap (`onHotReload`, content hash, `onReloaded`, the stale-reference warning; *Q66, Q67,
-  Q71*). §6.2, §10
+  the built-in Node kinds and custom ones through the Registry (now with `acceptsParent`,
+  *Q112*), `AssetSource` and asset fields with the `.anim.json` reader (the Tiled loader of *Q78*
+  stays in v0.2), lookup API (`find`, `findAll`, paths), unknown-type handling (*Q58, Q113*),
+  Hot-swap (`onHotReload`, text comparison, `onReloaded`, the stale-reference warning; *Q66, Q67,
+  Q71, Q110, Q111*). §6.2, §10; [`specs/004-runtime/`](../specs/004-runtime/spec.md)
+  (*Q109–Q115*). *Open:* the manual Hot-swap run and the timings on the reference Mac (tasks
+  T038, T043)
 
 **Tests:** document and history; serialization (round-trip every preview Node kind, the
 `childIds` repair cases); generator goldens and error cases (Type ID collision, unsupported field,
@@ -120,7 +123,7 @@ hash check. §13
 
 **Done when:** a fixture scene round-trips through the Document model byte for byte, the
 generator's goldens pass on annotated fixtures, and the Runtime loads fixture scenes with a
-hand-written Registry in `flame_test`.
+hand-written Registry in `flame_test`. ✅
 
 ## Phase 3 — Vertical slice ⬜
 
@@ -235,7 +238,6 @@ open until Phase 6's feedback (*Q82*). Components come from `pyro_ui`, as in Pha
 - [ ] **#4 Viewport** (3.5): grid, snapping, rotate/scale gizmos, the reference rectangle (*Q85*)
 - [ ] **#5 Inspector** (2): editors for `Color`, entity reference, `Sprite`, `SpriteAnimation`
 - [ ] **#6 Built-in Node kinds** (0.5): the third hitbox kind
-- [ ] **#8 Runtime** (0.5): the difference between §14's preview and v0.1 estimates
 - [ ] **#9 Behaviors** (1): reorder, Missing behavior polish
 - [ ] **#11 Play** (5): device list and emulator boot (*Q62*), Attach info file, `launch.json`,
   unauthenticated mode (*Q81*), lifecycle (*Q63*)
@@ -282,5 +284,5 @@ Tasks with lead time or a recurring trigger, done next to the phases rather than
 
 None right now.
 
-The phase estimates are the per-item figures in §14's two tables. Phase 7's #8 line is the
-difference between those tables, so it is rough. #7 moved wholly into Phase 2 (*Q100*).
+The phase estimates are the per-item figures in §14's two tables. #7 and #8 moved wholly into
+Phase 2 (*Q100, Q116*).

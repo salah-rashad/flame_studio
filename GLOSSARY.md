@@ -32,7 +32,7 @@ What sort of thing a Node is: a built-in sort (root, entity, sprite, hitbox, pre
 _Avoid_: Kind (unqualified), node type
 
 **Entity**:
-A Node that can hold Behaviors.
+A Node that can hold Behaviors. In a game its component is a `PyroEntity`.
 
 **Behavior**:
 A user-written Dart class holding logic, attached to an Entity.
@@ -86,6 +86,14 @@ _Avoid_: Kind (for fields)
 The Field type of an Editable field holding a project-root-relative image path, declared with `ImagePath` from `pyro_annotations`; a plain `String` field is always text.
 _Avoid_: Asset string
 
+**Animation file**:
+A `*.anim.json` file holding one spritesheet's named animations; a `SpriteAnimation` Override names the file and one of its animations.
+_Avoid_: Animation sheet
+
+**Asset source**:
+Where the Runtime and Pyro read a Scene's files from, by project-relative path: the game's asset bundle in a game, the project folder on disk in Pyro.
+_Avoid_: Asset loader, asset provider
+
 **Override**:
 A value the developer explicitly set for an Editable field on a Node; it is saved in the Scene. A field with no Override takes its default from code.
 _Avoid_: Saved value, custom value
@@ -137,8 +145,12 @@ _Avoid_: Run game, launch
 Connecting the developer's IDE debugger to a game Pyro is already running.
 
 **Hot-swap**:
-Replacing a Scene inside a running game with its newly saved version, without restarting the game.
+Replacing a Scene inside a running game with its newly saved version, without restarting the game. It happens only when the Scene's content changed.
 _Avoid_: Scene reload, live reload
+
+**Stale reference**:
+A component of a Node that a Hot-swap removed, still held by game code; debug builds warn the first time one is moved or added back.
+_Avoid_: Dangling reference
 
 **Live bridge**:
 A future two-way connection between Pyro and a running game for selecting and tweaking Nodes live.

@@ -84,6 +84,7 @@ Sorted by `file`, `line`, `code`, `typeId`, `field`.
 | `notBehavior` | error | `@PyroBehavior` class doesn't extend `Behavior`. |
 | `badTypeId` | error | Explicit `id:` is empty or contains whitespace. |
 | `parentTypeNotClass` | error | A Behavior's parent type is a mixin or interface-only type. |
+| `unreachableParentType` | error | A Behavior's parent type is private or not exported by any library its file imports, so the Registry's `acceptsParent` can't name it (spec 004). |
 | `missingRuntime` | error | The package doesn't depend on `pyro_runtime`. |
 | `unsupportedFieldType` | error | `@Editable` field of a type outside the v1 Field types. |
 | `privateFieldType` | error | `@Editable` field whose type has a private name, which the Registry can't write. |

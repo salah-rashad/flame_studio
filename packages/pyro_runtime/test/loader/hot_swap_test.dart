@@ -166,6 +166,37 @@ void main() {
     expect(reloads, isNotEmpty);
   });
 
+  testWithFlameGame('an onReloaded that throws is reported, and later '
+      'Hot-swaps still run', (game) async {
+    final reported = <FlutterErrorDetails>[];
+    final originalOnError = FlutterError.onError;
+    FlutterError.onError = reported.add;
+    addTearDown(() => FlutterError.onError = originalOnError);
+    var calls = 0;
+    final scene = await PyroScene.load(
+      scenePath,
+      registry: testRegistry,
+      assets: source,
+      onReloaded: (scene) {
+        calls++;
+        // Game code looking up a Node the new Scene no longer has.
+        if (calls == 1) scene.find<Player>('renamed');
+      },
+    );
+    await game.ensureAdd(scene);
+
+    source.texts[scenePath] = _scene(1);
+    await hotReload(game, scene);
+    expect(reported, hasLength(1));
+    expect(reported.single.exception, isA<StateError>());
+    expect(reported.single.context.toString(), contains(scenePath));
+
+    source.texts[scenePath] = _scene(2);
+    await hotReload(game, scene);
+    expect(scene.find<Player>('player').position.x, 2);
+    expect(calls, 2);
+  });
+
   testWithFlameGame('a Scene never added to the game reads nothing', (
     game,
   ) async {

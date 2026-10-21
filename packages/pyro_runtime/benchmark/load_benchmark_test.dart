@@ -118,6 +118,11 @@ void main() {
 
   test('SC-004 on the 1,000-Node benchmark Scene', () async {
     final text = SceneCodec.encode(benchmarkScene());
+    // The rebuild moves the Node at this position; if a writer or fixture
+    // change removed it, the "rebuild" would silently measure a no-op.
+    const moved = '"position": [0, 0]';
+    expect(text, contains(moved), reason: 'the rebuild must change the text');
+    var reloads = 0;
     final image = await makeImage(256, 32);
     final source = MemoryAssetSource(
       texts: {_path: text},
@@ -134,6 +139,7 @@ void main() {
       _path,
       registry: _registry,
       assets: source,
+      onReloaded: (_) => reloads++,
     );
     final texts = {const AssetPath(_path): text};
     final check = await _measure(() async {
@@ -145,14 +151,12 @@ void main() {
     var x = 0;
     final rebuild = await _measure(() async {
       // A one-character change, as when a Node is moved in Pyro.
-      source.texts[_path] = text.replaceFirst(
-        '"position": [0, 0]',
-        '"position": [${++x}, 0]',
-      );
+      source.texts[_path] = text.replaceFirst(moved, '"position": [${++x}, 0]');
       game.onHotReload();
       // ignore: invalid_use_of_visible_for_testing_member, a benchmark drives the Hot-swap the way the tests do.
       await scene.pendingCheck;
     });
+    expect(reloads, _warmUp + _runs, reason: 'every run must rebuild');
 
     // ignore: avoid_print, a benchmark reports to the console.
     print(

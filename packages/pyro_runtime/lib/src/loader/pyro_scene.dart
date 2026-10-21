@@ -185,7 +185,23 @@ final class PyroScene extends Component {
   @override
   void onHotReload() {
     super.onHotReload();
-    if (kDebugMode) _pending = _pending.then((_) => _checkForChanges());
+    if (kDebugMode) {
+      // Each link catches its own error, so one failure (such as an
+      // onReloaded that throws) never stops later Hot-swaps.
+      _pending = _pending.then((_) => _checkForChanges()).catchError((
+        Object error,
+        StackTrace stackTrace,
+      ) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'pyro_runtime',
+            context: ErrorDescription('while Hot-swapping $path'),
+          ),
+        );
+      });
+    }
   }
 
   Future<void> _checkForChanges() async {

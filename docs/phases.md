@@ -106,7 +106,7 @@ share one format (§5); that comes first, because #2 and #8 both build on it.
   emitters into `lib/` (*Q68*; no `build.yaml` needed in games, *Q107*), errors and warnings in
   the Manifest, for **every** v1 Field type (*Q100*); the Registry contract in `pyro_runtime`.
   §6.1, §7.3, §9.2; [`specs/003-generator/`](../specs/003-generator/spec.md) (*Q100–Q108*)
-- [x] **#8 Runtime** (5, full scope, *Q116*): `PyroScene.load` with the two-pass loading order (it reads
+- [x] **#8 Runtime** (5, full scope, *Q116*): `PyroScene.load` with the four-pass loading order (it reads
   each Scene with `SceneCodec.decode` and calls `warnAboutRepairs` after it, FR-024a), building
   the built-in Node kinds and custom ones through the Registry (now with `acceptsParent`,
   *Q112*), `AssetSource` and asset fields with the `.anim.json` reader (the Tiled loader of *Q78*

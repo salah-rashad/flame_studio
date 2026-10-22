@@ -83,10 +83,23 @@ stands in); anything on Windows or Linux beyond CI's widget tests.
 
 ## Clarifications
 
-None yet. Defaults chosen while writing this spec (a new scene's initial contents, the
-transform fields, clamping to the Manifest's `min`/`max`, opening a project without a usable
-SDK, and opening an already-open scene) are recorded in Assumptions and can be revisited in
-`$speckit-clarify`.
+### Session 2026-10-22
+
+- Q: Which fields does the inspector's Transform section edit in this phase? → A: All five —
+  position, angle, scale, size and anchor — as plain number/Vector2 rows on the existing
+  components. §14's "numeric editing in the inspector covers them" for rotate/scale is then
+  honored without gizmos; the 3×3 anchor picker of the design prompts waits for the design
+  review (a new pattern, proposed only if the plain row proves insufficient).
+- Q: What does a brand-new scene contain when it is created? → A: One root Node; entities are
+  added from there, and the file is named at first save.
+- Q: What happens when a typed or scrubbed number lands outside the field's `min`/`max`? → A:
+  The committed value is clamped to the range and the field shows the clamped result —
+  scrubbing already stops at the limits, and rejecting the entry would fight typing and
+  scrubbing alike.
+- Q: When are the Claude Design view designs generated, given the tool is unavailable now? →
+  A: Later. The prompts are synced, so the views can be generated at any time; the spec, plan
+  and tasks proceed now, and each panel's implementation waits for its view design (the
+  "New patterns" rule of `claude-design-prompts.md`) — not the other way around.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -311,8 +324,8 @@ even while its neighbours are edited.
 **Acceptance Scenarios**:
 
 1. **Given** a selected Node, **When** the inspector renders, **Then** it shows a transform
-   section (position, size, angle) and one row per Editable field of the Node's type from the
-   catalog, in the Manifest's order, on `PrPropertyRow` / `PrNumberProperty` /
+   section (position, angle, scale, size, anchor) and one row per Editable field of the Node's
+   type from the catalog, in the Manifest's order, on `PrPropertyRow` / `PrNumberProperty` /
    `PrVector2Property`.
 2. **Given** a `double` field with `min`/`max` in the Manifest, **When** a value is typed,
    dragged or scrubbed past the range, **Then** the committed value is clamped to the range
@@ -454,6 +467,8 @@ close/reopen cycle, and hot-swaps in the running game.
 - **A project whose `pyro_runtime` is out of range**: scenes open and edit, but save is gated
   with the version named (story 1, scenario 2); Pyro never writes a `schemaVersion` the
   Runtime can't read (*Q49*).
+- **A project whose `pubspec.lock` has no `pyro_runtime` at all**: compatibility is
+  `unknown` — scenes open and edit, and save is gated until a Runtime is resolved (*Q98*).
 - **A project with no detectable SDK**: it opens and scenes edit and save — the SDK is needed
   for Play (Phase 5), not for editing; the project list and status say no SDK was found.
 - **Deleting a Behavior that is the only writer of an Override**: removing the Behavior removes
@@ -529,9 +544,10 @@ close/reopen cycle, and hot-swaps in the running game.
   re-evaluate without a restart. Pyro MUST NOT run the generator itself in this phase (the
   watcher is #11, rest).
 - **FR-014**: Manifest `errors` and `warnings` MUST be shown with their stable code, file,
-  line, class and field where the type would have appeared (§7.3); while a Manifest is
-  unreadable or carries errors, the last good catalog MUST stay active with a clear error, and
-  no crash or blank catalog.
+  line, class and field where the type would have appeared (§7.3) — in a problems list
+  opened from the catalog status (a `PrDialog`; the Console takes over as the standing
+  surface in Phase 5); while a Manifest is unreadable or carries errors, the last good
+  catalog MUST stay active with a clear error, and no crash or blank catalog.
 - **FR-015**: Preview components MUST render built-in Node kinds for real with Pyro's own Flame
   (sprites from disk images via `AssetSource`, hitboxes as their outlines), and custom
   components as placeholders — a labelled box with the Type ID, or the `preview:` image when
@@ -589,7 +605,8 @@ close/reopen cycle, and hot-swaps in the running game.
 **Inspector (#5)**
 
 - **FR-029**: With a Node selected, the inspector MUST show a transform section (position,
-  size, angle) and one row per Editable field of the Node's type from the catalog, in the
+  angle, scale, size and anchor — plain number/Vector2 rows; the anchor's 3×3 picker is a later
+  design decision) and one row per Editable field of the Node's type from the catalog, in the
   Manifest's order, on the design system's property-row components; with nothing selected it
   shows an empty state.
 - **FR-030**: The inspector MUST provide working editors for `int`, `double` (honouring the
@@ -597,9 +614,13 @@ close/reopen cycle, and hot-swaps in the running game.
   `Vector2` and asset paths (a dropdown of matching files under the project's declared asset
   folders, read from disk so new files appear without a restart, *Q31*; the value stored is
   the project-relative path).
-- **FR-031**: Typed, dragged or scrubbed number values MUST be clamped to the field's
-  `min`/`max` on commit when the Manifest declares them; an enum value not among the Manifest's
-  `values` (a kept value) MUST still display.
+- **FR-031**: The field's `min`/`max` from the Manifest MUST be enforced so that no
+  out-of-range Override is ever written: a typed, dragged or scrubbed number outside the
+  range is clamped on commit and the field shows the clamped result (Clarification
+  2026-10-22 — scrubbing already stops at the limits, and rejecting the entry would fight
+  typing and scrubbing alike); text that is not a number at all is held invalid (error
+  border, Esc reverts) — the `PrNumberProperty` behavior (*Q84*). An enum value not among
+  the Manifest's `values` (a kept value) MUST still display.
 - **FR-032**: Fields with an Override MUST carry a visible Override marker and *Reset to
   default*, which removes the Override (ADR 0003); un-overridden fields MUST show the code
   default — the evaluated constant, or the source text for a non-constant default (§7.3).
@@ -711,9 +732,15 @@ close/reopen cycle, and hot-swaps in the running game.
   the panels only compose them. A component the panels need that doesn't fit is proposed and
   the author decides (*Q87*) — none is currently expected to be missing
   (`PrTreeRow`, `PrPropertyRow`, `PrNumberProperty`, `PrVector2Property` all exist).
-- **Transform** means position, size and angle (a `PositionComponent`'s transform; §8.4 says
-  "transform" without listing). Rotate and scale have no gizmo this phase (§14) — the inspector
-  numbers cover them.
+- The Claude Design **view designs are deferred, not a dependency**: the panels compose
+  components whose APIs are fixed, so the spec, plan and tasks proceed without them. Each
+  panel's implementation task waits for its view design (Prompts 2, 1, 4, 3, 5 and 11C of
+  `claude-design-prompts.md`, in Phase 4's build order), so missing "New patterns" surface
+  before code, not during it.
+- **Transform** means all five `PositionComponent` fields — position, angle, scale, size and
+  anchor — as plain number/Vector2 rows (confirmed in clarify). Rotate and scale have no gizmo
+  this phase (§14: numeric editing covers them), and the anchor's 3×3 picker waits for the
+  design review.
 - **Number clamping**: on commit, an entered value outside the Manifest's `min`/`max` is
   clamped (the generator guarantees `min ≤ max`, §6.1). The alternative — refusing the entry —
   was not chosen because the Manifest's range is authoritative either way and clamping matches

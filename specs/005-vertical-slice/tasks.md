@@ -315,10 +315,10 @@ generated Registry, and shows every Override's effect.
 - [X] T024 [US1] (needs Flutter) Run `flutter analyze --fatal-infos example` from the root, then
   `flutter analyze --fatal-infos lib/pyro.g.dart` and `flutter test` in `ex/`, and
   `dart format --set-exit-if-changed example` (US1 #2, constitution I).
-- [ ] T025 [US1] (reference Mac) Run quickstart §4. Note the time from a clean clone's
+- [X] T025 [US1] (reference Mac) Run quickstart §4. Note the time from a clean clone's
   `dart pub get` to the window (SC-001) for T049.
-  _Run 2026-10-22: the window came up in 26 s from a warm cache and the log was right, but nobody
-  looked at the ship, banner and HUD yet. Left open for that._
+  _Run 2026-10-22: 26 s from a warm cache (not measured cold). The window shows the clockwise
+  ship, the banner and the HUD; **the hitbox is not drawn**, see ARCHITECTURE.md "Vertical slice"._
 
 **Checkpoint**: the example generates with no errors, its tests pass, and on the Mac the window
 shows the turning ship, the banner and the HUD.

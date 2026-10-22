@@ -764,11 +764,17 @@ minor, no difference seen), `-d macos --debug`.
 | §5.9 release build | ✅ 0 matches for `couldn't Hot-swap` in `App.framework/App`; the string is in the Debug build's kernel (2) and `Scene loaded` is in the Release binary (2), so the search works |
 | §5.10 transcripts | ✅ replaced with recordings, see `apps/pyro/test/fixtures/daemon/README.md` |
 
-**Not verified.** I drove the run from a shell and could not see the window. The ship turning,
-its hitbox, the banner colour and the HUD text (`swaps`, `time`, `code`) were not looked at; the
-log lines above stand in for them. The window close in §5.7 was an AppleScript `quit` (it printed
-"User canceled" yet the game closed and the client logged `Lost connection to device.`), not a
-click on the red button.
+**Looked at in the window** (a second run, with screenshots): the ship turns clockwise, the banner
+"Hello from Pyro" is white and the HUD reads `time: …s  swaps: 0  code: v1`. A save changed the
+banner to "Hello again" and `swaps` to 1 while `time` kept counting. `codeMarker` to `v2` and `r`
+changed the HUD to `code: v2` and left `swaps` at 1. The red close button ended the session with
+`Lost connection to device.` and exit 0, with nothing left running.
+
+**Not as the quickstart says.** §4 expects the ship's **hitbox** to show. No outline is drawn:
+`example/` has no code that paints it, and the Scene's `body` hitbox is only a component. Either
+the quickstart should stop expecting it, or the example should turn on debug drawing. The author
+decides. The spin speed was judged from two frames (clockwise), not measured against 0.5 and 2
+turns a second.
 
 **Findings on the Mac**
 

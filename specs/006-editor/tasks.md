@@ -18,9 +18,9 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Add `yaml: ^1.14.0` to `apps/pyro/pubspec.yaml` dependencies (BSD-3, MIT-distribution compatible — the one new dependency flagged in plan.md's Constitution Check) and resolve the workspace from the repo root (`dart pub get`); commit the lock change alone.
-- [ ] T002 [P] Create `apps/pyro/test/flutter_test_config.dart` loading the app's font manifest the gallery's way (copy the pattern from `packages/pyro_ui/example/test/flutter_test_config.dart`) so `Pr` widgets and `PrIcons` glyphs render in tests instead of squares.
-- [ ] T003 [P] Create the four feature folders with empty public barrels per plan.md's structure: `lib/app/app.dart`, `lib/project/project.dart`, `lib/viewport/viewport.dart`, `lib/panels/panels.dart` (export lists grow with the stories; nothing else lives at `lib/` top level beside `main.dart` and the existing `document/`, `process/`).
+- [x] T001 Add `yaml: ^1.14.0` to `apps/pyro/pubspec.yaml` dependencies (BSD-3, MIT-distribution compatible — the one new dependency flagged in plan.md's Constitution Check) and resolve the workspace from the repo root (`dart pub get`); commit the lock change alone.
+- [x] T002 [P] Create `apps/pyro/test/flutter_test_config.dart` loading the app's font manifest the gallery's way (copy the pattern from `packages/pyro_ui/example/test/flutter_test_config.dart`) so `Pr` widgets and `PrIcons` glyphs render in tests instead of squares.
+- [x] T003 [P] Create the four feature folders with empty public barrels per plan.md's structure: `lib/app/app.dart`, `lib/project/project.dart`, `lib/viewport/viewport.dart`, `lib/panels/panels.dart` (export lists grow with the stories; nothing else lives at `lib/` top level beside `main.dart` and the existing `document/`, `process/`).
 
 ---
 

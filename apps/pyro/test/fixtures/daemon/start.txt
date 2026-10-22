@@ -1,0 +1,9 @@
+Launching lib/main.dart on macOS in debug mode...
+[{"event":"daemon.connected","params":{"version":"0.6.1","pid":4242}}]
+[{"event":"app.start","params":{"appId":"app-1","deviceId":"macos","directory":"/work/example","supportsRestart":true,"launchMode":"run","mode":"debug"}}]
+[{"event":"app.progress","params":{"appId":"app-1","id":"0","progressId":null,"message":"Building macOS application...","finished":false}}]
+[{"event":"app.progress","params":{"appId":"app-1","id":"0","progressId":null,"finished":true}}]
+flutter: The Dart VM service is listening on http://127.0.0.1:50300/AbCdEf123456=/
+[{"event":"app.debugPort","params":{"appId":"app-1","port":50300,"wsUri":"ws://127.0.0.1:50300/AbCdEf123456=/ws","baseUri":"file:///Users/dev/Library/Containers/dev.pyro.pyroExample/Data/tmp/exampleAbCd/example/"}}]
+[{"event":"app.started","params":{"appId":"app-1"}}]
+flutter: [pyro_example] Scene loaded: assets/scenes/level1.scene.json

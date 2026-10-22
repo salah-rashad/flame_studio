@@ -1,0 +1,2 @@
+[{"id":2,"result":true}]
+[{"event":"app.stop","params":{"appId":"app-1"}}]

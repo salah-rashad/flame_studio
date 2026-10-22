@@ -53,7 +53,9 @@ comments or the docs:
 
 - **Flutter in the cloud session.** The container had no Flutter at first, so 3.44.2 was installed
   for the session. Every task except the reference-Mac ones (T025, T039, T045, T046) ran here.
-  T031 is the CI run.
+  T031 was CI run 35 (`workflow_dispatch` on `specs/005-vertical-slice`, 2026-10-22). All seven jobs
+  were green, the contract job took 1 min 19 s, and the example's committed-files check passed on
+  macOS, Windows and Linux.
 - **The macOS runner (T004)** was made with `flutter create` in a scratch copy, and only `macos/`
   and `.metadata` were copied in, so nothing else in `example/` was touched.
 - **Saves while starting (T032, T035):** the plan dropped Scene changes before `app.started`. A
@@ -372,7 +374,7 @@ Manifest with its golden, and loads every Scene, each as a named step.
   `cp` command above step 3. Keep the job's existing triggers (FR-009, FR-015).
 - [X] T030 [US2] (needs Flutter) Run quickstart §2 and each breakage of §3 locally. Each check fails
   where the table says and passes again after `git checkout -- example` (SC-002).
-- [ ] T031 [US2] Push, then confirm in CI that the contract job is green, that the committed-files
+- [X] T031 [US2] Push, then confirm in CI that the contract job is green, that the committed-files
   step passes on macOS, Windows and Linux (FR-009a), and that the job takes under 3 minutes warm
   (SC-003). If the three-OS step is green, tick the CI part of `specs/003-generator/tasks.md` T043
   with a note pointing to this spec. Its Mac clean-cache run stays as it is.

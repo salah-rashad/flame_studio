@@ -18,3 +18,4 @@ export 'providers.dart'
         projectProvider,
         selectionProvider,
         sessionRegistryProvider;
+export 'save_scene.dart' show reloadFromDisk, saveScene;

@@ -71,6 +71,9 @@ device list and emulator boot; the full sample game (item 13, v0.1); anything on
   with the committed copies) also runs on macOS and Windows, because that is the output that
   could differ by system. The Manifest golden and Scene-loading checks run on Linux only. This
   also closes spec 003's open cross-system check (T043, SC-003).
+- Q: What is the pass limit for the delay from saving a changed Scene to seeing it in the running
+  game? → A: Over ten saves on the reference Mac, the median is under 500 ms and the worst is
+  under 1 s.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -198,8 +201,8 @@ that the Scene's runtime state survives.
    target, as Pyro's own save will), **When** the rename happens, **Then** the client notices
    the change as it would a plain write.
 8. **Given** the reference Mac, **When** a save is made, **Then** the change is on screen in
-   about a second (the constitution's feedback-latency budget; spike #1 measured 58–250 ms for
-   the reload itself).
+   under a second, with a median under 500 ms over ten saves (SC-004; the constitution's
+   feedback-latency budget; spike #1 measured 58–250 ms for the reload itself).
 
 ---
 
@@ -385,8 +388,9 @@ after each run. Close the window by hand once and check the client's report.
 - **SC-003**: The contract job finishes in under three minutes on a warm cache on Linux, and
   the committed-files check passes on macOS, Windows and Linux with identical files.
 - **SC-004**: Over ten consecutive saves of a changed Scene file on the reference Mac, the
-  change is visible in the running game within about one second of the save, every time
-  (constitution III; spike #1 measured 58–250 ms for the reload itself).
+  change is visible in the running game with a median delay under 500 ms and a worst delay under
+  1 s, measured from the save to the first frame showing the change (constitution III; spike #1
+  measured 58–250 ms for the reload itself).
 - **SC-005**: Over ten consecutive reloads that follow a Dart-only change or a save with the same
   content, the Scene is rebuilt zero times (components keep their state, `onReloaded` does not
   run).

@@ -12,6 +12,7 @@ Starts Play sessions. It is stateless apart from its injected seams.
 |---|---|---|
 | `flutter` | `String` | executable; default `'flutter'` (on `PATH`) |
 | `startProcess` | `ProcessStarter` | default `Process.start` (research R3) |
+| `fileSystem` | `FileSystem` (`package:file`) | default `const LocalFileSystem()`; every file check goes through it (R3) |
 | `watchDirectory` | `Stream<FileSystemEvent> Function(Directory)` | default `dir.watch(recursive: true)` (R7) |
 | `quietPeriod` | `Duration` | 150 ms (R8) |
 | `stopTimeout` | `Duration` | 5 s before SIGTERM, then 2 s before SIGKILL (R10) |
@@ -63,8 +64,8 @@ Rules:
 - At most one request of `app.restart` is outstanding. A change during `reloading` sets `_queued`.
   When the response arrives and `_queued` is set, one more reload runs for all paths collected
   meanwhile (R8).
-- `stopped` is final. The watcher is cancelled, pending requests fail with
-  `PlayStoppedException`, and the stream closes.
+- `stopped` is final. The watcher is cancelled, pending requests fail with a
+  `StateError` naming the stopped session, and the stream closes.
 
 ## PlayEvent (sealed)
 

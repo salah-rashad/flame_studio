@@ -24,7 +24,8 @@ failure names it (FR-013):
 | 1 | Generate the example game's Registry and Manifest | `example` | `dart run build_runner build -d` | the Generator reports an error |
 | 2 | Check the committed Registry and Manifest | `example` | `git diff --exit-code -- lib/pyro.g.dart lib/pyro.manifest.json` | the Generator's output changed and the commit didn't include it |
 | 3 | Check the Manifest against its golden | `example` | `diff -u test/goldens/pyro.manifest.json.golden lib/pyro.manifest.json` | the Manifest changed and the golden wasn't deliberately updated |
-| 4 | Load every example Scene with the real Registry | `example` | `flutter test test/contract/` | a Scene doesn't load (the Runtime's error names the Scene, Node, Type ID or field) |
+| 4 | Load every example Scene with the real Registry | `example` | `flutter test test/contract/` | a Scene doesn't load, or loads with a Runtime warning (the error or warning names the Scene, Node, Type ID or field) |
+| 5 | Analyze the example game | `example` | `flutter analyze --fatal-infos . lib/pyro.g.dart` | an analysis issue, including in the generated Registry (FR-013) |
 
 The comment above step 2 keeps the Flutter ≥ 3.47 alternative,
 `dart run build_runner build --only-check`, for when the pin moves (US2 #7). The comment above
@@ -41,6 +42,8 @@ cp lib/pyro.manifest.json test/goldens/pyro.manifest.json.golden
 - One `testWithFlameGame` per file: `PyroScene.load(<asset path>, registry: pyroRegistry)` with
   the default `UnknownType.fail`, `ensureAdd`, `ready`. A load error fails the test with the
   Runtime's message.
+- While each load runs, `debugPrint` is recorded. Any Runtime warning (an unused Override, a
+  repaired tree, a skipped type) fails the test, quoting the warning (spec FR-012, US2 #4).
 
 ## Budget
 

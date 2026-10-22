@@ -52,6 +52,7 @@ On a scratch branch, one at a time, run §2 again and reset afterwards
 | Add a blank line to `lib/pyro.g.dart` | `git diff` step shows it |
 | Change `"default": 0.25` in `test/goldens/pyro.manifest.json.golden` | `diff -u` step shows it |
 | Rename `"type": "Spin"` to `"Spinner"` in `assets/scenes/level1.scene.json` | `test/contract/` fails naming `level1.scene.json`, Node `ship` and Type ID `Spinner` |
+| Add `"speed": 3` to `ship`'s `Spin` Overrides (a field the code doesn't have) | `test/contract/` fails quoting the Runtime's unused-Override warning for `Spin.speed` (US2 #4) |
 | Copy `level1.scene.json` to `assets/scenes/extra/level2.scene.json` (then declare `assets/scenes/extra/`) | `test/contract/` runs two Scene tests, with no test edit (US2 #5) |
 
 Then push the branch and confirm the CI run shows the same failures in the step of the same
@@ -83,7 +84,8 @@ Record every result in `docs/ARCHITECTURE.md`, section "Vertical slice" (FR-026)
    shows a reload, `swaps` stays the same, and the ship keeps its angle (US3 #3).
 4. **Dart-only reload.** Change `codeMarker` to `'v2'` and type `r` in the CLI. The HUD shows
    `code: v2` and `swaps` doesn't change (US3 #4).
-5. **A broken save.** Save invalid JSON, then an unknown Type ID, then `"turnsPerSecond": "fast"`.
+5. **A broken save.** Three times each: save invalid JSON, an unknown Type ID, and
+   `"turnsPerSecond": "fast"`.
    Each time the game keeps the previous Scene and the CLI shows the Runtime's
    `couldn't Hot-swap` message naming the Scene, Node and type or field. A valid save recovers
    (US3 #6, SC-008).

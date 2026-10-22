@@ -14,7 +14,9 @@ task on the Mac records real transcripts that replace the hand-written ones (R6)
 `pyro_generator`, `build_runner ^2.15.1`, `flame_test` and `flutter_lints`. These match
 `fixture_game`. The app gains **no** dependency. File watching uses `dart:io` `FileSystemEntity.watch`
 (FSEvents on macOS). Process spawning uses `dart:io` `Process`. Timers and the debounce use the app's
-existing `clock` and, in tests, `fake_async`.
+existing `clock` and, in tests, `fake_async`. File checks use the app's existing `file`
+package (`FileSystem`, `LocalFileSystem` by default), so tests run on a `MemoryFileSystem`
+(constitution V: "time and file system are injected or faked"; spec 002 does the same).
 
 **Rationale:** everything the client needs is in `dart:io`. A new package such as `watcher` or
 `process` would be a boundary change (constitution II) for no gain. The test seams below
@@ -52,7 +54,10 @@ executable is `flutter`, found on `PATH`, or the CLI's `--flutter <path>` (basic
 #1). The arguments are `run --machine -d macos --debug`. There is no `--project-root` (R9) and no
 `--dds-port` or `--disable-service-auth-codes` (auth codes stay on, *Q81*). The working directory
 is the project. Tests pass a fake `Process` whose stdout replays a transcript and whose stdin
-records what the client sent.
+records what the client sent. `PlayClient` also takes a `FileSystem` (`package:file`, default
+`const LocalFileSystem()`) for every file check it makes: the start checks (R11) and the Scene
+folder's existence (R7). Tests give it a `MemoryFileSystem`, so no test touches the real disk,
+and a test can assert that the client wrote nothing (spec FR-020).
 
 **Rationale:** one injected function is the smallest seam that makes the client testable without
 an SDK (constitution V: "Process clients are tested against recorded daemon transcripts, never a
@@ -141,8 +146,8 @@ same stdout the client reads.
 how an atomic temp-then-rename save arrives. Deletes are passed on (spec Edge Cases: the reload
 then reports the Runtime's missing-file error). The watcher is injected as a
 `Stream<FileSystemEvent> Function(Directory)`. The default is `dir.watch(recursive: true)`, and
-tests push events by hand. If the folder doesn't exist, the session runs without watching and says
-so once as a tool output line.
+tests push events by hand. If the folder doesn't exist (checked through the injected `FileSystem`,
+R3), the session runs without watching and says so once as a tool output line.
 
 The client does not compare file contents. A save with the same bytes still sends a reload, and
 the Runtime's text comparison leaves the Scene alone (spec US3 #3; *Q67*).
@@ -207,15 +212,16 @@ an orphaned app.
 
 **Decision:** there is no start timeout: a first macOS build can take minutes. Failures are
 detected from what the tool does:
-- `flutter` can't be started (`ProcessException`): `PlayFailed` naming the executable and the
-  OS error.
+- `flutter` can't be started (`ProcessException`): `start` throws `PlayStartException` naming
+  the executable and the OS error.
 - The process exits before `app.started`: `PlayFailed` with the exit code and the last 20
   output lines, already redacted. That covers no macOS target, a compile error and a missing
   `pubspec.yaml`.
 - `app.stop` with `error` before `app.started`: the same.
 
 `start` also checks, before spawning, that the project path holds a `pubspec.yaml` and a `macos/`
-folder, and fails with the path if not. This is a cheap, clear message for the commonest mistake.
+folder, through the injected `FileSystem` (R3), and throws `PlayStartException` with the path
+if not. This is a cheap, clear message for the commonest mistake.
 
 **Rationale:** spec US4 #3 asks for an error rather than waiting forever. A Flutter failure always
 ends the process, so watching for the exit is enough. The tail of the output is where the tool
@@ -273,13 +279,17 @@ project looks like (spec FR-007), and it has no platform runner.
    To update it, deliberately: `cp lib/pyro.manifest.json test/goldens/pyro.manifest.json.golden`,
    documented in `example/README.md` and in a comment on the step.
 3. **Analyse** `example/` with the workspace rules, plus `lib/pyro.g.dart` by name (the root
-   options exclude `*.g.dart`), as `fixture_game` does.
+   options exclude `*.g.dart`), as `fixture_game` does. This runs in the matrix with every member
+   and again as the contract job's own last step (FR-013), so the job stands alone.
 4. **Scenes** (FR-012), Linux: `flutter test test/contract/` in `example/`.
    `scenes_test.dart` lists `assets/scenes/` on disk at test time (recursively, `*.scene.json`)
    and creates one `testWithFlameGame` per file that loads it with `PyroScene.load(path,
    registry: pyroRegistry)` through the bundle. It also checks that the list is not empty.
    A Scene missing from the bundle (an undeclared folder) fails as a missing file, which is also
-   a contract break.
+   a contract break. While each load runs, the test records `debugPrint`. Any Runtime warning
+   (an unused Override, a repaired tree, a skipped type) fails it too, because the Runtime only
+   warns about an Override the code no longer has (spec 004 FR-012). Without this, US2 #4 would
+   pass silently.
 
 The job is renamed from "Contract test (TODO)" to "Contract test". Each check is its own step
 with its own name, so the run summary shows which one failed (FR-013). `example/` joins the

@@ -35,8 +35,8 @@ It delivers three things that only mean something together:
 3. **The first slice of Play** (#11): Pyro's own client for `flutter run --machine` starts
    `example/` on macOS and, when the Scene file is saved, asks the running game to hot-reload
    so the Scene swaps. It is the "verify Hot-swap on macOS" check that §9.3 and *Q82* left open:
-   spike #1 proved the mechanism on iOS, Android and (with an IDE) macOS using throwaway code,
-   but Pyro's real client has not run it yet.
+   spike #1 proved the mechanism on macOS, iOS and Android with a throwaway driver (macOS reload
+   ~58 ms), but Pyro's own client has not run it yet.
 
 The slice also makes the author the first user of the whole loop, before any editor panel exists.
 If macOS Hot-swap turns out not to work, the slice's result is the evidence for choosing the
@@ -144,7 +144,9 @@ rename a Behavior field a Scene overrides) and see the matching check fail with 
    golden Manifest, **When** the job runs, **Then** it fails at the Manifest golden check.
 4. **Given** a Scene in `example/` that overrides a field the code no longer has, or names a
    Type ID the Registry doesn't hold, **When** the job runs, **Then** it fails at the Scene check
-   with the Runtime's own error (naming the Scene, the Node and the Type ID or field).
+   with the Runtime's own error or warning (naming the Scene, the Node and the Type ID or field).
+   The Runtime loads a Scene with an unused Override and only warns (spec 004 FR-012), so the
+   Scene check treats any Runtime warning as a failure.
 5. **Given** a second Scene file added to `example/`, **When** the job runs, **Then** that Scene
    is checked too, with no change to the job.
 6. **Given** the committed-files check running on macOS, Windows and Linux, **When** each
@@ -242,9 +244,10 @@ after each run. Close the window by hand once and check the client's report.
   reload to an app it has not seen start.
 - The Scene file is deleted or renamed while the game runs: the client does not crash; a reload
   that follows gets the Runtime's missing-file error and the game keeps the previous Scene.
-- A new Scene file appears under `example/` that the game does not load: the client does not
-  reload for it (only Scenes the game has loaded are of interest), but the contract job still
-  checks it.
+- A new Scene file appears under `assets/scenes/` that the game does not load: the client still
+  reloads for it (it can't tell which Scenes the game loaded, see Assumptions). That reload is
+  harmless, because the Runtime rebuilds only Scenes whose content changed. The contract job
+  checks the new Scene too.
 - `flutter run --machine` writes lines that are not messages for the client (build progress,
   warnings, the engine's own log): the client ignores what it does not understand, keeps the lines
   for later display, and never mistakes them for a reply.
@@ -301,14 +304,16 @@ after each run. Close the window by hand once and check the client's report.
   documented step (not a side effect of running the job).
 - **FR-012**: The job MUST discover every `*.scene.json` under `example/` (not a hard-coded list)
   and load each one with `flame_test` against the real generated Registry, using the Runtime's
-  default setting for unknown types (so an unknown Type ID fails).
+  default setting for unknown types (so an unknown Type ID fails). A load that prints any Runtime
+  warning (an unused Override, a repaired tree, a skipped type) MUST also fail the check, naming
+  the Scene and quoting the warning: `example/`'s Scenes are meant to be clean.
 - **FR-013**: Each of the three checks MUST report on its own, so a failing run says which check
   failed without reading logs for the other two. The job MUST also analyse `example/`, including
-  its generated Registry, with the workspace's rules.
+  its generated Registry, with the workspace's rules, as a fourth step of its own.
 - **FR-014**: The checks MUST be runnable locally with commands the contributor can copy from the
   job, and MUST give the same result as in CI.
-- **FR-015**: The job MUST pin the same Flutter version as the rest of CI and MUST cost no more
-  than about three minutes on a warm cache.
+- **FR-015**: The job MUST pin the same Flutter version as the rest of CI and MUST finish in under
+  three minutes on a warm cache.
 
 **Pyro's client (first slice of #11)**
 
@@ -391,18 +396,19 @@ after each run. Close the window by hand once and check the client's report.
   the committed-files check passes on macOS, Windows and Linux with identical files.
 - **SC-004**: Over ten consecutive saves of a changed Scene file on the reference Mac, the
   change is visible in the running game with a median delay under 500 ms and a worst delay under
-  1 s, measured from the save to the first frame showing the change (constitution III; spike #1
-  measured 58–250 ms for the reload itself).
+  1 s. It is measured from the save to the game's "Scene reloaded" log line, printed once the swap
+  is done. The frame that shows it follows within 16 ms, which is noted with the results
+  (constitution III; spike #1 measured 58–250 ms for the reload itself).
 - **SC-005**: Over ten consecutive reloads that follow a Dart-only change or a save with the same
   content, the Scene is rebuilt zero times (components keep their state, `onReloaded` does not
   run).
-- **SC-006**: A burst of ten saves within one second causes at most two reloads and ends with the
-  last content on screen.
+- **SC-006**: A burst of ten saves 100 ms apart causes at most two reloads and ends with the last
+  content on screen.
 - **SC-007**: After five start/stop cycles, including one where the game window is closed by
   hand and one where the game is stopped by the client, no process started by the client is still
   running.
-- **SC-008**: A Scene with a mistake never takes the running game down: in ten trials of invalid
-  JSON, unknown Type ID and wrong-typed Override, the game keeps running with the previous
+- **SC-008**: A Scene with a mistake never takes the running game down: in nine trials (three each
+  of invalid JSON, an unknown Type ID and a wrong-typed Override), the game keeps running with the previous
   Scene and the error reaches the client's caller with the Scene, Node and Type ID or field named.
 - **SC-009**: The recorded transcripts of a start, a reload, a failed reload and a stop make the
   client's parsing tests pass without starting a real `flutter` process or any device.
@@ -437,6 +443,7 @@ after each run. Close the window by hand once and check the client's report.
 - The golden Manifest lives under `example/test/`, next to the contract tests, where the
   Generator never writes (it writes only `lib/`), so a stray regeneration cannot silently update
   the file it is compared with.
-- Estimated effort is the plan's 0.5 + 1 + 0.5 evenings for items 13, 12 and the slice of 11,
-  ~2 in total before the 1.3–1.5× solo overrun; phases.md's 1.5 does not count the client's
-  transcript tests, which this spec adds (SC-009). Revisit the estimate at planning.
+- Estimated effort: phases.md gives ~1.5 evenings (0.5 for item 13, 1 for item 12, with #11's
+  slice inside #11's 4). The plan's estimate is ~2.5–3 before the 1.3–1.5× solo overrun, because
+  the client, its transcript tests (SC-009), the CLI and the benchmark weren't priced in
+  (plan Risks). §14 and phases.md change when the slice is done.

@@ -69,9 +69,10 @@ that are compared byte for byte.
   image package, and writes it to `ex/assets/images/ship.png`. Run it and commit both files.
   Running it again must produce identical bytes.
 - [ ] T004 (needs Flutter) In `ex/`, run
-  `flutter create --platforms=macos --project-name pyro_example --org dev.pyro .`. Then delete
-  everything it created outside `macos/` and `.metadata` (`lib/main.dart`, `test/`, `README.md`,
-  `.gitignore` edits it didn't need). Check that `macos/Runner/DebugProfile.entitlements` holds
+  `flutter create --platforms=macos --project-name pyro_example --org dev.pyro .`. Keep `macos/`
+  and `.metadata`. Delete everything else it created or changed (`lib/main.dart`, the `test/`
+  folder, `README.md`, `pubspec.yaml` changes and any new `.gitignore`), so that the files from
+  T001 stay as written. Check that `macos/Runner/DebugProfile.entitlements` holds
   `com.apple.security.network.server` (VM service in debug). Commit `ex/macos/` (spec FR-006).
 
 ---
@@ -144,9 +145,12 @@ on it.
   - after `exit(0)`, `PlayStopped(exitCode: 0, requested: false)` comes and the stream closes;
   - stderr lines arrive as `PlayOutput(source: stderr)`.
 
-  Also write `ptest/play_client_test.dart`'s spawn case: the starter is called with `flutter`,
-  `['run', '--machine', '-d', 'macos', '--debug']` and the project's absolute path, and
-  `--flutter` overrides the executable.
+  Also write `ptest/play_client_test.dart`'s spawn case on a `MemoryFileSystem` holding
+  `/work/My Game ñ/pubspec.yaml` and `/work/My Game ñ/macos/`. The path has a space and a
+  non-ASCII character (spec Edge Cases). Check that the starter is called with `flutter`,
+  `['run', '--machine', '-d', 'macos', '--debug']` and that exact path as the working
+  directory, that the `flutter` argument overrides the executable, and that the file system holds
+  exactly the same entries after the session stops (nothing written, spec FR-020).
 
 ### Implementation for the foundation
 
@@ -187,13 +191,16 @@ on it.
 
   Make T009's lifecycle group pass.
 - [ ] T014 Implement `proc/src/play_client.dart` (`PlayClient`; the constructor takes `flutter`,
-  `startProcess`, `watchDirectory`, `quietPeriod: 150 ms` and `stopTimeout: 5 s`, research R3, R8,
-  R10). `start` spawns `run --machine -d macos --debug` in the absolute project path and returns
+  `startProcess`, `fileSystem` (`package:file`, default `const LocalFileSystem()`),
+  `watchDirectory`, `quietPeriod: 150 ms` and `stopTimeout: 5 s`, research R3, R8, R10). Every
+  file check goes through `fileSystem`, never `dart:io`'s `File` or `Directory`. `start` spawns `run --machine -d macos --debug` in the absolute project path and returns
   a `PlaySession`. Write `proc/process.dart`, the library that exports exactly the surface of
   [contracts/play-client-api.md § Exports](contracts/play-client-api.md#exports), with a library
   doc comment citing §9.3. Make T009's spawn case pass. No file under `proc/` may import
   `package:flutter` or Riverpod (research R2). Add a test in `ptest/play_client_test.dart` that
-  reads every `proc/**.dart` file and fails on such an import.
+  reads every `proc/**.dart` file and fails on such an import, or on a `dart:io` `File(` or
+  `Directory(` constructor (file access goes through `fileSystem`). This test reads the
+  repository's own sources, not the client's file system.
 
 **Checkpoint**: `flutter test test/process/` passes in `app/`, and a session replays `start.txt`
 to `PlayStarted` with no auth code anywhere.
@@ -258,7 +265,7 @@ generated Registry, and shows every Override's effect.
   in canonical form (sorted keys, two-space indent, trailing newline, as `SceneCodec.encode`
   writes). Make T015 pass. If the hand-written form differs, replace it with the encoder's output.
 - [ ] T022 [US1] (needs Flutter) Run `dart run build_runner build -d` in `ex/`. Check that
-  `lib/pyro.manifest.json` has `"errors": []` and lists `Spin` (fields `clockwise`,
+  `lib/pyro.manifest.json` has `"errors": []` and `"warnings": []` and lists `Spin` (fields `clockwise`,
   `turnsPerSecond`) and `Banner` (fields `color`, `message`), then commit `lib/pyro.g.dart` and
   `lib/pyro.manifest.json` (US1 #1). Make T016 pass.
 - [ ] T023 [US1] Write `ex/README.md`. It says what the game is for (the slice, the contract test
@@ -294,7 +301,13 @@ Manifest with its golden, and loads every Scene, each as a named step.
   - fail with a clear message if the list is empty;
   - for each file, a `testWithFlameGame('loads <path>')` that awaits
     `PyroScene.load(path, registry: pyroRegistry)` with the default `onUnknownType`, then
-    `game.ensureAdd` and `game.ready()`.
+    `game.ensureAdd` and `game.ready()`;
+  - while each load runs, replace `debugPrint` with a recorder, restoring it in `tearDown`. If
+    the Runtime printed any warning (an unused Override, a repair, a skip; spec FR-012), fail
+    with the Scene's path and the warning's text.
+
+  Add a case that proves the warning check works: an unused Override in an inline copy of
+  `level1.scene.json` (loaded through a memory `AssetSource`) must fail with the field named.
 
   A library doc comment says this is #12's Scene check (*Q59*).
 
@@ -315,8 +328,9 @@ Manifest with its golden, and loads every Scene, each as a named step.
 - [ ] T029 [US2] Replace the `contract` job in `.github/workflows/ci.yml` per
   [contracts/contract-job.md § The contract job](contracts/contract-job.md#the-contract-job-linux-ubuntu-2404).
   Name it `Contract test` on `ubuntu-24.04`. Its steps are checkout, `subosito/flutter-action@v2`
-  with `${{ env.FLUTTER_VERSION }}` and cache, `dart pub get`, then the four named steps in order,
-  each with `working-directory: example`. Replace the TODO comment with a short one citing
+  with `${{ env.FLUTTER_VERSION }}` and cache, `dart pub get`, then the five named steps in order,
+  each with `working-directory: example`: the four checks of the contract, plus "Analyze the
+  example game", which runs `flutter analyze --fatal-infos . lib/pyro.g.dart` (spec FR-013). Replace the TODO comment with a short one citing
   *Q59* and spec 005. Keep the Flutter ≥ 3.47 `--only-check` note above step 2 and the golden
   `cp` command above step 3. Keep the job's existing triggers (FR-009, FR-015).
 - [ ] T030 [US2] (needs Flutter) Run quickstart §2 and each breakage of §3 locally. Each check fails
@@ -351,7 +365,8 @@ time, and reports each reload. The CLI lets the author run it, and the benchmark
   - a change during an in-flight reload queues exactly one more, covering every path changed
     meanwhile, and more changes don't queue a third;
   - changes before `app.started` are dropped;
-  - a missing `assets/scenes/` gives one `PlayOutput(tool)` line and no watch.
+  - a missing `assets/scenes/` (absent from the test's `MemoryFileSystem`) gives one
+    `PlayOutput(tool)` line and no watch.
 - [ ] T033 [P] [US3] Write the reload part of `ptest/play_session_test.dart` (`group('reload')`,
   starting from `start.txt`):
   - a Scene change sends exactly
@@ -403,7 +418,7 @@ time, and reports each reload. The CLI lets the author run it, and the benchmark
   - **SC-005**: ten times, alternately touch the Scene (same bytes, new mtime) and bump
     `codeMarker` in `lib/code_marker.dart` then `reload()`; count `Scene reloaded` lines over 2 s
     after each. It passes on 0;
-  - **SC-006**: ten changed writes within 1 s; count `PlayReloading` events until 2 s of quiet.
+  - **SC-006**: ten changed writes 100 ms apart; count `PlayReloading` events until 2 s of quiet.
     It passes on ≤ 2, provided the last `Scene reloaded` came after the last write;
   - restore both files in a `finally`, stop the session, print a Markdown table, and exit 1 on any
     failed criterion.
@@ -440,7 +455,7 @@ the client started.
     whose `outputTail` holds the tool's lines (at most 20, redacted), then `PlayStopped`;
   - `app.stop` with an `error` before `app.started` gives `PlayFailed` with that error.
 
-  Use temporary directories from `Directory.systemTemp.createTemp`, deleted in `tearDown`.
+  All of these run on a `MemoryFileSystem` (constitution V). No test touches the real disk.
 - [ ] T041 [P] [US4] Write the stop part of `ptest/play_session_test.dart` (`group('stop')`,
   `fake_async`):
   - `stop()` sends `app.stop` with `appId`; with `stop.txt` and an exit within 5 s no signal is
@@ -449,13 +464,13 @@ the client started.
   - `stop()` twice sends one `app.stop`;
   - `stop()` after the process exited does nothing;
   - with `crash.txt` and `exit(1)`, `PlayStopped(exitCode: 1, requested: false)` comes, the
-    watcher is closed, and an in-flight `reload()` completes with an error;
+    watcher is closed, and an in-flight `reload()` fails with a `StateError` naming the stopped session;
   - a second `PlayClient.start` after a stop works (US4 #4).
 
 ### Implementation for User Story 4
 
-- [ ] T042 [US4] In `proc/src/play_client.dart`, check `pubspec.yaml` and `macos/` before
-  spawning, and map a `ProcessException` to `PlayStartException`. Make the first three cases of
+- [ ] T042 [US4] In `proc/src/play_client.dart`, check `pubspec.yaml` and `macos/` through
+  `fileSystem` before spawning, and map a `ProcessException` to `PlayStartException`. Make the first three cases of
   T040 pass.
 - [ ] T043 [US4] In `proc/src/play_session.dart`:
   - an exit or `app.stop(error)` before `app.started` emits `PlayFailed` with the exit code and
@@ -484,9 +499,10 @@ the path or compile error named.
   differs, noting each difference), update that folder's README, and rerun quickstart §1.
 - [ ] T047 [P] Add **Play session** and **Contract test** to `GLOSSARY.md` (plan § Documentation
   updates). This ships in the same PR as the code (constitution I).
-- [ ] T048 [P] Add Q117–Q122 to `docs/decisions.md`, with the rows the plan lists: the CLI entry
+- [ ] T048 [P] Add Q117–Q124 to `docs/decisions.md`, with the rows the plan lists: the CLI entry
   point, the contract job's OS split, the latency limit, no run link or re-point in the slice, the
-  URI dropped, and the 150 ms debounce with one reload in flight.
+  URI dropped, the 150 ms debounce with one reload in flight, the contract test failing on
+  Runtime warnings, and the `specs/005-vertical-slice` mirror branch.
 - [ ] T049 Add a "Vertical slice" section to `docs/ARCHITECTURE.md`, after "Runtime". It covers:
   - what was checked and on what machine;
   - the results of T025, T039, T045 and T046 (whether a save swaps on macOS, whether Dart-only

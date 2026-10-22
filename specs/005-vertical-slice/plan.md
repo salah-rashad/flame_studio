@@ -1,7 +1,7 @@
 # Implementation Plan: Vertical Slice
 
-**Branch**: `specs/005-vertical-slice` (this session's work goes on `claude/gallant-galileo-0xv2k7`,
-see Risks) | **Date**: 2026-10-22 | **Spec**: [spec.md](spec.md)
+**Branch**: `specs/005-vertical-slice` (mirrored from this session's
+`claude/gallant-galileo-0xv2k7`, see Risks) | **Date**: 2026-10-22 | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `specs/005-vertical-slice/spec.md`
 
@@ -13,9 +13,10 @@ Phase 3 joins the data contract end to end, with no editor UI:
   Behavior (`Spin`: `double`, `bool`), one Custom component (`Banner`: `String`, `Color`), one
   canonical Scene, the committed Registry and Manifest, a macOS runner, and a HUD that makes
   Hot-swaps visible (research R12).
-- **The contract test** (#12). The `contract` job replaces its TODO with four named steps on
-  Linux: generate, `git diff` the committed files, `diff` the Manifest against its golden, and
-  load every discovered Scene with `flame_test`. The committed-files check also joins the
+- **The contract test** (#12). The `contract` job replaces its TODO with five named steps on
+  Linux: generate, `git diff` the committed files, `diff` the Manifest against its golden, load
+  every discovered Scene with `flame_test` (failing on Runtime warnings too), and analyse
+  `example/`. The committed-files check also joins the
   three-OS matrix, which closes spec 003's cross-system check (R13).
 - **The first slice of Play** (#11). The app's `process/` feature gets a Flutter-free
   `PlayClient`. It spawns `flutter run --machine -d macos`, parses the daemon's messages, masks
@@ -33,7 +34,8 @@ It ends with a manual run on the reference Mac (quickstart §5), recorded in
 **Primary Dependencies**: `example/`: `flame` (>=1.36 <2), `flame_behaviors` ^1.4.0,
 `pyro_runtime`, `pyro_annotations`; dev `pyro_generator`, `build_runner` ^2.15.1, `flame_test`,
 `flutter_lints`, the same as `fixture_game`. `apps/pyro`: **no new dependency**. The client uses
-`dart:io` plus the existing `clock` and, in tests, `fake_async` (R1).
+`dart:io` plus the existing `clock` and `file` (a `FileSystem` seam), and, in tests,
+`fake_async` and `MemoryFileSystem` (R1, R3).
 
 **Storage**: none new. The client writes nothing in the project (FR-020). `example/` reads its
 Scene and image through the bundle.
@@ -69,14 +71,14 @@ steps plus 2 matrix steps; ~6 transcripts
 | II. Modular Boundaries | App never imports or runs user code; feature folders; no new dependency without saying so | ✅ | ✅ the client starts `flutter run` as a child process and reads only its protocol (*Q7*); it lives in `lib/process/` behind `process.dart`; no dependency added (R1); `example/` depends only on the published packages' public APIs, as a developer's game would |
 | III. Performance by Design | Budget stated and measured; feedback latency; no blocking I/O on the UI isolate; resources released | ✅ | ✅ SC-004 budget with the benchmark (R14); a 150 ms debounce chosen against it (R8); all I/O async; the watcher, timers and process are released on stop (R10); process-output parsing is per line and cheap, and moves off the UI isolate in Phase 4 if profiling asks |
 | IV. User Data Integrity | Pyro never rewrites user data; atomic writes | ✅ | ✅ the client writes nothing in the project (FR-020); the benchmark rewrites `example/`'s own Scene atomically and restores it, and it never runs on a user project by default; `example/`'s Scene is canonical (FR-003) |
-| V. Tested Core | Contract test green; process clients tested against recorded transcripts, never a real SDK; deterministic | ✅ | ✅ the contract job is this feature (R13); client tests replay transcripts through a fake process, with `fake_async` for timers and a pushed event stream for files (R6–R8); real recordings replace the hand-written transcripts on the Mac (quickstart §5.10) |
+| V. Tested Core | Contract test green; process clients tested against recorded transcripts, never a real SDK; deterministic | ✅ | ✅ the contract job is this feature (R13); client tests replay transcripts through a fake process, with `fake_async` for timers, a `MemoryFileSystem` for every file check, and a pushed event stream for file changes (R3, R6–R8), so no client test touches the real disk or clock; real recordings replace the hand-written transcripts on the Mac (quickstart §5.10) |
 
 Technology constraints: Flutter stable 3.44.2 ✅; no `dart:mirrors` ✅; uses the user's installed
 SDK, `flutter` on `PATH` or `--flutter` (*Q39*) ✅; MIT-compatible ✅ (nothing added; the image is
 drawn for the repository).
 
-Workflow: the spec-branch rule (`specs/005-vertical-slice`) conflicts with this session's assigned
-branch. See Risks.
+Workflow: the spec-branch rule is met. The work is on `specs/005-vertical-slice`, which mirrors
+this session's assigned branch commit for commit (see Risks).
 
 **Result:** passes, no violations.
 
@@ -105,7 +107,7 @@ specs/005-vertical-slice/
 ```text
 pubspec.yaml                                 # workspace: + example
 .gitattributes                               # + example/lib/pyro.*, example/assets/**, example/test/goldens/** -text
-.github/workflows/ci.yml                     # analyze-test: + example steps; contract: the four checks
+.github/workflows/ci.yml                     # analyze-test: + example steps; contract: the five steps
 
 example/
 ├── pubspec.yaml                             # pyro_example (contracts/example-game.md)
@@ -174,7 +176,10 @@ callers in this slice. The Play button's provider is the third, in Phase 4.
     Clarifications);
   - the slice runs without the run link and asset re-point (R9);
   - the client drops the VM service URI rather than keeping it (R5);
-  - the debounce is 150 ms with one reload in flight (R8).
+  - the debounce is 150 ms with one reload in flight (R8);
+  - the contract test fails on any Runtime warning as well as on errors (R13; spec analysis
+    finding I1);
+  - spec 005 runs on a `specs/005-vertical-slice` mirror of the session branch (Risks).
 - `docs/project-plan.md`: §9.3 notes what the slice built (daemon client, debounce, redaction);
   §13 "Process clients" names the transcript fixtures; §14 updates the estimates of #11, #12
   and #13 if they moved.
@@ -205,9 +210,10 @@ callers in this slice. The Play button's provider is the third, in Phase 4.
 - **FSEvents latency and coalescing.** FSEvents batches events, by default with up to ~100 ms of
   latency in `dart:io`'s use. Added to the 150 ms debounce, that still fits SC-004's median, and
   the benchmark measures it. If the median fails, shorten the debounce before anything else.
-- **Branch rule.** The constitution asks for `specs/005-vertical-slice`. This session pushes to
-  `claude/gallant-galileo-0xv2k7` as instructed. The author can rename it or open the PR from it.
-  Nothing in the plan depends on the name.
+- **Branch rule.** The constitution asks for `specs/005-vertical-slice`. This session was told to
+  push to `claude/gallant-galileo-0xv2k7`, so every push goes to both branches with the same
+  commits, and the PR opens from `specs/005-vertical-slice`. Delete the session branch after the
+  merge.
 - **Estimate.** Phases.md gives the slice ~1.5 evenings (0.5 + 1, with #11's slice inside #11's
   4). The client with its tests, the benchmark and the CLI are closer to 1.5 on their own, which
   makes ~2.5–3 for Phase 3. Update §14 and phases.md when the slice is done, not before.

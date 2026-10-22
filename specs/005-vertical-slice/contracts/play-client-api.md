@@ -13,6 +13,7 @@ class PlayClient {
   PlayClient({
     String flutter = 'flutter',
     ProcessStarter startProcess = Process.start,
+    FileSystem fileSystem = const LocalFileSystem(),
     DirectoryWatcher watchDirectory = watchRecursively,
     Duration quietPeriod = const Duration(milliseconds: 150),
     Duration stopTimeout = const Duration(seconds: 5),
@@ -21,7 +22,8 @@ class PlayClient {
   /// Spawns `flutter run --machine -d macos --debug` in [projectPath].
   ///
   /// Throws [PlayStartException] when the project has no `pubspec.yaml` or
-  /// `macos/` folder, or when the executable can't be started.
+  /// `macos/` folder (checked through [fileSystem]), or when the executable
+  /// can't be started.
   Future<PlaySession> start(String projectPath);
 }
 
@@ -101,10 +103,12 @@ fields and `const` constructors where possible (constitution I).
 - No `PlayEvent` and no exception message contains a VM service auth code (spec FR-021,
   research R5).
 - `PlayReloading` is followed by exactly one `PlayReloaded` or `PlayReloadFailed`, unless
-  `PlayStopped` comes first.
+  `PlayStopped` comes first. Then the pending `reload()` future fails with a `StateError`
+  naming the stopped session.
 - Two reloads are never in flight together. A burst of Scene changes produces one reload after it
   settles, plus at most one already in flight (R8).
 - After `PlayStopped`, no process the session started is running, as far as `Process` can tell.
   The manual check (quickstart §5) covers the macOS app itself.
-- The client writes nothing in the project (spec FR-020). The CLI's `--record` and the benchmark,
+- The client writes nothing in the project (spec FR-020). Tests check this on the injected
+  `MemoryFileSystem`. The CLI's `--record` and the benchmark,
   which rewrites and restores the Scene, are the only callers that touch files.

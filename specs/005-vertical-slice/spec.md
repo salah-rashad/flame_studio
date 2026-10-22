@@ -164,7 +164,7 @@ Scene. They open `level1.scene.json` in a text editor, change the entity's posit
 Behavior Override, and save. Within about a second the entity moves and the Behavior behaves
 differently, in the same running game, without a restart: the game's own state outside the Scene
 (a score on screen, say) is unchanged. They then change a line of Dart in the game (a log
-message, say), save, and the client reloads the code. The Scene is not rebuilt: whatever the game
+message, say), save, and ask the client for a hot reload (automatic code reload is #11, rest). The Scene is not rebuilt: whatever the game
 did to the Scene's components since the swap (an entity it moved, a counter it kept) is still
 there.
 
@@ -329,8 +329,9 @@ after each run. Close the window by hand once and check the client's report.
   run link) in this slice (those belong to #11, rest and v0.1).
 - **FR-021**: The client MUST report the game's lifecycle to its caller as typed events (starting,
   started, reloaded, reload failed, stopped with status, error), and MUST pass the game's output
-  lines through unchanged for later display. The VM service address MUST NOT appear in anything
-  the client logs or reports (§9.3, "The URI stays out of logs"; *Q81*).
+  lines through for later display, unchanged except that any VM service auth code in them is
+  masked. The VM service address MUST NOT appear in anything the client logs or reports (§9.3,
+  "The URI stays out of logs"; *Q81*): on desktop the engine prints it to stdout as a raw line.
 - **FR-022**: Stopping MUST send the daemon's stop command first and kill the process if the game
   does not exit within a short, fixed time. No child process may outlive the client.
 - **FR-023**: Errors MUST name what failed and where (the command, the project path, the tool's
@@ -370,8 +371,9 @@ after each run. Close the window by hand once and check the client's report.
   the generated one.
 - **Contract check**: one of the three CI checks (committed files, Manifest golden, Scene
   loading).
-- **Run session**: one run of a project through the client, from start to stop. Has a state
-  (starting, running, reloading, stopped), an app identifier and a stream of events and output.
+- **Play session**: one run of a project through the client, from start to stop (*Play* in the
+  glossary). Has a state (starting, running, reloading, stopping, stopped), an app identifier and
+  a stream of events and output.
 - **Reload trigger**: a settled change to a Scene file that causes one hot-reload request.
 
 ## Success Criteria *(mandatory)*
@@ -432,8 +434,9 @@ after each run. Close the window by hand once and check the client's report.
 - `example/` is a skeleton (item 13 of the preview, 0.5 evening). The fuller sample game of
   v0.1 builds on it later and may rename or add Scenes; the contract job's discovery of every
   Scene (FR-012) means that costs nothing.
-- The golden Manifest lives with the contract tests, not inside `example/`, so a stray
-  regeneration in `example/` cannot silently update the file it is compared with.
+- The golden Manifest lives under `example/test/`, next to the contract tests, where the
+  Generator never writes (it writes only `lib/`), so a stray regeneration cannot silently update
+  the file it is compared with.
 - Estimated effort is the plan's 0.5 + 1 + 0.5 evenings for items 13, 12 and the slice of 11,
   ~2 in total before the 1.3–1.5× solo overrun; phases.md's 1.5 does not count the client's
   transcript tests, which this spec adds (SC-009). Revisit the estimate at planning.

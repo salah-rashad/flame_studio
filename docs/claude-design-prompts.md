@@ -234,7 +234,9 @@ Scene tabs (Tabs, document style, above the viewport)
   **with unsaved changes already**: the repair is the Document's starting state, not an undo step,
   so the dot is there before anything is edited and closing offers to save it.
 - A "New scene…" action (⌘N): Dialog with name and folder (default assets/scenes/); if the folder
-  isn't declared in pubspec.yaml yet, a line says it will be added.
+  isn't declared in pubspec.yaml yet, a warning line says the game can't load from it — in the
+  early preview Pyro never edits the pubspec (the folder is declared by the developer; the sync
+  flow is item 10, v0.1, where the line becomes "assets/scenes/ will be added to pubspec.yaml").
 
 Status bar
 - Generator status dot + text: "Types up to date" / "Generating…" / "Generator error — see
@@ -261,7 +263,8 @@ States to show
    changes Dialog (Prompt 11).
 10. No scene open: tab strip empty, viewport EmptyState ("Open a scene or create one", New
     scene… / Open from Assets), Inspector empty.
-11. The New scene Dialog, including the pubspec.yaml note.
+11. The New scene Dialog, including the pubspec.yaml warning (and, as a v0.1 variant frame, the
+    "will be added" notice the sync flow turns it into).
 12. A Scene that needed repair on open: an info Banner above the viewport, "Repaired level_1:
     2 Nodes had no parent, 1 was under two parents. Save to keep the repair." with "Show report"
     (opens the per-Node list) and "Dismiss"; the tab shows unsaved changes.
@@ -709,12 +712,15 @@ C. A sheet of the global warning / error / empty patterns used across the app. T
 **2026-10-22** — synced with Q89–Q124, the decisions of specs 001–005, before the first view is
 designed:
 
-- **Corrected three prompts that had gone wrong.** Prompt 10 no longer adds a `build.yaml`
+- **Corrected four prompts that had gone wrong.** Prompt 10 no longer adds a `build.yaml`
   (*Q107*: both builders auto-apply). Prompt 3 disables the hitbox entries on the scene root and
   rejects that drop (*Q115*: Flame refuses a hitbox with no positioned owner, so such a Scene
   fails the game's load). Prompt 5's Override display is scoped to the `@Editable` fields of the
   user's own types; Transform, Sprite and Hitbox rows never show a marker, a greyed default or a
-  ↺, because those properties are always written in full (*Q89*).
+  ↺, because those properties are always written in full (*Q89*). Prompt 2's New scene Dialog
+  warns about a folder that isn't in pubspec.yaml instead of promising to add it: in the early
+  preview Pyro never edits the pubspec, so the game can't load from that folder until the
+  developer declares it (the sync flow is item 10, v0.1).
 - **New states the specs created.** The repair report and a Scene that opens with unsaved changes
   (*Q93, Q96*, Prompts 2 and 11); the save refused because the file changed on disk, as a Dialog
   raised by the save rather than a watcher's Banner (*Q95*); the save refused while the Runtime's

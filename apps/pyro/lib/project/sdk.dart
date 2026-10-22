@@ -91,9 +91,7 @@ String? _fvmVersion(FileSystem fs, String projectRoot) {
       // An unreadable fvm config falls through to the next source.
     }
   }
-  final config = fs.file(
-    fs.path.join(projectRoot, '.fvm', 'fvm_config.json'),
-  );
+  final config = fs.file(fs.path.join(projectRoot, '.fvm', 'fvm_config.json'));
   if (config.existsSync()) {
     try {
       final json = jsonDecode(config.readAsStringSync());

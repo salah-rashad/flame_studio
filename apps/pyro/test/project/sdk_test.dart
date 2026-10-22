@@ -19,9 +19,7 @@ void main() {
 
     test('falls back to .fvm/fvm_config.json', () async {
       final fs = MemoryFileSystem.test();
-      fs
-          .directory('/proj/.fvm')
-          .createSync(recursive: true);
+      fs.directory('/proj/.fvm').createSync(recursive: true);
       fs
           .file('/proj/.fvm/fvm_config.json')
           .writeAsStringSync('{"flutterVersion": "3.44.0"}');
@@ -31,12 +29,8 @@ void main() {
 
     test('falls back to .fvm/flutter_sdk/version', () async {
       final fs = MemoryFileSystem.test();
-      fs
-          .directory('/proj/.fvm/flutter_sdk')
-          .createSync(recursive: true);
-      fs
-          .file('/proj/.fvm/flutter_sdk/version')
-          .writeAsStringSync('3.44.2\n');
+      fs.directory('/proj/.fvm/flutter_sdk').createSync(recursive: true);
+      fs.file('/proj/.fvm/flutter_sdk/version').writeAsStringSync('3.44.2\n');
       final info = await detectSdk('/proj', fileSystem: fs, env: (_) => null);
       expect(info, const SdkInfo(version: '3.44.2', source: SdkSource.fvm));
     });
@@ -54,17 +48,19 @@ void main() {
       );
     });
 
-    test('FLUTTER_ROOT without a readable version file falls to PATH',
-        () async {
-      final fs = MemoryFileSystem.test();
-      final info = await detectSdk(
-        '/proj',
-        fileSystem: fs,
-        env: (_) => '/no-sdk-here',
-        pathVersion: () async => '3.44.2',
-      );
-      expect(info, const SdkInfo(version: '3.44.2', source: SdkSource.path));
-    });
+    test(
+      'FLUTTER_ROOT without a readable version file falls to PATH',
+      () async {
+        final fs = MemoryFileSystem.test();
+        final info = await detectSdk(
+          '/proj',
+          fileSystem: fs,
+          env: (_) => '/no-sdk-here',
+          pathVersion: () async => '3.44.2',
+        );
+        expect(info, const SdkInfo(version: '3.44.2', source: SdkSource.path));
+      },
+    );
 
     test('no SDK anywhere is none, never an error', () async {
       final fs = MemoryFileSystem.test();

@@ -2,6 +2,7 @@
 /// provider layout (spec 006, work item 1).
 library;
 
+export 'open_scene.dart' show OpenSceneCommand;
 export 'providers.dart'
     show
         DocumentNotifier,

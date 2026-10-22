@@ -634,17 +634,18 @@ after the watcher starts pays the analyzer's warm-up (2.8 s on the M4 in spike #
 Node kind and Field type into a Flame game through the generated Registry, Hot-swap only changed
 Scenes, and stay within SC-004's budgets?
 
-**Answer:** yes on everything the container could check; the reference-Mac timings and the manual
-Hot-swap run in a macOS app are still to do (tasks T038, T043). Before building, a test pinned
-every Flame fact the plan had only read from source (`test/loader/flame_assumptions_test.dart`):
-all held.
+**Answer:** yes on everything the container could check, and the manual Hot-swap run in a macOS
+app passed on the reference Mac (2026-10-22, spec 005's run; "Vertical slice / On the reference
+Mac" below). The reference-Mac timings and the pause limit stay to do (task T043). Before
+building, a test pinned every Flame fact the plan had only read from source
+(`test/loader/flame_assumptions_test.dart`): all held.
 
 | What | Result |
 |---|---|
 | Runtime tests (`flutter test` in `pyro_runtime`) | ✅ 331 pass |
 | Fixture game: a Scene loaded through `rootBundle` with the generated Registry | ✅ |
 | Generator goldens with `acceptsParent` | ✅ |
-| Release build free of Hot-swap code (SC-006) | to do on the reference Mac (T043) |
+| Release build free of Hot-swap code (SC-006) | ✅ 0 matches (spec 005, quickstart §5.9, 2026-10-22) |
 
 Timings on the 1,000-Node benchmark Scene (`benchmark/load_benchmark_test.dart`), median (p95) of
 20 runs, `flutter test` (JIT, asserts on), image decoding excluded. **Linux early signal**, not

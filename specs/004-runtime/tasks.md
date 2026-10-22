@@ -61,9 +61,11 @@ Deviations found while implementing, each also reflected in the code's comments:
 - **Hitboxes need a positioned parent (T022):** Flame refuses a hitbox without a
   `PositionComponent` ancestor, so a hitbox directly under the root fails the load naming the Node
   (spec edge case added).
-- **Open on the reference Mac:** T038 (manual Hot-swap in a macOS app) and T043 (timings and the
-  release-build check). Container (Linux, JIT) timings are in ARCHITECTURE.md "Runtime" as an
-  early signal. #8's estimate is 5 evenings, set by the author (Q116).
+- **Open on the reference Mac:** only T043's timings and pause limit remain. T038's manual
+  Hot-swap in a macOS app and T043's release-build check ran there in spec 005's run on
+  `example/` (2026-10-22, ARCHITECTURE.md "Vertical slice / On the reference Mac"). Container
+  (Linux, JIT) timings are in ARCHITECTURE.md "Runtime" as an early signal. #8's estimate is
+  5 evenings, set by the author (Q116).
 - **Behavior parent types (T010):** a Behavior whose parent type is private or unreachable is the
   new Generator error `unreachableParentType` (golden case `errors/unreachable_parent_type`).
 
@@ -381,8 +383,9 @@ reload again and check that nothing was rebuilt (spec US4)
   - `close()` detaches everything.
 
   `PyroScene` closes the previous watch before starting a new one and in `onRemove` (calling `super`). Every line of this code runs only under `kDebugMode`. Make T034 pass.
-- [ ] T038 [US4] On the reference Mac, run [quickstart.md](quickstart.md) §5 steps 1–3 in a throwaway macOS app (not committed) and note the results for T047. If it can't run in the implementing session, leave this task open and say so in the PR
+- [X] T038 [US4] On the reference Mac, run [quickstart.md](quickstart.md) §5 steps 1–3 in a throwaway macOS app (not committed) and note the results for T047. If it can't run in the implementing session, leave this task open and say so in the PR
   - *Spec 005:* folded into its reference-Mac run on `example/` (spec 005 T039, quickstart §5 steps 1–5), which closes this task when it runs.
+  - Closed by that run (2026-10-22): a save swaps the Scene on macOS, a Dart-only reload leaves it alone; see ARCHITECTURE.md "Vertical slice / On the reference Mac".
 
 **Checkpoint**: Hot-swap tests pass (SC-003); the manual run on macOS, if done, shows a saved Scene
 rebuilding and a Dart-only reload leaving it alone

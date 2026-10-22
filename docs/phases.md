@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Phase 2 done (2026-10-20): Scene format, #2 Document model, #7 Generator and #8 Runtime. Phase 3 (vertical slice) built (2026-10-22, [`specs/005-vertical-slice/`](../specs/005-vertical-slice/spec.md)); its reference-Mac run is open |
+| **Status** | Phase 2 done (2026-10-20): Scene format, #2 Document model, #7 Generator and #8 Runtime. Phase 3 (vertical slice) done (2026-10-22, [`specs/005-vertical-slice/`](../specs/005-vertical-slice/spec.md)): the whole loop ran on Linux and on the reference Mac and met every limit ([`ARCHITECTURE.md`](ARCHITECTURE.md), "Vertical slice"). Next: Phase 4 (Editor) |
 | **Source of truth** | [`project-plan.md`](project-plan.md) §14 owns scope, estimates and build order; this file only groups that order into phases and tracks progress |
 | **Sync rule** | When §14 changes (an item, an estimate, the order), change this file in the same commit. When a step here is finished, tick it here; §14 changes only if its scope or estimate changed |
 
@@ -23,7 +23,7 @@ it). A phase starts only when the one before it is done, except for the tasks un
 flowchart LR
   P0["Phase 0<br/>De-risking spikes ✅"] --> P1["Phase 1<br/>Foundations ✅"]
   P1 --> P2["Phase 2<br/>Data contract ✅"]
-  P2 --> P3["Phase 3<br/>Vertical slice ⬜"]
+  P2 --> P3["Phase 3<br/>Vertical slice ✅"]
   P3 --> P4["Phase 4<br/>Editor ⬜"]
   P4 --> P5["Phase 5<br/>Play ⬜"]
   P5 --> M1(["Early preview"])
@@ -38,23 +38,23 @@ flowchart LR
 | 0 — De-risking spikes | v0.0 spikes #1–#3 | ~4 (outside the totals) | 0 | ✅ |
 | 1 — Foundations | #0 repo setup, #14 design system (all of it) | 3 + 23 | 0 | ✅ |
 | 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 16 | 0 | ✅ |
-| 3 — Vertical slice | `example/` skeleton (part of #13), #12 contract test, first slice of #11 | 1.5 + (in #11) | 1.5 | 🔶 |
+| 3 — Vertical slice | `example/` skeleton (part of #13), #12 contract test, first slice of #11 | 1.5 + (in #11) | 0 | ✅ |
 | 4 — Editor | #1 preview part with the editor window, #6, #4, #3, #5, #9 | 18 | 18 | ⬜ |
 | 5 — Play | Rest of #11 preview part, README recipe | 4 | 4 | ⬜ |
-| **Early preview** | | **~65.5** | **~23.5** | |
+| **Early preview** | | **~65.5** | **~22** | |
 | 6 — Testers and feedback | 5–8 testers, response table | — | — | ⬜ |
 | 7 — v0.1 breadth | #10, then the deferred parts of #1–#6, #9 and #11 | 20.5 | 20.5 | ⬜ |
 | 8 — Release | #15 with pub.dev, rest of #13, #14 final pass, #16 | 7.5 | 7.5 | ⬜ |
 | **v0.1** | | **~93.5** | **~51.5** | |
 
-**Left to the early preview:** ~23.5 evenings ≈ 8 weeks, ~11 weeks with a 1.4× overrun.
+**Left to the early preview:** ~22 evenings ≈ 7 weeks, ~10 weeks with a 1.4× overrun.
 **Left to v0.1:** ~51.5 evenings ≈ 17 weeks, ~24 weeks with a 1.4× overrun.
 
 §14 counts the early preview as ~48 evenings. The ~65.5 above is larger because Phase 1 holds all
 ~23 evenings of #14, while §14 puts only a ~5.5-evening core in the preview. The other ~17.5 were
 built ahead of the preview, so the preview's panels use the Pyro components throughout (*Q84,
-Q87*). The ~42 done are the repo setup, the whole design system, the Document model, the
-Generator and the Runtime. The spikes come on top.
+Q87*). The ~43.5 done are the repo setup, the whole design system, the Document model, the
+Generator, the Runtime and the vertical slice. The spikes come on top.
 
 ---
 
@@ -126,14 +126,14 @@ hash check. §13
 generator's goldens pass on annotated fixtures, and the Runtime loads fixture scenes with a
 hand-written Registry in `flame_test`. ✅
 
-## Phase 3 — Vertical slice 🔶
+## Phase 3 — Vertical slice ✅
 
 The whole contract end to end, with no editor UI. It removes the integration risk the spikes
 couldn't, and the author becomes the first user. It also retires the open macOS risk early: the
 preview defaults Play to the macOS desktop target, and Hot-swap with Pyro's own daemon client
 hasn't been run there yet. Built in [`specs/005-vertical-slice/`](../specs/005-vertical-slice/spec.md)
-(*Q117–Q124*). Everything but the reference-Mac run is done and green; a throwaway Linux run of
-the whole loop met every limit (ARCHITECTURE.md, "Vertical slice").
+(*Q117–Q124*). Everything is done and green: a throwaway Linux run and then the reference-Mac
+run of the whole loop both met every limit (ARCHITECTURE.md, "Vertical slice").
 
 - [x] **`example/` skeleton** (part of #13, 0.5): a minimal Flame game in the workspace with one
   annotated Behavior, one custom component and one hand-written Scene JSON, loaded through
@@ -143,18 +143,22 @@ the whole loop met every limit (ARCHITECTURE.md, "Vertical slice").
   §7.3), check the Manifest against its golden, load every `example/` scene with `flame_test`
   against the real Registry. §13. It also fails on any Runtime warning (*Q123*), and the
   committed-files check runs on all three OSes (*Q118*)
-- 🔶 **First slice of #11:** Pyro's `flutter run --machine` client starts `example/` on macOS,
+- [x] **First slice of #11:** Pyro's `flutter run --machine` client starts `example/` on macOS,
   saving the Scene JSON triggers `app.restart`, and the scene hot-swaps; a Dart-only reload leaves
   it alone (§9.3). This is the "verify Hot-swap on macOS" check. *Built:* `PlayClient` and
   `apps/pyro/bin/play.dart` (*Q117*, *Q121*, *Q122*), tested on transcripts and run end to end
-  on Linux. *Open:* the run on macOS on the reference Mac (spec 005, quickstart §5), whose timings
-  must meet *Q119*
+  on Linux and on the reference Mac (spec 005, quickstart §5): every *Q119* limit met there —
+  save → swap median 321 ms < 500 ms, worst 334 ms < 1000 ms, 0 rebuilds after ten no-op saves
+  and Dart-only reloads, 1 reload for ten saves 100 ms apart (≤ 2) — and the release build is
+  free of Hot-swap code
 
 **Tests:** the contract job is green in CI.
 
 **Done when:** editing `example/`'s Scene JSON by hand and saving swaps the scene in the game
 running on macOS, Dart-only reloads don't rebuild it, and the contract job passes. If macOS
-Hot-swap fails, decide the preview's default Play target before Phase 4.
+Hot-swap fails, decide the preview's default Play target before Phase 4. ✅ macOS Hot-swap
+passed, so the macOS desktop target stays the default Play target (ARCHITECTURE.md, "Vertical
+slice").
 
 ## Phase 4 — Editor ⬜
 

@@ -1,2 +1,5 @@
-No macOS desktop project configured. See https://flutter.dev/to/add-desktop-support to learn about adding macOS support to a project.
-[{"event":"daemon.logMessage","params":{"level":"error","message":"Error launching application on macOS."}}]
+[{"event":"daemon.connected","params":{"version":"0.6.1","pid":97019}}]
+[{"event":"app.start","params":{"appId":"00808424-aefd-42c9-8db9-e2f7eb776262","deviceId":"macos","directory":"/private/tmp/claude-501/-Users-salah-MyProjects-Flutter-Dart-Tools-pyro/00808424-aefd-42c9-8db9-e2f7eb776262/scratchpad/nomac","supportsRestart":true,"launchMode":"run","mode":"debug"}}]
+Launching lib/main.dart on macOS in debug mode...
+Error: No macOS desktop project configured. See https://flutter.dev/to/add-desktop-support to learn about adding macOS support to a project.
+[{"event":"app.stop","params":{"appId":"00808424-aefd-42c9-8db9-e2f7eb776262"}}]

@@ -11,6 +11,9 @@ import 'fake_process.dart';
 /// The known fake auth code in every transcript (research R5).
 const authCode = 'AbCdEf123456';
 
+/// The app id in the recorded transcripts (quickstart §5.10).
+const appId = '00808424-aefd-42c9-8db9-e2f7eb776262';
+
 const scene = '$projectPath/assets/scenes/level1.scene.json';
 
 /// A Play session on a [FakeProcess], a memory file system and a watcher the
@@ -106,7 +109,7 @@ void main() {
           h.events.indexWhere((e) => e is PlayDebuggerAvailable),
           lessThan(started),
         );
-        expect(h.only<PlayStarted>().single.appId, 'app-1');
+        expect(h.only<PlayStarted>().single.appId, appId);
         expect(
           h.events.last,
           isA<PlayOutput>()
@@ -115,22 +118,16 @@ void main() {
         );
         expect(
           h.only<PlayOutput>().map((e) => e.line),
-          contains(
-            'flutter: The Dart VM service is listening on '
-            'http://127.0.0.1:50300/<auth-code>=/',
-          ),
-        );
-        expect(
-          h.only<PlayOutput>().map((e) => e.line),
           contains('Building macOS application...'),
         );
         for (final event in h.events) {
           expect('$event', isNot(contains(authCode)));
           expect('$event', isNot(contains('devtools')));
-          expect('$event', isNot(contains('35277')), reason: 'app.dtd');
+          expect('$event', isNot(contains('55817')), reason: 'app.dtd');
+          expect('$event', isNot(contains('ws://')), reason: 'wsUri');
         }
         expect(h.session.state, PlayState.running);
-        expect(h.session.appId, 'app-1');
+        expect(h.session.appId, appId);
       });
     });
 
@@ -196,7 +193,7 @@ void main() {
           'id': 1,
           'method': 'app.restart',
           'params': {
-            'appId': 'app-1',
+            'appId': appId,
             'fullRestart': false,
             'pause': false,
             'reason': 'pyro',
@@ -223,7 +220,7 @@ void main() {
       });
     });
 
-    test('a failed reload reports the compile error', () {
+    test('a failed reload reports the daemon\'s message', () {
       fakeAsync((async) {
         final h = Harness(async)..startGame();
         h.process.onRequest = (_) => h.process.play('reload_failed.txt');
@@ -238,7 +235,8 @@ void main() {
               .having(
                 (e) => e.message,
                 'message',
-                contains('lib/main.dart:3:1'),
+                // The compile error itself comes on stderr, not here.
+                'DevFS synchronization failed',
               )
               .having((e) => e.code, 'code', 1),
         );
@@ -385,7 +383,7 @@ void main() {
         expect(h.process.requests.single, {
           'id': 1,
           'method': 'app.stop',
-          'params': {'appId': 'app-1'},
+          'params': {'appId': appId},
         });
         expect(h.process.signals, isEmpty);
         expect(done, isTrue);

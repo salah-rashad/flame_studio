@@ -1,4 +1,7 @@
-[{"event":"app.progress","params":{"appId":"app-1","id":"1","progressId":"hot.reload","message":"Performing hot reload...","finished":false}}]
-[{"event":"app.progress","params":{"appId":"app-1","id":"1","progressId":"hot.reload","finished":true}}]
+[{"event":"app.progress","params":{"appId":"00808424-aefd-42c9-8db9-e2f7eb776262","id":"2","progressId":"hot.reload","message":"Performing hot reload...","finished":false}}]
+[{"event":"app.progress","params":{"appId":"00808424-aefd-42c9-8db9-e2f7eb776262","id":"3","progressId":"devFS.update","message":"Syncing files to device macOS...","finished":false}}]
+[{"event":"app.progress","params":{"appId":"00808424-aefd-42c9-8db9-e2f7eb776262","id":"3","progressId":"devFS.update","finished":true}}]
+[{"event":"app.progress","params":{"appId":"00808424-aefd-42c9-8db9-e2f7eb776262","id":"2","progressId":"hot.reload","finished":true}}]
+Reloaded 0 libraries in 89ms (compile: 11 ms, reload: 0 ms, reassemble: 5 ms).
 [{"id":1,"result":{"code":0,"message":"Reloaded 0 libraries"}}]
 flutter: [pyro_example] Scene reloaded: assets/scenes/level1.scene.json

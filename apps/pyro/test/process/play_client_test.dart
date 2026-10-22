@@ -134,8 +134,8 @@ void main() {
         expect(failed.exitCode, 1);
         expect(failed.message, contains('exited with code 1'));
         expect(failed.outputTail, [
+          'Launching lib/main.dart on macOS in debug mode...',
           contains('No macOS desktop project configured'),
-          'Error launching application on macOS.',
         ]);
         expect(events.last, isA<PlayStopped>());
       });

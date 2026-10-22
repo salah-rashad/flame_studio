@@ -317,6 +317,8 @@ generated Registry, and shows every Override's effect.
   `dart format --set-exit-if-changed example` (US1 #2, constitution I).
 - [ ] T025 [US1] (reference Mac) Run quickstart §4. Note the time from a clean clone's
   `dart pub get` to the window (SC-001) for T049.
+  _Run 2026-10-22: the window came up in 26 s from a warm cache and the log was right, but nobody
+  looked at the ship, banner and HUD yet. Left open for that._
 
 **Checkpoint**: the example generates with no errors, its tests pass, and on the Mac the window
 shows the turning ship, the banner and the HUD.
@@ -466,7 +468,7 @@ time, and reports each reload. The CLI lets the author run it, and the benchmark
 - [X] T038 [US3] Add "Play from the command line" to `app/README.md`. It covers what
   `bin/play.dart` does, the usage and keys from contracts/play-cli.md, that it is the slice's entry
   point until the Play button (spec FR-025), and how to run the benchmark.
-- [ ] T039 [US3] (reference Mac) Run quickstart §5 steps 1–6 and keep the notes and the benchmark
+- [X] T039 [US3] (reference Mac) Run quickstart §5 steps 1–6 and keep the notes and the benchmark
   table for T049. If step 2 or 4 fails, stop, record what happened, and propose a default Play
   target to the author before going on (spec FR-026).
 
@@ -521,7 +523,7 @@ the client started.
   Make T040 and T041 pass.
 - [X] T044 [US4] In `app/bin/play.dart`, `SIGINT` and `SIGTERM` call `stop()` (`SIGTERM` is not
   watched on Windows), and the exit status follows the table in contracts/play-cli.md.
-- [ ] T045 [US4] (reference Mac) Run quickstart §5 steps 7–8 and keep the notes for T049. If an
+- [X] T045 [US4] (reference Mac) Run quickstart §5 steps 7–8 and keep the notes for T049. If an
   orphaned `pyro_example` process remains after a kill, record it and the fallback it needs (plan
   Risks).
 
@@ -532,7 +534,7 @@ the path or compile error named.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T046 (reference Mac) Run quickstart §5.9, the release build check (FR-027), and §5.10:
+- [X] T046 (reference Mac) Run quickstart §5.9, the release build check (FR-027), and §5.10:
   record real transcripts with `--record`, check that they hold no auth code, replace the
   hand-written files in `app/test/fixtures/daemon/` (adjusting tests only where the real format
   differs, noting each difference), update that folder's README, and rerun quickstart §1.

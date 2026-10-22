@@ -690,8 +690,9 @@ limit, and the builder yielding between passes, is decided from the reference-Ma
 - Pyro's own `flutter run --machine` client, with a save Hot-swapping the Scene and a Dart-only
   reload leaving it alone.
 
-**Answer:** yes on everything the cloud container could run. **The reference-Mac run is still to
-do.** It decides the preview's default Play target (*Q82*, SC-010). Results so far:
+**Answer:** yes, on Linux and on the reference Mac (below), except for what only a person looking
+at the window can confirm (see *Not verified*). Steps 2 and 4 of quickstart §5 passed, so no
+change to the default Play target is proposed (*Q82*, SC-010). Results:
 
 | What | Result |
 |---|---|
@@ -701,8 +702,8 @@ do.** It decides the preview's default Play target (*Q82*, SC-010). Results so f
 | Each deliberate breakage fails at its own check (quickstart §3) | ✅ all five |
 | `bin/play.dart` on a project without `macos/`, or with a missing `flutter` | ✅ exits 1, names the path or executable |
 | The loop end to end on **Linux** (a throwaway Linux runner and `-d linux`, under Xvfb) | ✅ see below |
-| The same on the macOS desktop target, through `bin/play.dart` | to do on the reference Mac (quickstart §5) |
-| Release build free of Hot-swap code (FR-027) | to do on the reference Mac |
+| The same on the macOS desktop target, through `bin/play.dart` | ✅ quickstart §5 steps 1–8, see "On the reference Mac" |
+| Release build free of Hot-swap code (FR-027) | ✅ 0 matches (the debug kernel has 2) |
 
 The Linux run is an **early signal**, not the reference Mac. It used a 4-core cloud container
 with software rendering under Xvfb, Flutter 3.44.2, on 2026-10-22, and
@@ -742,3 +743,42 @@ The daemon's hot reload took 121–263 ms of each save. The rest was the 150 ms 
 4. **`build_runner` keeps a hand-edited output when its inputs are unchanged.** It doesn't rewrite
    `lib/pyro.g.dart` on a warm cache, so a local `git diff` check after an edit can pass while a
    fresh checkout, as in CI, fails it. To reproduce CI locally, delete `.dart_tool/build` first.
+
+### On the reference Mac
+
+Run on 2026-10-22: macOS 26.2, Apple M4, **Flutter 3.44.9** (the quickstart names 3.44.2; same
+minor, no difference seen), `-d macos --debug`.
+
+| Quickstart | Result |
+|---|---|
+| §1, §2 | ✅ 48 client tests; `example/` generates with no diff, analysis clean, tests pass |
+| §4 `flutter run -d macos` from a fresh clone | ✅ "Scene loaded" 26 s after the clone's `dart pub get`. **Warm** pub and build caches, so SC-001 (< 5 min) is met but not measured cold |
+| §5.1 start through `bin/play.dart` | ✅ `started` in 11.4 s; no line holds an auth code |
+| §5.2 save `turnsPerSecond` and the banner | ✅ reload 100 ms, then "Scene reloaded" (a swap) |
+| §5.3 `touch` the Scene | ✅ reload 81 ms and no "Scene reloaded" (no swap) |
+| §5.4 `codeMarker` to `v2`, `r` | ✅ reload of 3 libraries, no "Scene reloaded" |
+| §5.5 invalid JSON, unknown Type ID, `"fast"`, three times each | ✅ nine `couldn't Hot-swap` messages naming the Scene, the Node and the type or field; a valid save then swapped |
+| §5.6 `benchmark/hot_swap_latency.dart` | ✅ SC-004 median 321 ms, worst 334 ms; SC-005 0 rebuilds; SC-006 1 reload |
+| §5.7 five start and stop cycles (`q` ×3, SIGINT, window close) | ✅ each exits 0 and leaves no `pyro_example` or `flutter run` process |
+| §5.8 start errors | ✅ no `macos/`: exit 1 naming the path; syntax error in `lib/main.dart`: exit 1 quoting the compile error |
+| §5.9 release build | ✅ 0 matches for `couldn't Hot-swap` in `App.framework/App`; the string is in the Debug build's kernel (2) and `Scene loaded` is in the Release binary (2), so the search works |
+| §5.10 transcripts | ✅ replaced with recordings, see `apps/pyro/test/fixtures/daemon/README.md` |
+
+**Not verified.** I drove the run from a shell and could not see the window. The ship turning,
+its hitbox, the banner colour and the HUD text (`swaps`, `time`, `code`) were not looked at; the
+log lines above stand in for them. The window close in §5.7 was an AppleScript `quit` (it printed
+"User canceled" yet the game closed and the client logged `Lost connection to device.`), not a
+click on the red button.
+
+**Findings on the Mac**
+
+1. **`flutter run` prints `Failed to foreground app; open returned 1` on stderr** at start. It is
+   harmless and shows as a `stderr:` line.
+2. **A compile error in a Dart reload reaches the client on stderr**, and the response is only
+   `{"code":1,"message":"DevFS synchronization failed"}`. The CLI shows the stderr lines just
+   before `reload failed: DevFS synchronization failed`. The tests now expect that message.
+3. **The window close also ends with `app.stop`**, after `Lost connection to device.`. The old
+   hand-written crash transcript had no `app.stop`.
+4. **A save in an editor arrives as an atomic rename**: the first reload lists
+   `assets/scenes/.!NNNNN!level1.scene.json` with the Scene (`sed -i` on macOS). One reload, as
+   designed.

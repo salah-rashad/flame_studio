@@ -66,6 +66,11 @@ device list and emulator boot; the full sample game (item 13, v0.1); anything on
   game's output lines, and stops the game on Ctrl-C. It exists so the slice can be run and timed
   by hand on the Mac; the Play button of Phase 4 reuses the same client, and the entry point is
   then either kept as a documented developer tool or removed (FR-025).
+- Q: Does the contract job run on Linux only, or on all three desktop systems? → A: It runs on
+  Linux. Its committed-files check (regenerate `example/`'s Registry and Manifest, then compare
+  with the committed copies) also runs on macOS and Windows, because that is the output that
+  could differ by system. The Manifest golden and Scene-loading checks run on Linux only. This
+  also closes spec 003's open cross-system check (T043, SC-003).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -139,9 +144,9 @@ rename a Behavior field a Scene overrides) and see the matching check fail with 
    with the Runtime's own error (naming the Scene, the Node and the Type ID or field).
 5. **Given** a second Scene file added to `example/`, **When** the job runs, **Then** that Scene
    is checked too, with no change to the job.
-6. **Given** a generator run in CI and the same run on the author's Mac, **When** both produce
-   the Registry and Manifest, **Then** the files are byte for byte identical (SC-003 of spec
-   003: the same output on macOS, Windows and Linux).
+6. **Given** the committed-files check running on macOS, Windows and Linux, **When** each
+   regenerates the Registry and Manifest, **Then** all three match the committed files byte for
+   byte (SC-003 of spec 003: the same output on every system).
 7. **Given** a repository whose Flutter version has moved to a release where `build_runner`
    offers its own "is the generated output up to date" check, **When** the project owner
    follows the note in the job, **Then** they can switch the check of the committed files to it
@@ -282,6 +287,8 @@ after each run. Close the window by hand once and check the client's report.
 
 - **FR-009**: The CI contract job MUST replace the placeholder job and run on every push and pull
   request that CI already covers.
+- **FR-009a**: The committed-files check of FR-010 MUST also run on macOS and Windows. The
+  Manifest golden check and the Scene-loading check (FR-011, FR-012) run on Linux only.
 - **FR-010**: The job MUST resolve the workspace, run the generator on `example/`, and fail if
   the Registry or the Manifest it writes differs from the committed copy. The failure MUST show
   the difference. The check used MUST be the one that works on the pinned Flutter version
@@ -375,8 +382,8 @@ after each run. Close the window by hand once and check the client's report.
   deliberate breakages (a hand-edited Registry, a hand-edited Manifest golden, a Scene with a
   removed Type ID) makes it fail at exactly the matching check, with a message that names the
   file or Scene involved.
-- **SC-003**: The contract job finishes in under three minutes on a warm cache and produces the
-  same result on the author's Mac and on CI.
+- **SC-003**: The contract job finishes in under three minutes on a warm cache on Linux, and
+  the committed-files check passes on macOS, Windows and Linux with identical files.
 - **SC-004**: Over ten consecutive saves of a changed Scene file on the reference Mac, the
   change is visible in the running game within about one second of the save, every time
   (constitution III; spike #1 measured 58–250 ms for the reload itself).

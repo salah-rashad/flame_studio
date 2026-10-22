@@ -62,16 +62,26 @@ jobs:
         run: |
           dart run build_runner build -d
           git diff --exit-code -- lib/pyro.g.dart lib/pyro.manifest.json
+      # The same for the example game, on every OS: this is the output that
+      # could differ by system (spec 005, FR-009a).
+      - name: Check the example game's generated files
+        working-directory: example
+        run: |
+          dart run build_runner build -d
+          git diff --exit-code -- lib/pyro.g.dart lib/pyro.manifest.json
       - name: Check formatting
-        run: dart format --output=none --set-exit-if-changed packages apps
+        run: dart format --output=none --set-exit-if-changed packages apps example
       - name: Analyze pure-Dart packages
         run: dart analyze --fatal-infos packages/pyro_annotations packages/pyro_generator
       - name: Analyze Flutter packages and the app
-        run: flutter analyze --fatal-infos packages/pyro_runtime packages/pyro_ui apps/pyro packages/pyro_generator/fixture_game
+        run: flutter analyze --fatal-infos packages/pyro_runtime packages/pyro_ui apps/pyro packages/pyro_generator/fixture_game example
       # Excluded files are still analyzed when named; the root options exclude
       # **/*.g.dart, so the Registry is checked this way (SC-005).
       - name: Analyze the fixture game's Registry
         working-directory: packages/pyro_generator/fixture_game
+        run: flutter analyze --fatal-infos lib/pyro.g.dart
+      - name: Analyze the example game's Registry
+        working-directory: example
         run: flutter analyze --fatal-infos lib/pyro.g.dart
       - name: Test pyro_annotations
         working-directory: packages/pyro_annotations
@@ -81,6 +91,9 @@ jobs:
         run: dart test
       - name: Test the generator's fixture game
         working-directory: packages/pyro_generator/fixture_game
+        run: flutter test
+      - name: Test the example game
+        working-directory: example
         run: flutter test
       - name: Test pyro_runtime
         working-directory: packages/pyro_runtime
@@ -141,23 +154,39 @@ jobs:
         run: flutter build ${{ matrix.platform }} --release
 
   contract:
-    # TODO(v0.1 #12, Q59): the contract test. Once example/ and the generator
-    # exist:
-    #   1. dart pub get, then run the generator on example/
-    #      (dart run build_runner build in example/).
-    #   2. Check the committed Registry and Manifest (§7.3, Q76). On Flutter
-    #      3.44 (build_runner <= 2.15.1) that is
-    #        git diff --exit-code lib/pyro.g.dart lib/pyro.manifest.json
-    #      and on Flutter >= 3.47
-    #        dart run build_runner build --only-check
-    #   3. Check the Manifest against its golden file.
-    #   4. Load every example/ scene with flame_test against the generated
-    #      Registry.
-    # The analyze-test job's fixture game steps (spec 003) are the pattern
-    # for steps 1, 2 and the analysis of example/lib/pyro.g.dart.
-    name: Contract test (TODO)
+    # The contract test (#12, Q59; spec 005): the Generator's output for
+    # example/ is committed and reviewed, and every example/ Scene loads with
+    # the real Registry, with no error and no Runtime warning. Each check is
+    # its own step, so a failure names it (FR-013).
+    name: Contract test
     runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+        working-directory: example
     steps:
-      - name: Placeholder
-        run: |
-          echo "::notice title=Contract test::TODO(v0.1 #12) - not implemented yet; example/ and the generator don't exist."
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Resolve the workspace
+        working-directory: .
+        run: dart pub get
+      - name: Generate the example game's Registry and Manifest
+        run: dart run build_runner build -d
+      # On Flutter >= 3.47 (build_runner >= 2.16) this can become
+      #   dart run build_runner build --only-check
+      # (project plan §7.3, Q76).
+      - name: Check the committed Registry and Manifest
+        run: git diff --exit-code -- lib/pyro.g.dart lib/pyro.manifest.json
+      # A deliberate Manifest change updates the golden too, after review:
+      #   cp lib/pyro.manifest.json test/goldens/pyro.manifest.json.golden
+      - name: Check the Manifest against its golden
+        run: diff -u test/goldens/pyro.manifest.json.golden lib/pyro.manifest.json
+      - name: Load every example Scene with the real Registry
+        run: flutter test test/contract/
+      # The root options exclude **/*.g.dart; naming the Registry analyzes it.
+      - name: Analyze the example game
+        run: flutter analyze --fatal-infos . lib/pyro.g.dart

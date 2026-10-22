@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "rootId": "root",
+  "nodes": {
+    "body": {
+      "kind": "rectangleHitbox",
+      "name": "body",
+      "props": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "collisionType": "active",
+        "isSolid": false,
+        "position": [8, 8],
+        "size": [48, 48]
+      }
+    },
+    "hull": {
+      "kind": "sprite",
+      "name": "hull",
+      "props": {
+        "image": "assets/images/ship.png"
+      },
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [64, 64]
+      }
+    },
+    "root": {
+      "childIds": [
+        "ship",
+        "title"
+      ],
+      "kind": "root"
+    },
+    "ship": {
+      "behaviors": [
+        {
+          "fields": {
+            "turnsPerSecond": 0.5
+          },
+          "type": "Spin"
+        }
+      ],
+      "childIds": [
+        "hull",
+        "body"
+      ],
+      "kind": "entity",
+      "name": "ship",
+      "transform": {
+        "anchor": "center",
+        "angle": 0,
+        "position": [400, 300],
+        "scale": [1, 1],
+        "size": [64, 64]
+      }
+    },
+    "title": {
+      "fields": {
+        "message": "Hello from Pyro"
+      },
+      "kind": "custom",
+      "name": "title",
+      "transform": {
+        "anchor": "topCenter",
+        "angle": 0,
+        "position": [400, 48],
+        "scale": [1, 1],
+        "size": [0, 0]
+      },
+      "type": "Banner"
+    }
+  }
+}

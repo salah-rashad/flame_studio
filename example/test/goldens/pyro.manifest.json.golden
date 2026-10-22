@@ -1,0 +1,62 @@
+{
+  "errors": [],
+  "manifestVersion": 1,
+  "types": [
+    {
+      "acceptsBehaviors": false,
+      "doc": "A line of text placed in the Scene, for the `String` and `Color` Field\ntypes (spec 005, contracts/example-game.md).",
+      "fields": [
+        {
+          "default": "Pyro",
+          "name": "message",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "defaultSource": "const Color(0xFFFFFFFF)",
+          "name": "color",
+          "nullable": false,
+          "type": "color"
+        }
+      ],
+      "id": "Banner",
+      "label": "Banner",
+      "role": "component",
+      "source": "lib/components/banner.dart",
+      "supertypes": [
+        "TextComponent",
+        "PositionComponent",
+        "Component"
+      ]
+    },
+    {
+      "doc": "Turns its entity continuously, so any change to its fields shows in the\nrunning game within a frame (spec 005, contracts/example-game.md).",
+      "fields": [
+        {
+          "default": 0.25,
+          "max": 4,
+          "min": 0,
+          "name": "turnsPerSecond",
+          "nullable": false,
+          "type": "double"
+        },
+        {
+          "default": true,
+          "name": "clockwise",
+          "nullable": false,
+          "type": "bool"
+        }
+      ],
+      "id": "Spin",
+      "label": "Spin",
+      "parentType": "PyroEntity",
+      "role": "behavior",
+      "source": "lib/behaviors/spin.dart",
+      "supertypes": [
+        "Behavior"
+      ]
+    }
+  ],
+  "warnings": []
+}

@@ -1,10 +1,10 @@
 {
-  "ai": "claude",
+  "ai": "zcode",
   "ai_skills": true,
   "allow_symlinks": false,
   "feature_numbering": "sequential",
   "here": true,
-  "integration": "claude",
+  "integration": "zcode",
   "script": "sh",
   "speckit_version": "1.2.1"
 }

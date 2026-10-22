@@ -2,14 +2,14 @@
   "version": "1.2.1",
   "integration_state_schema": 1,
   "installed_integrations": [
-    "claude"
+    "zcode"
   ],
   "integration_settings": {
-    "claude": {
+    "zcode": {
       "script": "sh",
       "invoke_separator": "-"
     }
   },
-  "integration": "claude",
-  "default_integration": "claude"
+  "integration": "zcode",
+  "default_integration": "zcode"
 }

@@ -28,8 +28,8 @@
 
 **⚠️** No user story starts before this phase is green.
 
-- [ ] T004 [P] Add the app widget-test harness `pumpPyro` to `apps/pyro/test/helpers/pump.dart`: `MaterialApp` + `PrTheme.dark()` + `ProviderScope` over a `surfacePanel` background, plus real-mouse gesture helpers (`hover`, `mouseDrag`), modeled on `packages/pyro_ui/test/helpers.dart`.
-- [ ] T005 [P] Add catalog and project fixtures to `apps/pyro/test/helpers/`: loaders for `example/lib/pyro.manifest.json` (read in place, like the document tests read runtime scene fixtures), fixture `pubspec.lock`/`pubspec.yaml` texts (ok / tooOld / tooNew / no pyro_runtime / undeclared folders), and a manifest-error sample; reuse the existing scene builders in `test/document/helpers/scenes.dart` (incl. `generatedScene(1000)`).
+- [x] T004 [P] Add the app widget-test harness `pumpPyro` to `apps/pyro/test/helpers/pump.dart`: `MaterialApp` + `PrTheme.dark()` + `ProviderScope` over a `surfacePanel` background, plus real-mouse gesture helpers (`hover`, `mouseDrag`), modeled on `packages/pyro_ui/test/helpers.dart`.
+- [x] T005 [P] Add catalog and project fixtures to `apps/pyro/test/helpers/`: loaders for `example/lib/pyro.manifest.json` (read in place, like the document tests read runtime scene fixtures), fixture `pubspec.lock`/`pubspec.yaml` texts (ok / tooOld / tooNew / no pyro_runtime / undeclared folders), and a manifest-error sample; reuse the existing scene builders in `test/document/helpers/scenes.dart` (incl. `generatedScene(1000)`).
 
 **Checkpoint**: `flutter analyze` and `flutter test` still green; stories can start.
 

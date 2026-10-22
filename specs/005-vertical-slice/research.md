@@ -126,7 +126,7 @@ Then a task on the Mac records real ones with `bin/play.dart --record <file>` an
 with auth codes masked before they are committed. The fake process replays a file and lets the
 test choose when the replay advances (after a request, at exit).
 
-**Rationale:** SC-009 asks for the parsing tests to pass with no SDK. Hand-written files unblock
+**Rationale:** SC-009 asks for the parsing tests to pass with no real `flutter` process. Hand-written files unblock
 the tests in a session without Flutter, and real recordings pin the actual format of 3.44.2.
 
 **Alternatives considered:** only hand-written transcripts. They would drift from the real format

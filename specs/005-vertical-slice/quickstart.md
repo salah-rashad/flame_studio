@@ -12,7 +12,7 @@ unless a directory is given. The details live in the contracts: see
 dart pub get
 ```
 
-## §1. Play client tests (no Flutter SDK needed for what they exercise)
+## §1. Play client tests (no device, no real `flutter run`)
 
 ```bash
 cd apps/pyro && flutter test test/process/

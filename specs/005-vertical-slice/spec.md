@@ -405,7 +405,7 @@ after each run. Close the window by hand once and check the client's report.
   JSON, unknown Type ID and wrong-typed Override, the game keeps running with the previous
   Scene and the error reaches the client's caller with the Scene, Node and Type ID or field named.
 - **SC-009**: The recorded transcripts of a start, a reload, a failed reload and a stop make the
-  client's parsing tests pass without a Flutter SDK installed.
+  client's parsing tests pass without starting a real `flutter` process or any device.
 - **SC-010**: The result of the manual check (FR-026) is recorded, and the author can say, from
   it alone, whether macOS is the preview's default Play target or not.
 

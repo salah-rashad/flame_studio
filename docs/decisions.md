@@ -8,7 +8,7 @@ spike #1, Q76–Q77 from spike #2, Q78–Q80 from spike #3, Q81 from the Attach 
 split (2026-10-17), Q84 from the UI components plan (2026-10-17), Q85 from the design-prompts sync
 (2026-10-18), Q86 from the maintainers' answer on the name (2026-10-18), Q87 and Q88 from the phases
 review (2026-10-18), Q89–Q93 from the Scene format spec (`specs/001-scene-format/`, 2026-10-18),
-Q94–Q99 from the Document model spec (`specs/002-document-model/`, 2026-10-19).
+Q94–Q99 from the Document model spec (`specs/002-document-model/`, 2026-10-19), Q117–Q124 from the Vertical slice spec (`specs/005-vertical-slice/`, 2026-10-22).
 
 ## 1. Product
 
@@ -195,3 +195,11 @@ Grilling of `project-plan.md`. Vocabulary in [`../GLOSSARY.md`](../GLOSSARY.md);
 | Q114 | **In a game, a missing or unreadable asset fails the load** (Runtime spec, 2026-10-20), naming the Scene, Node, field and path; Pyro's viewport shows its own inline error instead (§11). |
 | Q115 | **A hitbox directly under a Scene's root fails the load** (Runtime spec, 2026-10-20): Flame refuses a hitbox without a positioned owner for its collisions. Pyro's hierarchy (#3) should not offer it. |
 | Q116 | **#8 Runtime is ~5 evenings, all of it in the early preview** (Runtime spec, 2026-10-20; author's call after implementing): up from 4 in the preview and 4.5 in v0.1, for the animation reader, the `AssetRef` and Registry amendments and the stale-reference watch. Phase 7 keeps no #8 work, so the early preview grows ~47 → ~48 and v0.1 ~93 → ~93.5. |
+| Q117 | **Until the Play button, a command-line entry point starts Pyro's Play client** (Vertical slice spec, 2026-10-22; author's choice): `apps/pyro/bin/play.dart <project>`, a thin caller of the app's `process/` feature, which imports no Flutter so `dart run` can run it. Kept as a developer tool or removed when the Play button replaces it. |
+| Q118 | **The contract test's committed-files check runs on macOS, Windows and Linux; the Manifest golden and Scene checks on Linux** (Vertical slice spec, 2026-10-22; extends Q59): regenerated output is what could differ by system, and running it on all three closes spec 003's cross-system check (SC-003). |
+| Q119 | **Hot-swap's latency limit: over ten saves on the reference Mac, median under 500 ms and worst under 1 s** (Vertical slice spec, 2026-10-22; makes Q82's "about a second" testable), measured from the save to the game's "Scene reloaded" line by `apps/pyro/benchmark/hot_swap_latency.dart`. |
+| Q120 | **The vertical slice runs `flutter run` without the run link and the asset re-point** (Vertical slice spec, 2026-10-22; scopes Q74): both exist for Hot-swap with an IDE attached, which is #11's later part. If plain macOS Hot-swap needs them, that is a finding, not a silent addition. |
+| Q121 | **The Play client drops the VM service URI instead of keeping it** (Vertical slice spec, 2026-10-22; applies Q81): `app.debugPort`, `app.devTools` and `app.dtd` become one "debugger available" event with no address, and every output line has its auth codes masked. Attach will read the address from the daemon when it is built. |
+| Q122 | **Scene changes become one hot reload after 150 ms of quiet, one in flight and at most one queued** (Vertical slice spec, 2026-10-22): folds an editor's write-then-rename and a burst of saves (ten saves 100 ms apart are one reload) within Q119's budget. The client watches from the spawn and reloads once after `app.started` for a save made while the game started, because a real run showed the game can read its Scene before the daemon reports the start. |
+| Q123 | **The contract test fails on any Runtime warning, not only on errors** (Vertical slice spec, 2026-10-22; tightens Q59): the Runtime only warns about an Override the code no longer has (spec 004 FR-012), and `example/`'s Scenes are meant to be clean. |
+| Q124 | **Spec 005's work is mirrored to `specs/005-vertical-slice`** (Vertical slice spec, 2026-10-22): the session that built it pushed to its own branch too, with the same commits; the PR opens from the spec branch, as the constitution's branch rule asks. |

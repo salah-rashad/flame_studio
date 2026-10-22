@@ -141,6 +141,13 @@ _Avoid_: autosave, backup
 Running the developer's game from Pyro on a chosen device; Pyro owns that running game.
 _Avoid_: Run game, launch
 
+**Play session**:
+One run of the developer's game through Pyro's Play client, from starting `flutter run` to the game's exit; it reports the game's output and Hot-swaps its saved Scenes.
+_Avoid_: run, launch
+
+**Contract test**:
+The CI check that `example/`'s generated Registry and Manifest are committed and reviewed, and that every `example/` Scene loads with the real Registry, with no error and no warning.
+
 **Attach**:
 Connecting the developer's IDE debugger to a game Pyro is already running.
 

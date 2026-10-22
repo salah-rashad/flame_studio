@@ -382,6 +382,7 @@ reload again and check that nothing was rebuilt (spec US4)
 
   `PyroScene` closes the previous watch before starting a new one and in `onRemove` (calling `super`). Every line of this code runs only under `kDebugMode`. Make T034 pass.
 - [ ] T038 [US4] On the reference Mac, run [quickstart.md](quickstart.md) §5 steps 1–3 in a throwaway macOS app (not committed) and note the results for T047. If it can't run in the implementing session, leave this task open and say so in the PR
+  - *Spec 005:* folded into its reference-Mac run on `example/` (spec 005 T039, quickstart §5 steps 1–5), which closes this task when it runs.
 
 **Checkpoint**: Hot-swap tests pass (SC-003); the manual run on macOS, if done, shows a saved Scene
 rebuilding and a Dart-only reload leaving it alone
@@ -420,6 +421,7 @@ Registry and `rootBundle`
 
 - [X] T042 [P] Write `rt/benchmark/load_benchmark_test.dart` (SC-004, quickstart §4). Reuse the 1,000-Node Scene generator from `rt/benchmark/scene_codec_benchmark.dart`: move it to `rt/benchmark/support/benchmark_scene.dart` and import it from both, with entities, sprites on 10 distinct images, hitboxes, and Custom components and Behaviors from a small benchmark Registry. Use a `MemoryAssetSource` with pre-made images (so image decoding is excluded). Report the median and p95 of 20 runs each for `PyroScene.load`, a no-op Hot-swap check (`contentChanged` on unchanged texts), and a full rebuild (load into a mounted Scene + swap). `expect` each median under 50 ms, 5 ms and 100 ms. Also record the longest synchronous pause of the isolate during a load and during a rebuild: run a `Timer.periodic(Duration.zero)` probe alongside and report the longest gap between its ticks. No `expect` on it yet (spec Clarifications).
 - [ ] T043 On the reference Mac, run T042 and quickstart §5 step 4 (the release build checked with `strings … | grep -c "couldn't Hot-swap"` → 0, SC-006). Record the table (including the longest pauses, and noting that the no-op figure times `contentChanged` alone, not the whole `onHotReload` call), the configuration (macOS, Apple M4, Flutter 3.44.2, `flutter test` JIT) and the release result. Then propose a pause limit to the author. Once they set it, add it to SC-004 and plan.md, add the `expect` to T042's benchmark, and if the limit needs it, make `scene_builder.dart` yield between passes (and every ~200 Nodes in pass 1), recording the limit as a decision in `docs/decisions.md`. Record all of this in a new "Runtime" section of `docs/ARCHITECTURE.md`, after the Generator section. If this can't run on the reference Mac in the implementing session, leave the task open and say so in the PR
+  - *Spec 005:* the release check runs there on `example/` (spec 005 T046, quickstart §5.9). The timings and the pause limit stay this task's.
 - [X] T044 [P] Update `GLOSSARY.md` (plan.md, Documentation updates):
   - add **Asset source**, **Animation file** and **Stale reference**, each one line in the file's style;
   - add to **Entity** that its component in games is `PyroEntity`;

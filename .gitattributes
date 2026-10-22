@@ -10,3 +10,11 @@ packages/pyro_runtime/test/fixtures/** -text
 packages/pyro_generator/test/goldens/** -text
 packages/pyro_generator/fixture_game/lib/pyro.* -text
 packages/pyro_generator/fixture_game/assets/** -text
+
+# The example game's committed outputs, Scenes and Manifest golden are compared
+# byte for byte by the contract test (spec 005), and so are the Play client's
+# daemon transcripts; git must not rewrite their line endings.
+example/lib/pyro.* -text
+example/assets/** -text
+example/test/goldens/** -text
+apps/pyro/test/fixtures/daemon/** -text

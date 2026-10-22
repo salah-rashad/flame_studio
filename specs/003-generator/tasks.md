@@ -156,6 +156,7 @@ expected Registry out of `dart format` and the analyzer; `gen/analysis_options.y
 
 - [X] T042 [US3] Fix whatever T040 and T041 find in `gen/lib/src/`: sort every list the contract orders (types, fields kept in linearization order, enum values in declaration order, diagnostics, imports), never iterate a `Map` or `Set` built from build_runner's input order without sorting, write paths with `/` only, and emit no content that depends on the run (research R7)
 - [ ] T043 [US3] Clean-cache check in `game/`: `rm -rf .dart_tool/build && dart run build_runner build -d && git diff --exit-code -- lib/pyro.g.dart lib/pyro.manifest.json` twice (US3 #1); after the branch is pushed, confirm T004's regenerate-and-diff step passes on the macOS, Windows and Linux CI runners (SC-003)
+  - *Spec 005 (Q118):* CI also regenerates `example/`'s files on all three OSes; that confirms the CI part there. The clean-cache run here stays open.
 
 **Checkpoint**: stability and trigger tests pass; CI's regenerate-and-diff step is green on three OSes
 

@@ -1,0 +1,3 @@
+Application finished.
+[{"id":1,"result":true}]
+[{"event":"app.stop","params":{"appId":"00808424-aefd-42c9-8db9-e2f7eb776262"}}]

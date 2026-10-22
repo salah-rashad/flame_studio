@@ -760,6 +760,13 @@ sequenceDiagram
   service would skip the asset sync, so Pyro always reloads through the daemon.
   Verified in spike #1 on the iOS simulator, an Android emulator and a physical Android phone
   (scene reload 60–250 ms); a Dart-only reload leaves the scene alone.
+- **Built in the vertical slice (spec 005, *Q117–Q122*):** the daemon client in the app's
+  `process/` feature (`PlayClient`, `PlaySession`) and its command-line entry point
+  `apps/pyro/bin/play.dart`. It runs `flutter run --machine -d macos --debug` and watches
+  `assets/scenes/` from the spawn. Settled saves become one `app.restart` at a time (150 ms
+  quiet, at most one queued). It stops with `app.stop`, then SIGTERM, then SIGKILL. It drops
+  every VM service address and masks auth codes in all output. The run link, the asset
+  re-point, the build_runner watcher, auto code reload and the Console come with #11's rest.
 - **Code changes (*Q61*):** Pyro watches `lib/` and hot-reloads automatically, waiting until
   `build_runner` reports idle so it never reloads a half-written `.g.dart`. Toggle in settings, on
   by default. If an attached IDE also reloads, the duplicate reload is harmless (the content check
@@ -949,7 +956,7 @@ before display (§9.3, *Q81*).
 | Generator | golden tests: annotated source → Registry + Manifest; error cases (Type ID collision, unsupported field, bad constructor) | Heavy |
 | Runtime loader | load fixture scenes into a `FlameGame` with `flame_test`; reference resolution; asset loading; unknown Type ID; Hot-swap hash check | Heavy |
 | **Contract (*Q59*)** | CI runs the generator on `example/`, checks the Manifest against its golden file, then loads every `example/` scene with `flame_test` against the real generated Registry | Heavy |
-| Process clients | daemon protocol parsing with recorded transcripts (no real Flutter); build_runner lock probe | Medium |
+| Process clients | daemon protocol parsing with recorded transcripts (`apps/pyro/test/fixtures/daemon/`, no real Flutter); build_runner lock probe | Medium |
 | Design system (`pyro_ui`, *Q84*) | widget tests per component state; one golden per gallery grid (macOS CI only) | Medium |
 | Panels | a few widget tests for critical interactions | Light |
 | End-to-end | `example/` game smoke test on a device before each release, incl. Play, Hot-swap, Attach (manual in v0.1) | Manual |

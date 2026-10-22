@@ -1,4 +1,4 @@
 [{"event":"app.progress","params":{"appId":"app-1","id":"1","progressId":"hot.reload","message":"Performing hot reload...","finished":false}}]
 [{"event":"app.progress","params":{"appId":"app-1","id":"1","progressId":"hot.reload","finished":true}}]
-[{"id":1,"result":{"code":0,"message":""}}]
+[{"id":1,"result":{"code":0,"message":"Reloaded 0 libraries"}}]
 flutter: [pyro_example] Scene reloaded: assets/scenes/level1.scene.json

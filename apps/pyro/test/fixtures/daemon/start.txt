@@ -5,5 +5,8 @@ Launching lib/main.dart on macOS in debug mode...
 [{"event":"app.progress","params":{"appId":"app-1","id":"0","progressId":null,"finished":true}}]
 flutter: The Dart VM service is listening on http://127.0.0.1:50300/AbCdEf123456=/
 [{"event":"app.debugPort","params":{"appId":"app-1","port":50300,"wsUri":"ws://127.0.0.1:50300/AbCdEf123456=/ws","baseUri":"file:///Users/dev/Library/Containers/dev.pyro.pyroExample/Data/tmp/exampleAbCd/example/"}}]
+[{"event":"app.devTools","params":{"appId":"app-1","uri":"http://127.0.0.1:50300/AbCdEf123456=/devtools/?uri=ws://127.0.0.1:50300/AbCdEf123456=/ws"}}]
+[{"event":"app.dtd","params":{"appId":"app-1","uri":"ws://127.0.0.1:35277/AbCdEf123456="}}]
+[{"event":"app.progress","params":{"appId":"app-1","id":"1","progressId":null,"message":"Syncing files to device macOS...","finished":false}}]
 [{"event":"app.started","params":{"appId":"app-1"}}]
 flutter: [pyro_example] Scene loaded: assets/scenes/level1.scene.json

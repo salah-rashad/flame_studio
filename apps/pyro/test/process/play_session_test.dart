@@ -126,6 +126,8 @@ void main() {
         );
         for (final event in h.events) {
           expect('$event', isNot(contains(authCode)));
+          expect('$event', isNot(contains('devtools')));
+          expect('$event', isNot(contains('35277')), reason: 'app.dtd');
         }
         expect(h.session.state, PlayState.running);
         expect(h.session.appId, 'app-1');
@@ -337,13 +339,31 @@ void main() {
       });
     });
 
-    test('Scene changes before app.started are dropped', () {
+    test('a save while starting is one reload once the game has started', () {
       fakeAsync((async) {
-        final h = Harness(async)..start();
+        final h = Harness(async)
+          ..start()
+          ..answerReloads();
         h.save();
+        h.save('$projectPath/assets/scenes/other.scene.json');
         async.elapse(const Duration(milliseconds: 300));
+        expect(h.restarts, isEmpty, reason: 'no reload before app.started');
         h.process.play('start.txt');
-        async.elapse(const Duration(milliseconds: 300));
+        async.flushMicrotasks();
+        expect(h.restarts, hasLength(1));
+        expect(h.only<PlayReloading>().single.paths, [
+          'assets/scenes/level1.scene.json',
+          'assets/scenes/other.scene.json',
+        ]);
+        async.elapse(const Duration(seconds: 1));
+        expect(h.restarts, hasLength(1));
+      });
+    });
+
+    test('no save while starting, no reload at the start', () {
+      fakeAsync((async) {
+        final h = Harness(async)..startGame();
+        async.elapse(const Duration(seconds: 1));
         expect(h.restarts, isEmpty);
       });
     });

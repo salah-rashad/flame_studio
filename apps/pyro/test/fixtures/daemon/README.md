@@ -5,7 +5,10 @@ What `flutter run --machine` writes to stdout, one line per line, replayed by
 known fake `AbCdEf123456=`, so tests can assert it never leaks.
 
 These are **hand-written** from spike #1's driver and the flutter_tools daemon
-protocol. Quickstart §5.10 replaces them with recordings from the reference
+protocol, then checked against a real Flutter 3.44.2 recording on Linux
+(2026-10-22): the message shapes matched, and the recording added
+`app.devTools` and `app.dtd` (both carry addresses, which the client drops)
+and the success message `Reloaded 0 libraries`. Quickstart §5.10 replaces them with recordings from the reference
 Mac (`dart run bin/play.dart <project> --record <file>`, which masks auth
 codes) and notes any difference here.
 

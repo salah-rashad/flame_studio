@@ -62,6 +62,7 @@ void main() {
             flutter: '/sdk/flutter/bin/flutter',
             startProcess: starter.call,
             fileSystem: projectFileSystem(),
+            watchDirectory: (_) => const Stream.empty(),
           ).start(projectPath),
         );
         async.flushMicrotasks();

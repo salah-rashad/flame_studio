@@ -69,6 +69,9 @@ final class PlaySession {
       onNote: (note) => _output(note, PlayOutputSource.tool),
     );
     _emit(PlayStarting(command: command, projectPath: projectPath));
+    // Watch from the spawn: the game can read its Scene before the daemon
+    // reports app.started, and a save in between must not be lost.
+    _watcher.start();
     final stdoutDone = _process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
@@ -100,6 +103,7 @@ final class PlaySession {
   final _stopwatch = clock.stopwatch()..start();
   final _pending = <int, Completer<DaemonResponse>>{};
   final _tail = <String>[];
+  final _changedWhileStarting = <String>{};
   final _done = Completer<void>();
   var _nextId = 1;
   var _state = PlayState.starting;
@@ -189,13 +193,19 @@ final class PlaySession {
           _debuggerReported = true;
           _emit(const PlayDebuggerAvailable());
         }
+      case 'app.devTools' || 'app.dtd':
+        // DevTools and the tooling daemon: addresses, dropped like the VM
+        // service's (research R5).
+        break;
       case 'app.started':
         if (_state == PlayState.starting) {
           _state = PlayState.running;
           _started = true;
           _appId ??= params['appId'] as String?;
           _emit(PlayStarted(appId: _appId ?? '', elapsed: _stopwatch.elapsed));
-          _watcher.start();
+          final missed = _changedWhileStarting;
+          if (missed.isNotEmpty) _requestReload(Set.of(missed)).ignore();
+          missed.clear();
         }
       case 'app.log':
         final log = params['log'];
@@ -216,6 +226,12 @@ final class PlaySession {
   }
 
   void _onSceneChanges(Set<String> paths) {
+    if (_state == PlayState.starting) {
+      // Reloaded once the game has started (it may already have read
+      // the old file); the Runtime ignores it if the game read the new one.
+      _changedWhileStarting.addAll(paths);
+      return;
+    }
     if (_state != PlayState.running && _state != PlayState.reloading) return;
     // Watcher-driven reloads report through events; a failure has already
     // been reported as PlayReloadFailed, and a stop as PlayStopped.

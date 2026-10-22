@@ -24,7 +24,13 @@ class PlayClient {
   /// Throws [PlayStartException] when the project has no `pubspec.yaml` or
   /// `macos/` folder (checked through [fileSystem]), or when the executable
   /// can't be started.
-  Future<PlaySession> start(String projectPath);
+  ///
+  /// [onStdoutLine] receives every stdout line, auth codes masked, before it
+  /// is parsed (the CLI's `--record`).
+  Future<PlaySession> start(
+    String projectPath, {
+    void Function(String line)? onStdoutLine,
+  });
 }
 
 typedef ProcessStarter = Future<Process> Function(

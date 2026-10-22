@@ -82,6 +82,7 @@ client handles:
 | `daemon.connected` | ignored (version and pid, for a later check) |
 | `app.start` `{appId, deviceId, directory, launchMode}` | keep `appId`; state → starting |
 | `app.debugPort` `{wsUri, baseUri, port}` | noted only as "debugger available"; the URI is dropped (R5) |
+| `app.devTools` `{uri}`, `app.dtd` `{uri}` | dropped: addresses too (R5). Not in the first plan; seen in a real 3.44.2 run |
 | `app.started` `{appId}` | state → running; reloads allowed from here |
 | `app.log` `{log, error?}` | output line from the game |
 | `app.progress` `{message, finished, progressId}` | output line from the tool (build progress) |
@@ -164,9 +165,11 @@ already does this, per Scene and exactly. Doing it twice adds state for a reload
 
 **Decision:** a change starts (or restarts) a **150 ms** quiet timer. When it fires, one reload
 is requested for all files changed since the last one. If a reload is already in flight, at most
-**one** more is queued, and it covers every change that arrives meanwhile. Changes before
-`app.started` are dropped, because the game reads the file from disk when it starts (spec Edge
-Cases). Manual reloads (the CLI's `r`) go through the same queue with no debounce. The timer
+**one** more is queued, and it covers every change that arrives meanwhile. Changes made while
+the game starts are held, and become one reload on `app.started` (spec Edge Cases). The plan
+first dropped them, on the grounds that the game reads the file when it starts. A real run showed
+the game can read it before the daemon reports the start, so a save in between would be lost
+(ARCHITECTURE.md, "Vertical slice" finding 1). Manual reloads (the CLI's `r`) go through the same queue with no debounce. The timer
 uses `clock` and `Timer`, so `fake_async` drives it in tests.
 
 **Rationale:** SC-004's budget is a 500 ms median from save to screen. Spike #1 measured the

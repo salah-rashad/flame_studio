@@ -59,8 +59,10 @@ stateDiagram-v2
 ```
 
 Rules:
-- Scene changes are recorded only in `running` and `reloading`. In `starting` they are dropped
-  (spec Edge Cases).
+- Scene changes are watched from the spawn. In `starting` they are held, and one reload for all
+  of them is sent on `app.started`. The game can read its Scene before the daemon reports the
+  start (ARCHITECTURE.md, "Vertical slice" finding 1). The Runtime ignores that reload if the game
+  already read the new file.
 - At most one request of `app.restart` is outstanding. A change during `reloading` sets `_queued`.
   When the response arrives and `_queued` is set, one more reload runs for all paths collected
   meanwhile (R8).

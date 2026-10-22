@@ -40,7 +40,7 @@ cp lib/pyro.manifest.json test/goldens/pyro.manifest.json.golden
 - Lists `assets/scenes/` on disk at test time, recursively, `*.scene.json`, sorted.
 - Fails if the list is empty.
 - One `testWithFlameGame` per file: `PyroScene.load(<asset path>, registry: pyroRegistry)` with
-  the default `UnknownType.fail`, `ensureAdd`, `ready`. A load error fails the test with the
+  the default `UnknownType.error`, `ensureAdd`, `ready`. A load error fails the test with the
   Runtime's message.
 - While each load runs, `debugPrint` is recorded. Any Runtime warning (an unused Override, a
   repaired tree, a skipped type) fails the test, quoting the warning (spec FR-012, US2 #4).

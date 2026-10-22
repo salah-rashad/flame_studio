@@ -43,7 +43,7 @@ Canonical form (spec 001), `schemaVersion` 1.
   `PyroScene.load('assets/scenes/level1.scene.json', registry: pyroRegistry, onReloaded: …)`
   and adds the scene to `world`. The camera shows the 800×600 world.
 - A HUD in the viewport, outside the Scene, shows `time: <s>s  swaps: <n>  code: <codeMarker>`.
-- Log lines, printed with `print` so they reach the daemon in debug on macOS:
+- Log lines, printed with `debugPrint` (stdout, which reaches the daemon on desktop):
   - after the first load: `[pyro_example] Scene loaded: assets/scenes/level1.scene.json`;
   - in `onReloaded`: `[pyro_example] Scene reloaded: assets/scenes/level1.scene.json`.
   The latency benchmark matches the second one exactly (research R14).

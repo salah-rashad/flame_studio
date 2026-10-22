@@ -680,3 +680,65 @@ limit, and the builder yielding between passes, is decided from the reference-Ma
    back a stale player that carries a stale child prints two warnings, as specified (once per
    Node per rebuild).
 
+
+## Vertical slice
+
+**Question:** does the whole contract work end to end with no editor UI
+([`specs/005-vertical-slice/`](../specs/005-vertical-slice/spec.md))? The parts are:
+- `example/`'s hand-written Scene, run through the real Generator and Runtime;
+- the CI contract test;
+- Pyro's own `flutter run --machine` client, with a save Hot-swapping the Scene and a Dart-only
+  reload leaving it alone.
+
+**Answer:** yes on everything the cloud container could run. **The reference-Mac run is still to
+do.** It decides the preview's default Play target (*Q82*, SC-010). Results so far:
+
+| What | Result |
+|---|---|
+| Play client tests (`flutter test test/process/` in `apps/pyro`, transcripts, no device) | ✅ 48 pass |
+| `example/` tests: Scene loads with every Override, `Spin` turns, HUD, no-op reload | ✅ |
+| Contract checks locally: committed files, golden, every Scene, analysis | ✅ |
+| Each deliberate breakage fails at its own check (quickstart §3) | ✅ all five |
+| `bin/play.dart` on a project without `macos/`, or with a missing `flutter` | ✅ exits 1, names the path or executable |
+| The loop end to end on **Linux** (a throwaway Linux runner and `-d linux`, under Xvfb) | ✅ see below |
+| The same on the macOS desktop target, through `bin/play.dart` | to do on the reference Mac (quickstart §5) |
+| Release build free of Hot-swap code (FR-027) | to do on the reference Mac |
+
+The Linux run is an **early signal**, not the reference Mac. It used a 4-core cloud container
+with software rendering under Xvfb, Flutter 3.44.2, on 2026-10-22, and
+`benchmark/hot_swap_latency.dart`, with the client's device and runner check pointed at Linux
+for that run only. Times run from the save to the game's "Scene reloaded" line:
+
+| Check | Result | Limit (*Q119*) |
+|---|---|---|
+| SC-004 save → Scene reloaded, median of ten | 338 ms | < 500 ms |
+| SC-004 worst of ten | 462 ms | < 1000 ms |
+| SC-005 rebuilds after ten no-op saves and Dart-only reloads | 0 | 0 |
+| SC-006 reloads for ten saves 100 ms apart | 1 | ≤ 2, last content shown |
+
+The daemon's hot reload took 121–263 ms of each save. The rest was the 150 ms quiet period
+(*Q122*) and file events. A manual session showed the rest of the loop:
+- a save of `"turnsPerSecond": 2` swapped the Scene;
+- a save naming an unknown Type ID printed the Runtime's `couldn't Hot-swap` message, naming the
+  Scene, the Node and the Type ID, and the game kept running;
+- the next valid save swapped again;
+- `q` stopped the game with exit code 0.
+
+**Findings**
+
+1. **The game can read its Scene before the daemon says `app.started`.** On Linux the game's
+   "Scene loaded" line arrived ~100 ms before `app.started`. A save in that gap reached the game
+   too late for its first read, and the client, which then watched only after `app.started`,
+   dropped it. The client now watches from the spawn and sends one reload after `app.started`
+   for any save made meanwhile (*Q122*). The Runtime ignores that reload if the game already read
+   the new file.
+2. **Flutter 3.44.2 sends two more address-carrying events**, `app.devTools` and `app.dtd`, after
+   `app.debugPort`. The client drops them like `app.debugPort` (*Q121*). Redaction had already
+   masked their auth codes before the client knew them.
+3. **Tool lines also arrive as raw stdout.** `flutter run --machine` writes its own `pub get` and
+   build output as plain lines, not daemon messages, and they can't be told apart from the game's
+   stdout. The client labels every raw line `game`; the Console (#11) may want to group the lines
+   before `app.started` as the tool's.
+4. **`build_runner` keeps a hand-edited output when its inputs are unchanged.** It doesn't rewrite
+   `lib/pyro.g.dart` on a warm cache, so a local `git diff` check after an edit can pass while a
+   fresh checkout, as in CI, fails it. To reproduce CI locally, delete `.dart_tool/build` first.

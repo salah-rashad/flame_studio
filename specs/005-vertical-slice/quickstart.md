@@ -24,7 +24,7 @@ Expected: all pass. They cover:
 - the state machine: start, start failures, reload ok and failed, stop, an unrequested exit and a
   crash with no `app.stop`;
 - the debounce and the one-in-flight rule under `fake_async`: a burst of 10 changes gives ≤ 2
-  reloads, changes before `app.started` are dropped, and an atomic-rename event counts as a change;
+  reloads, saves while starting become one reload after `app.started`, and an atomic-rename event counts as a change;
 - the stop escalation: `app.stop`, then SIGTERM, then SIGKILL;
 - no event ever contains `wsUri` (SC-009, US3 #5–#7, US4).
 

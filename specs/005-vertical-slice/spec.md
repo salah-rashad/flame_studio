@@ -240,8 +240,9 @@ after each run. Close the window by hand once and check the client's report.
 ### Edge Cases
 
 - The Scene file is saved before the game has finished starting (no running app yet): the save
-  is not lost. The game loads whatever is on disk when it starts, and the client does not send a
-  reload to an app it has not seen start.
+  is not lost. The client sends no reload to an app it has not seen start. Once the app has
+  started, it sends one reload for every save made meanwhile, because the game may have read the
+  Scene before the save. That reload is harmless if the game read the new file.
 - The Scene file is deleted or renamed while the game runs: the client does not crash; a reload
   that follows gets the Runtime's missing-file error and the game keeps the previous Scene.
 - A new Scene file appears under `assets/scenes/` that the game does not load: the client still

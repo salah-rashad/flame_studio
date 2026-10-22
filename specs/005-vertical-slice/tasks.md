@@ -46,12 +46,49 @@ auth code. Tests assert this with the transcripts' known code `AbCdEf123456=` (r
 
 ---
 
+## Implementation notes
+
+What changed from the plan while implementing (2026-10-22), each also reflected in the code's
+comments or the docs:
+
+- **Flutter in the cloud session.** The container had no Flutter at first, so 3.44.2 was installed
+  for the session. Every task except the reference-Mac ones (T025, T039, T045, T046) ran here.
+  T031 is the CI run.
+- **The macOS runner (T004)** was made with `flutter create` in a scratch copy, and only `macos/`
+  and `.metadata` were copied in, so nothing else in `example/` was touched.
+- **Saves while starting (T032, T035):** the plan dropped Scene changes before `app.started`. A
+  real `flutter run` on Linux (a throwaway runner, see ARCHITECTURE.md, "Vertical slice") showed
+  the game reads its Scene ~100 ms *before* `app.started`, so such a save was lost. The client
+  now watches from the spawn and sends one reload after `app.started` (*Q122*). The test for it
+  lives in `ptest/play_session_test.dart`, not `scene_watcher_test.dart`. The watcher has no
+  `pause`/`resume`: the session's queue already keeps one reload in flight.
+- **`app.devTools` and `app.dtd`** came up in the same run and carry addresses. They are dropped
+  like `app.debugPort` (*Q121*). `start.txt` now includes them, and `reload_ok.txt` has the real
+  success message.
+- **`SceneWatcher.close` is synchronous.** Awaiting the subscription's `cancel()` never completed
+  under `fake_async`, which hung the session's exit. Nothing needs to wait for the watch to wind
+  down.
+- **`PlayClient.start` takes `onStdoutLine`** for the CLI's `--record` (contracts/play-client-api.md).
+- **The example game logs with `debugPrint`**, not `print` (the `avoid_print` lint). On desktop it
+  reaches stdout and the daemon the same way.
+- **The canonical Scene (T021)** writes string lists one item per line, as `SceneCodec.encode`
+  does. The file is the encoder's output.
+- **`build_runner` keeps a hand-edited output** when its inputs didn't change, so a local check of
+  the committed files needs `rm -rf .dart_tool/build` first, as a fresh CI checkout has
+  (ARCHITECTURE.md finding 4).
+- **The benchmark** waits for both `PlayStarted` and the game's first line before timing, because
+  the game can print before `app.started`.
+- **§14 estimates (T050)** are left as they are until the reference-Mac run closes Phase 3, per
+  the plan.
+
+---
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: make `example/` a workspace member with its assets and runner, and protect the files
 that are compared byte for byte.
 
-- [ ] T001 Add `example` to the `workspace:` list in `pubspec.yaml` (after
+- [X] T001 Add `example` to the `workspace:` list in `pubspec.yaml` (after
   `packages/pyro_generator/fixture_game`). Create `ex/pubspec.yaml` per
   [contracts/example-game.md § Package](contracts/example-game.md#package): `name: pyro_example`,
   `publish_to: none`, `version: 0.0.1`, `environment: sdk ^3.12.0, flutter ">=3.44.0"`,
@@ -61,14 +98,14 @@ that are compared byte for byte.
   `pyro_generator: ^0.0.1`. `flutter: assets: [assets/images/, assets/scenes/]`. There is no
   `build.yaml` (*Q107*). Copy `packages/pyro_generator/fixture_game/analysis_options.yaml` to
   `ex/analysis_options.yaml`, fixing its relative include. Run `dart pub get` at the root.
-- [ ] T002 [P] Add to `.gitattributes`, with a comment in the existing style:
+- [X] T002 [P] Add to `.gitattributes`, with a comment in the existing style:
   `example/lib/pyro.* -text`, `example/assets/** -text`, `example/test/goldens/** -text` and
   `apps/pyro/test/fixtures/daemon/** -text` (research R6, R13)
-- [ ] T003 [P] Write `ex/tool/draw_ship.dart`. It encodes a 32×32 RGBA PNG (a simple ship
+- [X] T003 [P] Write `ex/tool/draw_ship.dart`. It encodes a 32×32 RGBA PNG (a simple ship
   silhouette on transparency) with `dart:io`'s `zlib` and a CRC-32 written in the script, with no
   image package, and writes it to `ex/assets/images/ship.png`. Run it and commit both files.
   Running it again must produce identical bytes.
-- [ ] T004 (needs Flutter) In `ex/`, run
+- [X] T004 (needs Flutter) In `ex/`, run
   `flutter create --platforms=macos --project-name pyro_example --org dev.pyro .`. Keep `macos/`
   and `.metadata`. Delete everything else it created or changed (`lib/main.dart`, the `test/`
   folder, `README.md`, `pubspec.yaml` changes and any new `.gitignore`), so that the files from
@@ -87,7 +124,7 @@ on it.
 
 ### Tests for the foundation
 
-- [ ] T005 [P] Write the hand-written transcripts in `app/test/fixtures/daemon/` per research R6,
+- [X] T005 [P] Write the hand-written transcripts in `app/test/fixtures/daemon/` per research R6,
   one stdout line per line, in Flutter 3.44.2's daemon format (spike #1's driver shows the
   shapes):
   - `start.txt`: a non-JSON `Launching lib/main.dart on macOS in debug mode...` line;
@@ -109,12 +146,12 @@ on it.
 
   Add `app/test/fixtures/daemon/README.md` saying they are hand-written until quickstart §5.10
   replaces them with recordings (`bin/play.dart --record`).
-- [ ] T006 [P] Write `ptest/redact_test.dart` for `redactAuthCodes`:
+- [X] T006 [P] Write `ptest/redact_test.dart` for `redactAuthCodes`:
   `http://127.0.0.1:50300/AbCdEf123456=/` becomes `http://127.0.0.1:50300/<auth-code>=/`; the
   same for `ws://…/AbCdEf123456=/ws` and DTD's `ws://127.0.0.1:1235/AbCdEf123456=` at the end of a
   line; a code inside JSON quotes; a line without a URI is unchanged; a path that isn't a code (a
   URL without a trailing `=`) is unchanged.
-- [ ] T007 [P] Write `ptest/daemon_message_test.dart` for `parseDaemonLine`:
+- [X] T007 [P] Write `ptest/daemon_message_test.dart` for `parseDaemonLine`:
   - an event (`DaemonEvent(name, params)`);
   - a response with `result` and one with `error` (`DaemonResponse`);
   - a batch of two messages in one line;
@@ -122,7 +159,7 @@ on it.
   - an unknown event → `DaemonEvent` (not an error);
   - every line of every file in `app/test/fixtures/daemon/` parses without throwing (total
     function, research R4).
-- [ ] T008 Write `ptest/fake_process.dart`, a `Process` for tests:
+- [X] T008 Write `ptest/fake_process.dart`, a `Process` for tests:
   - `FakeProcess.fromTranscript(String file)` reads lines from `app/test/fixtures/daemon/`;
   - `emitAll()` and `emitUntil(bool Function(String line))` push lines to stdout;
   - `emitStderr(String line)` pushes to stderr;
@@ -133,7 +170,7 @@ on it.
 
   Also write `fakeStarter(FakeProcess)`, a `ProcessStarter` that records the executable, the
   arguments and the working directory.
-- [ ] T009 Write the lifecycle part of `ptest/play_session_test.dart` (`group('lifecycle')`),
+- [X] T009 Write the lifecycle part of `ptest/play_session_test.dart` (`group('lifecycle')`),
   using `start.txt`:
   - the events, in order: `PlayStarting` (with command
     `flutter run --machine -d macos --debug` and the project path), `PlayOutput` lines,
@@ -154,14 +191,14 @@ on it.
 
 ### Implementation for the foundation
 
-- [ ] T010 [P] Implement `proc/src/redact.dart`: `redactAuthCodes(String line)` with spike #1's
+- [X] T010 [P] Implement `proc/src/redact.dart`: `redactAuthCodes(String line)` with spike #1's
   pattern `((?:https?|wss?)://[^/\s"]+/)[A-Za-z0-9_\-]+=(?=[/"\s]|$)` → `${1}<auth-code>=`
   (research R5). Make T006 pass.
-- [ ] T011 [P] Implement `proc/src/daemon_message.dart`: a sealed `DaemonMessage` with
+- [X] T011 [P] Implement `proc/src/daemon_message.dart`: a sealed `DaemonMessage` with
   `DaemonEvent(String name, Map<String, Object?> params)`, `DaemonResponse(int id, Object? result,
   Object? error)` and `RawLine(String text)`, plus `List<DaemonMessage> parseDaemonLine(String
   line)`. It is total: anything unexpected is a `RawLine` (research R4). Make T007 pass.
-- [ ] T012 [P] Implement `proc/src/play_event.dart` per
+- [X] T012 [P] Implement `proc/src/play_event.dart` per
   [data-model.md § PlayEvent](data-model.md#playevent-sealed) and
   [contracts/play-client-api.md](contracts/play-client-api.md):
   - the sealed `PlayEvent` with `PlayStarting`, `PlayDebuggerAvailable`, `PlayStarted`,
@@ -174,7 +211,7 @@ on it.
 
   All are immutable with `final` fields and `const` constructors where possible. Each has a
   `toString` that the CLI prints. Document every public member.
-- [ ] T013 Implement the base of `proc/src/play_session.dart`:
+- [X] T013 Implement the base of `proc/src/play_session.dart`:
   - decode stdout and stderr as UTF-8 lines;
   - dispatch each `parseDaemonLine` result: `app.start` keeps `appId`; `app.debugPort` becomes
     `PlayDebuggerAvailable` and the URI is dropped; `app.started` becomes `PlayStarted` with
@@ -190,7 +227,7 @@ on it.
     [data-model.md § States](data-model.md#states).
 
   Make T009's lifecycle group pass.
-- [ ] T014 Implement `proc/src/play_client.dart` (`PlayClient`; the constructor takes `flutter`,
+- [X] T014 Implement `proc/src/play_client.dart` (`PlayClient`; the constructor takes `flutter`,
   `startProcess`, `fileSystem` (`package:file`, default `const LocalFileSystem()`),
   `watchDirectory`, `quietPeriod: 150 ms` and `stopTimeout: 5 s`, research R3, R8, R10). Every
   file check goes through `fileSystem`, never `dart:io`'s `File` or `Directory`. `start` spawns `run --machine -d macos --debug` in the absolute project path and returns
@@ -218,11 +255,11 @@ generated Registry, and shows every Override's effect.
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Write `ex/test/scene_canonical_test.dart`. It reads
+- [X] T015 [P] [US1] Write `ex/test/scene_canonical_test.dart`. It reads
   `assets/scenes/level1.scene.json` from disk and checks that
   `SceneCodec.encode(SceneCodec.decode(text))` equals the file byte for byte, with no repairs
   reported (spec FR-003).
-- [ ] T016 [P] [US1] Write `ex/test/example_game_test.dart` with `testWithGame(ExampleGame.new)`:
+- [X] T016 [P] [US1] Write `ex/test/example_game_test.dart` with `testWithGame(ExampleGame.new)`:
   - after load, `scene.find<PyroEntity>('ship')` has a `Spin` whose `turnsPerSecond` is 0.5 (the
     Override) and whose `clockwise` is true (the default);
   - it has a `SpriteComponent` `hull` and a `RectangleHitbox` `body` of size 48×48;
@@ -234,18 +271,18 @@ generated Registry, and shows every Override's effect.
 
 ### Implementation for User Story 1
 
-- [ ] T017 [P] [US1] Write `ex/lib/behaviors/spin.dart`: `@PyroBehavior()`,
+- [X] T017 [P] [US1] Write `ex/lib/behaviors/spin.dart`: `@PyroBehavior()`,
   `class Spin extends Behavior<PyroEntity>`. It has
   `@Editable() double turnsPerSecond = 0.25;` and `@Editable() bool clockwise = true;`, and
   `update(dt)` turns `parent.angle` by `turnsPerSecond * 2π * dt`, negated when not `clockwise`.
   Write a doc comment.
-- [ ] T018 [P] [US1] Write `ex/lib/components/banner.dart`: `@PyroComponent()`,
+- [X] T018 [P] [US1] Write `ex/lib/components/banner.dart`: `@PyroComponent()`,
   `class Banner extends TextComponent`. It has `@Editable() String message = 'Pyro';` and
   `@Editable() Color color = const Color(0xFFFFFFFF);`, and `onLoad` sets `text = message` and a
   `TextPaint` with `color` at font size 24. It accepts no Behaviors (contracts/example-game.md).
-- [ ] T019 [P] [US1] Write `ex/lib/code_marker.dart`: `const codeMarker = 'v1';`, with a doc
+- [X] T019 [P] [US1] Write `ex/lib/code_marker.dart`: `const codeMarker = 'v1';`, with a doc
   comment saying the Dart-only reload check edits it (quickstart §5.4).
-- [ ] T020 [US1] Write `ex/lib/example_game.dart` and `ex/lib/main.dart` per
+- [X] T020 [US1] Write `ex/lib/example_game.dart` and `ex/lib/main.dart` per
   [contracts/example-game.md § Game](contracts/example-game.md#game):
   - `ExampleGame extends FlameGame` with an 800×600 fixed-resolution camera;
   - `onLoad` awaits
@@ -259,21 +296,21 @@ generated Registry, and shows every Override's effect.
   - `main` runs `runApp(GameWidget(game: ExampleGame()))`.
 
   The printed lines must match the contract exactly, because the benchmark matches them.
-- [ ] T021 [US1] Write `ex/assets/scenes/level1.scene.json` per
+- [X] T021 [US1] Write `ex/assets/scenes/level1.scene.json` per
   [contracts/example-game.md § Scene](contracts/example-game.md#scene-assetsscenes-level1scenejson):
   Nodes `root`, `ship`, `hull`, `body` and `title` with the listed transforms, props and Overrides,
   in canonical form (sorted keys, two-space indent, trailing newline, as `SceneCodec.encode`
   writes). Make T015 pass. If the hand-written form differs, replace it with the encoder's output.
-- [ ] T022 [US1] (needs Flutter) Run `dart run build_runner build -d` in `ex/`. Check that
+- [X] T022 [US1] (needs Flutter) Run `dart run build_runner build -d` in `ex/`. Check that
   `lib/pyro.manifest.json` has `"errors": []` and `"warnings": []` and lists `Spin` (fields `clockwise`,
   `turnsPerSecond`) and `Banner` (fields `color`, `message`), then commit `lib/pyro.g.dart` and
   `lib/pyro.manifest.json` (US1 #1). Make T016 pass.
-- [ ] T023 [US1] Write `ex/README.md`. It says what the game is for (the slice, the contract test
+- [X] T023 [US1] Write `ex/README.md`. It says what the game is for (the slice, the contract test
   and later the README recipe's reference) and covers: running it (`flutter run -d macos`);
   regenerating (`dart run build_runner build -d`); updating the golden (the `cp` of
   contracts/contract-job.md); that it is macOS-only; and `assets/images/ship.png`, drawn by
   `tool/draw_ship.dart` for this repository and MIT licensed (spec FR-008).
-- [ ] T024 [US1] (needs Flutter) Run `flutter analyze --fatal-infos example` from the root, then
+- [X] T024 [US1] (needs Flutter) Run `flutter analyze --fatal-infos example` from the root, then
   `flutter analyze --fatal-infos lib/pyro.g.dart` and `flutter test` in `ex/`, and
   `dart format --set-exit-if-changed example` (US1 #2, constitution I).
 - [ ] T025 [US1] (reference Mac) Run quickstart §4. Note the time from a clean clone's
@@ -293,7 +330,7 @@ Manifest with its golden, and loads every Scene, each as a named step.
 
 ### Tests for User Story 2
 
-- [ ] T026 [P] [US2] Write `ex/test/contract/scenes_test.dart` per
+- [X] T026 [P] [US2] Write `ex/test/contract/scenes_test.dart` per
   [contracts/contract-job.md § scenes_test.dart](contracts/contract-job.md#testcontractscenes_testdart):
   - at test time, list `Directory('assets/scenes')` recursively for files ending in
     `.scene.json`, sorted, with paths relative to the package (`assets/scenes/…`, `/` separators
@@ -313,10 +350,10 @@ Manifest with its golden, and loads every Scene, each as a named step.
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] (needs Flutter) Create `ex/test/goldens/pyro.manifest.json.golden` as a
+- [X] T027 [US2] (needs Flutter) Create `ex/test/goldens/pyro.manifest.json.golden` as a
   byte-for-byte copy of `ex/lib/pyro.manifest.json` (after T022). Check with
   `diff -u test/goldens/pyro.manifest.json.golden lib/pyro.manifest.json`.
-- [ ] T028 [US2] In `.github/workflows/ci.yml`'s `analyze-test` job, per
+- [X] T028 [US2] In `.github/workflows/ci.yml`'s `analyze-test` job, per
   [contracts/contract-job.md § In analyze-test](contracts/contract-job.md#in-analyze-test-macos-windows-linux):
   - after the fixture game's check, add the step "Check the example game's generated files"
     (`working-directory: example`, `dart run build_runner build -d` then
@@ -325,7 +362,7 @@ Manifest with its golden, and loads every Scene, each as a named step.
   - add "Analyze the example game's Registry" (`flutter analyze --fatal-infos lib/pyro.g.dart`
     in `example`);
   - add "Test the example game" (`flutter test` in `example`), after the fixture game's tests.
-- [ ] T029 [US2] Replace the `contract` job in `.github/workflows/ci.yml` per
+- [X] T029 [US2] Replace the `contract` job in `.github/workflows/ci.yml` per
   [contracts/contract-job.md § The contract job](contracts/contract-job.md#the-contract-job-linux-ubuntu-2404).
   Name it `Contract test` on `ubuntu-24.04`. Its steps are checkout, `subosito/flutter-action@v2`
   with `${{ env.FLUTTER_VERSION }}` and cache, `dart pub get`, then the five named steps in order,
@@ -333,7 +370,7 @@ Manifest with its golden, and loads every Scene, each as a named step.
   example game", which runs `flutter analyze --fatal-infos . lib/pyro.g.dart` (spec FR-013). Replace the TODO comment with a short one citing
   *Q59* and spec 005. Keep the Flutter ≥ 3.47 `--only-check` note above step 2 and the golden
   `cp` command above step 3. Keep the job's existing triggers (FR-009, FR-015).
-- [ ] T030 [US2] (needs Flutter) Run quickstart §2 and each breakage of §3 locally. Each check fails
+- [X] T030 [US2] (needs Flutter) Run quickstart §2 and each breakage of §3 locally. Each check fails
   where the table says and passes again after `git checkout -- example` (SC-002).
 - [ ] T031 [US2] Push, then confirm in CI that the contract job is green, that the committed-files
   step passes on macOS, Windows and Linux (FR-009a), and that the job takes under 3 minutes warm
@@ -354,7 +391,7 @@ time, and reports each reload. The CLI lets the author run it, and the benchmark
 
 ### Tests for User Story 3
 
-- [ ] T032 [P] [US3] Write `ptest/scene_watcher_test.dart` with `fake_async` and a
+- [X] T032 [P] [US3] Write `ptest/scene_watcher_test.dart` with `fake_async` and a
   `StreamController<FileSystemEvent>` as the watcher (research R7, R8):
   - only paths under `assets/scenes/` ending in `.scene.json` count (`level1.scene.json.tmp`,
     `.level1.scene.json.swp`, `level1.scene.json~` and `lib/main.dart` don't);
@@ -364,10 +401,10 @@ time, and reports each reload. The CLI lets the author run it, and the benchmark
   - a burst of 10 modify events 100 ms apart gives one reload covering the one path;
   - a change during an in-flight reload queues exactly one more, covering every path changed
     meanwhile, and more changes don't queue a third;
-  - changes before `app.started` are dropped;
+  - (moved to `ptest/play_session_test.dart`, see Implementation notes) saves while starting become one reload after `app.started`;
   - a missing `assets/scenes/` (absent from the test's `MemoryFileSystem`) gives one
     `PlayOutput(tool)` line and no watch.
-- [ ] T033 [P] [US3] Write the reload part of `ptest/play_session_test.dart` (`group('reload')`,
+- [X] T033 [P] [US3] Write the reload part of `ptest/play_session_test.dart` (`group('reload')`,
   starting from `start.txt`):
   - a Scene change sends exactly
     `{"method":"app.restart","params":{"appId":"app-1","fullRestart":false,"pause":false,"reason":"pyro"}}`;
@@ -383,12 +420,12 @@ time, and reports each reload. The CLI lets the author run it, and the benchmark
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] Implement `proc/src/scene_watcher.dart`, a `SceneWatcher` that takes the project
+- [X] T034 [US3] Implement `proc/src/scene_watcher.dart`, a `SceneWatcher` that takes the project
   directory, the `DirectoryWatcher` and the quiet period. It filters, debounces with `Timer`, and
   coalesces into a `Stream<Set<String>>` of project-relative paths (`/`-separated). `pause` and
   `resume` follow the session's in-flight state, and `close()` cancels the subscription and the
   timer. It reports a missing folder through a callback. Make T032 pass.
-- [ ] T035 [US3] Wire reloads into `proc/src/play_session.dart`:
+- [X] T035 [US3] Wire reloads into `proc/src/play_session.dart`:
   - start the `SceneWatcher` on `PlayStarted`;
   - `reload()` and watcher batches go through one queue: one `app.restart` in flight, at most one
     queued with the union of paths;
@@ -398,7 +435,7 @@ time, and reports each reload. The CLI lets the author run it, and the benchmark
   - add `reload()` to the public surface.
 
   Pass `watchDirectory` and `quietPeriod` through from `PlayClient`. Make T033 pass.
-- [ ] T036 [US3] Write `app/bin/play.dart` per [contracts/play-cli.md](contracts/play-cli.md):
+- [X] T036 [US3] Write `app/bin/play.dart` per [contracts/play-cli.md](contracts/play-cli.md):
   - parse `<project>`, `--flutter` and `--record`, with no package (a small loop like spike #1's);
     bad arguments print usage to stderr and exit 64;
   - print each event as `+<s.mmm>s  <event>`;
@@ -408,7 +445,7 @@ time, and reports each reload. The CLI lets the author run it, and the benchmark
   - exit 1 on `PlayStartException` or `PlayFailed`, otherwise with the game's exit code.
 
   Signals come in US4 (T044). Document it in a file doc comment.
-- [ ] T037 [P] [US3] Write `app/benchmark/hot_swap_latency.dart` per research R14:
+- [X] T037 [P] [US3] Write `app/benchmark/hot_swap_latency.dart` per research R14:
   - it takes the project path (default `../../example`), starts a `PlaySession`, and waits for
     `PlayStarted` and the `[pyro_example] Scene loaded` line;
   - **SC-004**: ten times, write a changed `level1.scene.json` atomically (temp + rename) with the
@@ -424,7 +461,7 @@ time, and reports each reload. The CLI lets the author run it, and the benchmark
     failed criterion.
 
   Note in its doc comment that the time is to the log line, and the next frame is ≤ 16 ms later.
-- [ ] T038 [US3] Add "Play from the command line" to `app/README.md`. It covers what
+- [X] T038 [US3] Add "Play from the command line" to `app/README.md`. It covers what
   `bin/play.dart` does, the usage and keys from contracts/play-cli.md, that it is the slice's entry
   point until the Play button (spec FR-025), and how to run the benchmark.
 - [ ] T039 [US3] (reference Mac) Run quickstart §5 steps 1–6 and keep the notes and the benchmark
@@ -445,7 +482,7 @@ the client started.
 
 ### Tests for User Story 4
 
-- [ ] T040 [P] [US4] Extend `ptest/play_client_test.dart` with the start failures (research R11):
+- [X] T040 [P] [US4] Extend `ptest/play_client_test.dart` with the start failures (research R11):
   - a path with no `pubspec.yaml` throws `PlayStartException`, with a message naming the path and
     `pubspec.yaml`;
   - a path with no `macos/` names `macos/`;
@@ -456,7 +493,7 @@ the client started.
   - `app.stop` with an `error` before `app.started` gives `PlayFailed` with that error.
 
   All of these run on a `MemoryFileSystem` (constitution V). No test touches the real disk.
-- [ ] T041 [P] [US4] Write the stop part of `ptest/play_session_test.dart` (`group('stop')`,
+- [X] T041 [P] [US4] Write the stop part of `ptest/play_session_test.dart` (`group('stop')`,
   `fake_async`):
   - `stop()` sends `app.stop` with `appId`; with `stop.txt` and an exit within 5 s no signal is
     sent and `PlayStopped(requested: true)` comes;
@@ -469,10 +506,10 @@ the client started.
 
 ### Implementation for User Story 4
 
-- [ ] T042 [US4] In `proc/src/play_client.dart`, check `pubspec.yaml` and `macos/` through
+- [X] T042 [US4] In `proc/src/play_client.dart`, check `pubspec.yaml` and `macos/` through
   `fileSystem` before spawning, and map a `ProcessException` to `PlayStartException`. Make the first three cases of
   T040 pass.
-- [ ] T043 [US4] In `proc/src/play_session.dart`:
+- [X] T043 [US4] In `proc/src/play_session.dart`:
   - an exit or `app.stop(error)` before `app.started` emits `PlayFailed` with the exit code and
     `_tail`;
   - `stop()` is idempotent: it sends `app.stop` and escalates per research R10 with `Timer`s;
@@ -480,7 +517,7 @@ the client started.
     `StateError` naming the stopped session), then emits `PlayStopped` and closes.
 
   Make T040 and T041 pass.
-- [ ] T044 [US4] In `app/bin/play.dart`, `SIGINT` and `SIGTERM` call `stop()` (`SIGTERM` is not
+- [X] T044 [US4] In `app/bin/play.dart`, `SIGINT` and `SIGTERM` call `stop()` (`SIGTERM` is not
   watched on Windows), and the exit status follows the table in contracts/play-cli.md.
 - [ ] T045 [US4] (reference Mac) Run quickstart §5 steps 7–8 and keep the notes for T049. If an
   orphaned `pyro_example` process remains after a kill, record it and the fallback it needs (plan
@@ -497,13 +534,13 @@ the path or compile error named.
   record real transcripts with `--record`, check that they hold no auth code, replace the
   hand-written files in `app/test/fixtures/daemon/` (adjusting tests only where the real format
   differs, noting each difference), update that folder's README, and rerun quickstart §1.
-- [ ] T047 [P] Add **Play session** and **Contract test** to `GLOSSARY.md` (plan § Documentation
+- [X] T047 [P] Add **Play session** and **Contract test** to `GLOSSARY.md` (plan § Documentation
   updates). This ships in the same PR as the code (constitution I).
-- [ ] T048 [P] Add Q117–Q124 to `docs/decisions.md`, with the rows the plan lists: the CLI entry
+- [X] T048 [P] Add Q117–Q124 to `docs/decisions.md`, with the rows the plan lists: the CLI entry
   point, the contract job's OS split, the latency limit, no run link or re-point in the slice, the
   URI dropped, the 150 ms debounce with one reload in flight, the contract test failing on
   Runtime warnings, and the `specs/005-vertical-slice` mirror branch.
-- [ ] T049 Add a "Vertical slice" section to `docs/ARCHITECTURE.md`, after "Runtime". It covers:
+- [X] T049 Add a "Vertical slice" section to `docs/ARCHITECTURE.md`, after "Runtime". It covers:
   - what was checked and on what machine;
   - the results of T025, T039, T045 and T046 (whether a save swaps on macOS, whether Dart-only
     reloads leave the Scene alone, the benchmark table, start and stop, the release check);
@@ -512,15 +549,15 @@ the path or compile error named.
 
   Where the same run covered spec 004's T038 and T043, update the Runtime section's open line.
   Steps that couldn't run are listed as to do.
-- [ ] T050 Update `docs/project-plan.md` §9.3 (what the slice built: the daemon client, the
+- [X] T050 Update `docs/project-plan.md` §9.3 (what the slice built: the daemon client, the
   debounce, redaction, no IDE workarounds yet), §13 ("Process clients" names the transcript
   fixtures), and §14 (the estimates of #11, #12 and #13 if they moved; plan Risks). In the same
   commit, update `docs/phases.md`: tick Phase 3's items that are done; update the status line,
   the at-a-glance table and the "Left" counts; and close or carry over Phase 2's "Open" note
   (FR-028).
-- [ ] T051 Tick or annotate `specs/004-runtime/tasks.md` T038 and T043 and
+- [X] T051 Tick or annotate `specs/004-runtime/tasks.md` T038 and T043 and
   `specs/003-generator/tasks.md` T043 to match what T031, T039 and T046 did.
-- [ ] T052 Final pass. Run `dart format --set-exit-if-changed packages apps example`, both
+- [X] T052 Final pass. Run `dart format --set-exit-if-changed packages apps example`, both
   analyze steps of CI, `flutter test` in `apps/pyro` and `example`, and quickstart §1–§3. Then
   re-read the diff against the constitution: no Flutter import in `proc/`, no auth code in any
   fixture or test output, every public member documented, glossary terms used.

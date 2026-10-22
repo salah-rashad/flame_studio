@@ -2,7 +2,7 @@
 /// `ws://…/AbC=/ws`, or the Dart Tooling Daemon's `ws://…/AbC=` at the end of
 /// a line (spike #1's pattern).
 final _authCode = RegExp(
-  r'((?:https?|wss?)://[^/\s"]+/)[A-Za-z0-9_\-]+=(?=[/"\s]|$)',
+  r'((?:https?|wss?)://[^/\s"]+/)[A-Za-z0-9_\-]+=(?![A-Za-z0-9_\-])',
 );
 
 /// Masks VM service auth codes in [line]: `ws://127.0.0.1:1234/AbC=/ws`

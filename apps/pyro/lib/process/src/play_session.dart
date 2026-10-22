@@ -273,7 +273,13 @@ final class PlaySession {
     _queuedPaths = null;
     _queuedReload = null;
     if (queued != null && waiting != null) {
-      waiting.complete(_runReload(queued));
+      // A stop requested while the reload was in flight fails the queued
+      // one instead of restarting an app that is being stopped.
+      if (_stopRequested) {
+        waiting.completeError(_stoppedError());
+      } else {
+        waiting.complete(_runReload(queued));
+      }
     }
     return result;
   }

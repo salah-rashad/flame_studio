@@ -28,6 +28,21 @@ void main() {
       );
     });
 
+    test('masks a code followed by a closing delimiter', () {
+      const lines = [
+        '(ws://127.0.0.1:1/AbCdEf123456=)',
+        "'ws://127.0.0.1:1/AbCdEf123456='",
+        'ws://127.0.0.1:1/AbCdEf123456=,',
+        'ws://127.0.0.1:1/AbCdEf123456=.',
+      ];
+      for (final line in lines) {
+        expect(
+          redactAuthCodes(line),
+          line.replaceAll('AbCdEf123456=', '<auth-code>='),
+        );
+      }
+    });
+
     test('masks a URI inside JSON quotes', () {
       expect(
         redactAuthCodes('{"wsUri":"ws://127.0.0.1:50300/AbCdEf123456=/ws"}'),

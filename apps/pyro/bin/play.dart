@@ -73,8 +73,10 @@ Future<int> _play(
       .listen((line) {
         switch (line.trim()) {
           case 'r':
+            // Future.sync: reload() throws synchronously when the game
+            // isn't running yet, and that throw must reach onError too.
             unawaited(
-              session.reload().then<void>(
+              Future.sync(session.reload).then<void>(
                 (_) {},
                 onError: (Object error) => say('no reload: $error'),
               ),

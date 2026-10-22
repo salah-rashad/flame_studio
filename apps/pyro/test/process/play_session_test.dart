@@ -446,6 +446,48 @@ void main() {
       });
     });
 
+    test('a queued reload fails, not restarts, when a stop was requested', () {
+      fakeAsync((async) {
+        final h = Harness(async)
+          ..startGame()
+          ..answerReloads(delay: const Duration(milliseconds: 200));
+        h.save();
+        async.elapse(const Duration(milliseconds: 160));
+        expect(h.restarts, hasLength(1));
+
+        Object? error;
+        unawaited(
+          h.session.reload().catchError((Object e) {
+            error = e;
+            return const ReloadResult(ok: false, elapsed: Duration.zero);
+          }),
+        );
+        async.flushMicrotasks();
+        expect(h.restarts, hasLength(1), reason: 'queued behind the first');
+
+        unawaited(h.session.stop());
+        async.flushMicrotasks();
+        expect(h.session.state, PlayState.stopping);
+
+        async.elapse(const Duration(milliseconds: 200));
+        expect(
+          h.restarts,
+          hasLength(1),
+          reason: 'no app.restart for an app being stopped',
+        );
+        expect(h.session.state, PlayState.stopping);
+        expect(h.only<PlayReloading>(), hasLength(1));
+        expect(
+          error,
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            contains('stopped'),
+          ),
+        );
+      });
+    });
+
     test('a crash fails the reload in flight and closes the watcher', () {
       fakeAsync((async) {
         final h = Harness(async)..startGame();

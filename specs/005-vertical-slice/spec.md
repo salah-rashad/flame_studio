@@ -329,8 +329,9 @@ after each run. Close the window by hand once and check the client's report.
   without a full restart), not through the VM service directly, so that changed assets are
   synced first (§9.3, *Q66*).
 - **FR-019**: The client MUST coalesce bursts of changes into one reload per settled change,
-  MUST NOT run two reloads at the same time, and MUST ignore changes that arrive before the app
-  has started.
+  MUST NOT run two reloads at the same time, and MUST NOT send a reload before the app has
+  started. Changes that arrive before `app.started` MUST be held and sent as one reload once the
+  app has started.
 - **FR-020**: The client MUST write nothing to the project (no info file, no `launch.json`, no
   run link) in this slice (those belong to #11, rest and v0.1).
 - **FR-021**: The client MUST report the game's lifecycle to its caller as typed events (starting,

@@ -161,9 +161,10 @@ class _WelcomeWindowState extends State<_WelcomeWindow> {
     final recent = await widget.settings.read();
     final entries = <(String, SdkInfo)>[];
     for (final root in recent.paths) {
-      entries.add(
-        (root, await detectSdk(root, pathVersion: flutterPathVersion)),
-      );
+      entries.add((
+        root,
+        await detectSdk(root, pathVersion: flutterPathVersion),
+      ));
     }
     if (mounted) setState(() => _recent = entries);
   }

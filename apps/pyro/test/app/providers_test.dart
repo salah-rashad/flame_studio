@@ -169,17 +169,12 @@ void main() {
   });
 
   group('OpenScenesState.close (T013, FR-008)', () {
-    OpenScene tab(String id) => OpenScene(
-      sceneId: id,
-      path: null,
-      displayName: id,
-    );
+    OpenScene tab(String id) =>
+        OpenScene(sceneId: id, path: null, displayName: id);
 
-    OpenScenesState openabc() =>
-        const OpenScenesState(scenes: IList<OpenScene>.empty())
-            .open(tab('a'))
-            .open(tab('b'))
-            .open(tab('c'));
+    OpenScenesState openabc() => const OpenScenesState(
+      scenes: IList<OpenScene>.empty(),
+    ).open(tab('a')).open(tab('b')).open(tab('c'));
 
     test('closing the active tab activates its left neighbour', () {
       final state = openabc().focus('b').close('b');

@@ -14,7 +14,7 @@ class MainFlutterWindow: NSWindow {
     // native one and keep the traffic lights over the full-size content
     // view, whose title bar keeps a leading inset clear for them.
     self.titlebarAppearsTransparent = true
-    self.titleBarStyle = .fullSizeContentView
+    self.styleMask.insert(.fullSizeContentView)
     self.isMovableByWindowBackground = true
 
     super.awakeFromNib()

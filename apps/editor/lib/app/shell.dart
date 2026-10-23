@@ -160,7 +160,10 @@ class _PyroEditorWindowState extends ConsumerState<PyroEditorWindow> {
         ),
         right: dock(2, widget.right, 'Inspector'),
         bottom: null,
-        statusBar: _StatusBar(project: project),
+        statusBar: _StatusBar(
+          project: project,
+          catalog: ref.watch(typeCatalogProvider),
+        ),
         sizes: _sizes,
         onSizesChanged: (sizes) => setState(() => _sizes = sizes),
         onSizesChangeEnd: _persistSizes,
@@ -213,17 +216,19 @@ Future<void> discardScene(ProviderContainer container, String sceneId) async {
   }
 }
 
-/// The status bar (FR-003/FR-004): the detected SDK, the Runtime
-/// compatibility result, and the Type catalog's status — a placeholder
-/// until the catalog lands (US2, T022).
+/// The status bar (FR-003/FR-004/FR-014): the detected SDK, the Runtime
+/// compatibility result, and the Type catalog's status — up to date,
+/// built-ins only, or stale with its problems one click away.
 class _StatusBar extends StatelessWidget {
-  const _StatusBar({required this.project});
+  const _StatusBar({required this.project, required this.catalog});
 
   final ProjectState? project;
 
+  /// The project's types, for the catalog's status item (T022).
+  final TypeCatalog catalog;
+
   @override
   Widget build(BuildContext context) {
-    final c = PrColors.of(context);
     final sdk = project?.sdk;
     final compatibility = project?.compatibility;
     return Row(
@@ -249,12 +254,51 @@ class _StatusBar extends StatelessWidget {
             RuntimeCompatStatus.unknown || null => 'pyro_runtime: not found',
           },
         ),
-        Text(
-          'Types: catalog not loaded yet',
-          style: PrText.small.copyWith(color: c.textSecondary),
-        ),
+        _typesItem(context, catalog),
       ],
     );
+  }
+
+  /// The catalog's status (FR-014): up to date / built-ins only / stale
+  /// with its errors counted — never "no types", because a stale catalog
+  /// keeps the last good ones (*Q105*). Clicking opens the problems.
+  Widget _typesItem(BuildContext context, TypeCatalog catalog) {
+    final c = PrColors.of(context);
+    return Tooltip(
+      message: 'Show the Type catalog',
+      child: InkWell(
+        borderRadius: PrRadii.sm,
+        onTap: () => showCatalogProblemsDialog(context, catalog: catalog),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: PrSpacing.s1),
+          child: Row(
+            spacing: PrSpacing.s1,
+            children: [
+              Icon(PrIcons.code, size: 12, color: c.textSecondary),
+              Text(
+                _typesStatus(catalog),
+                style: PrText.small.copyWith(color: c.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _typesStatus(TypeCatalog catalog) {
+    final errors = catalog.problems
+        .where((problem) => !problem.isWarning)
+        .length;
+    return switch (catalog.origin) {
+      ManifestUpToDate() => 'Types up to date',
+      ManifestAbsent() => 'Built-in types only',
+      ManifestStale(:final reason) =>
+        errors == 0
+            ? 'Types stale — $reason'
+            : 'Types stale — ${errors == 1 ? '1 error' : '$errors errors'} '
+                  '($reason)',
+    };
   }
 
   Widget _item(

@@ -1,15 +1,16 @@
 import 'dart:io';
 
 import 'package:file/memory.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pyro/app/open_scene.dart';
 import 'package:pyro/app/providers.dart';
 import 'package:pyro/app/shell.dart';
 import 'package:pyro/project/project.dart';
+import 'package:pyro_ui/pyro_ui.dart';
 
 import '../helpers/fixtures.dart';
-import '../helpers/pump.dart';
 
 void main() {
   // A project whose Manifest carries one error and one warning — the
@@ -25,24 +26,28 @@ void main() {
     ).writeAsStringSync(manifestWithProblems);
   });
 
+  /// Pumps the window as `PyroApp` hosts it: `MaterialApp` with the window
+  /// as its home and nothing else — no ambient Material (the editor window
+  /// must not need one), unlike the panel harness `pumpPyro`.
   Future<void> pumpWindow(WidgetTester tester, ProviderContainer container) =>
-      pumpPyro(
-        tester,
-        UncontrolledProviderScope(
-          container: container,
-          child: PyroEditorWindow(
-            command: OpenSceneCommand(
-              projectRoot: root.path,
-              recoveryFolder: '${root.path}/recovery',
-              fileSystem: MemoryFileSystem.test(),
-            ),
-            settings: RecentProjectsStore(
-              MemoryFileSystem.test().file('/settings.json'),
-              fileSystem: MemoryFileSystem.test(),
+      tester.pumpWidget(
+        MaterialApp(
+          theme: PrTheme.dark(),
+          home: UncontrolledProviderScope(
+            container: container,
+            child: PyroEditorWindow(
+              command: OpenSceneCommand(
+                projectRoot: root.path,
+                recoveryFolder: '${root.path}/recovery',
+                fileSystem: MemoryFileSystem.test(),
+              ),
+              settings: RecentProjectsStore(
+                MemoryFileSystem.test().file('/settings.json'),
+                fileSystem: MemoryFileSystem.test(),
+              ),
             ),
           ),
         ),
-        width: 900,
       );
 
   testWidgets('the status bar shows the errors and opens their dialog', (

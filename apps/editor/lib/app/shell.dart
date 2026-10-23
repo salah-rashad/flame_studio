@@ -262,26 +262,43 @@ class _StatusBar extends StatelessWidget {
   /// The catalog's status (FR-014): up to date / built-ins only / stale
   /// with its errors counted — never "no types", because a stale catalog
   /// keeps the last good ones (*Q105*). Clicking opens the problems.
+  ///
+  /// `PrInteractive`, not `InkWell`: the editor window has no Material
+  /// ancestor (only `PrDialog` brings its own), and the `Pr` widgets are
+  /// built without one.
   Widget _typesItem(BuildContext context, TypeCatalog catalog) {
-    final c = PrColors.of(context);
     return Tooltip(
       message: 'Show the Type catalog',
-      child: InkWell(
-        borderRadius: PrRadii.sm,
-        onTap: () => showCatalogProblemsDialog(context, catalog: catalog),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: PrSpacing.s1),
-          child: Row(
-            spacing: PrSpacing.s1,
-            children: [
-              Icon(PrIcons.code, size: 12, color: c.textSecondary),
-              Text(
-                _typesStatus(catalog),
-                style: PrText.small.copyWith(color: c.textSecondary),
-              ),
-            ],
-          ),
-        ),
+      child: PrInteractive(
+        onPressed: () => showCatalogProblemsDialog(context, catalog: catalog),
+        cursor: SystemMouseCursors.click,
+        semanticsLabel: 'Type catalog',
+        builder: (context, states) {
+          final c = PrColors.of(context);
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: PrSpacing.s1),
+            decoration: BoxDecoration(
+              color: states.contains(WidgetState.hovered)
+                  ? c.surfaceHover
+                  : null,
+              borderRadius: PrRadii.sm,
+            ),
+            child: Row(
+              spacing: PrSpacing.s1,
+              children: [
+                Icon(PrIcons.code, size: 12, color: c.textSecondary),
+                Text(
+                  _typesStatus(catalog),
+                  style: PrText.small.copyWith(
+                    color: states.contains(WidgetState.hovered)
+                        ? c.textPrimary
+                        : c.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

@@ -141,6 +141,63 @@ sealed class TypeDescriptor with _$TypeDescriptor {
   }) = _TypeDescriptor;
 }
 
+/// How the catalog came by its types (FR-012, `contracts/type-catalog.md`).
+sealed class ManifestOrigin {
+  const ManifestOrigin();
+}
+
+/// The Manifest parsed cleanly; its warnings may still be carried as
+/// problems.
+final class ManifestUpToDate extends ManifestOrigin {
+  /// The good outcome.
+  const ManifestUpToDate();
+}
+
+/// No Manifest file at all — a project without annotated types still edits
+/// the built-in kinds.
+final class ManifestAbsent extends ManifestOrigin {
+  /// The project has no annotated types.
+  const ManifestAbsent();
+}
+
+/// The Manifest was unreadable, had errors, or carries a version this Pyro
+/// can't read (*Q105*): the previous types stay active — stale, not empty —
+/// so Missing states never fire from them.
+final class ManifestStale extends ManifestOrigin {
+  /// The outcome that keeps the last good types.
+  const ManifestStale(this.reason);
+
+  /// Why they are kept, surfaced in the status bar and the catalog dialog.
+  final String reason;
+}
+
+/// The project's types: the built-in descriptors joined with the
+/// Manifest's (FR-012), as every panel reads them through
+/// `typeCatalogProvider` and nothing else.
+@freezed
+sealed class TypeCatalog with _$TypeCatalog {
+  /// Creates the catalog.
+  const factory TypeCatalog({
+    /// Every type by Type ID: the built-ins plus the Manifest's.
+    required IMap<TypeId, TypeDescriptor> types,
+
+    /// The Manifest's problems, when it parsed with warnings or failed.
+    required IList<ManifestProblem> problems,
+
+    /// Where the types came from.
+    required ManifestOrigin origin,
+  }) = _TypeCatalog;
+
+  const TypeCatalog._();
+
+  /// The type with Type ID [id], or null if there is none.
+  TypeDescriptor? operator [](TypeId id) => types[id];
+
+  /// The types in Type ID order, a stable listing order for menus.
+  IList<TypeDescriptor> get sorted =>
+      IList([...types.values]..sort((a, b) => a.id.compareTo(b.id)));
+}
+
 /// What reading a Manifest file came to, mapping straight onto the
 /// catalog's states (`contracts/type-catalog.md`): parsed (its warnings may
 /// remain), failed with errors, unreadable, or a version this Pyro can't

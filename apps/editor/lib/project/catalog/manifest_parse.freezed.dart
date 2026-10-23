@@ -899,4 +899,267 @@ as IList<FieldDescriptor>,
 
 }
 
+/// @nodoc
+mixin _$TypeCatalog {
+
+/// Every type by Type ID: the built-ins plus the Manifest's.
+ IMap<TypeId, TypeDescriptor> get types;/// The Manifest's problems, when it parsed with warnings or failed.
+ IList<ManifestProblem> get problems;/// Where the types came from.
+ ManifestOrigin get origin;
+/// Create a copy of TypeCatalog
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$TypeCatalogCopyWith<TypeCatalog> get copyWith => _$TypeCatalogCopyWithImpl<TypeCatalog>(this as TypeCatalog, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TypeCatalog&&(identical(other.types, types) || other.types == types)&&const DeepCollectionEquality().equals(other.problems, problems)&&(identical(other.origin, origin) || other.origin == origin));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,types,const DeepCollectionEquality().hash(problems),origin);
+
+@override
+String toString() {
+  return 'TypeCatalog(types: $types, problems: $problems, origin: $origin)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $TypeCatalogCopyWith<$Res>  {
+  factory $TypeCatalogCopyWith(TypeCatalog value, $Res Function(TypeCatalog) _then) = _$TypeCatalogCopyWithImpl;
+@useResult
+$Res call({
+ IMap<TypeId, TypeDescriptor> types, IList<ManifestProblem> problems, ManifestOrigin origin
+});
+
+
+
+
+}
+/// @nodoc
+class _$TypeCatalogCopyWithImpl<$Res>
+    implements $TypeCatalogCopyWith<$Res> {
+  _$TypeCatalogCopyWithImpl(this._self, this._then);
+
+  final TypeCatalog _self;
+  final $Res Function(TypeCatalog) _then;
+
+/// Create a copy of TypeCatalog
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? types = null,Object? problems = null,Object? origin = null,}) {
+  return _then(_self.copyWith(
+types: null == types ? _self.types : types // ignore: cast_nullable_to_non_nullable
+as IMap<TypeId, TypeDescriptor>,problems: null == problems ? _self.problems : problems // ignore: cast_nullable_to_non_nullable
+as IList<ManifestProblem>,origin: null == origin ? _self.origin : origin // ignore: cast_nullable_to_non_nullable
+as ManifestOrigin,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [TypeCatalog].
+extension TypeCatalogPatterns on TypeCatalog {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _TypeCatalog value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _TypeCatalog() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _TypeCatalog value)  $default,){
+final _that = this;
+switch (_that) {
+case _TypeCatalog():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _TypeCatalog value)?  $default,){
+final _that = this;
+switch (_that) {
+case _TypeCatalog() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IMap<TypeId, TypeDescriptor> types,  IList<ManifestProblem> problems,  ManifestOrigin origin)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _TypeCatalog() when $default != null:
+return $default(_that.types,_that.problems,_that.origin);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IMap<TypeId, TypeDescriptor> types,  IList<ManifestProblem> problems,  ManifestOrigin origin)  $default,) {final _that = this;
+switch (_that) {
+case _TypeCatalog():
+return $default(_that.types,_that.problems,_that.origin);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IMap<TypeId, TypeDescriptor> types,  IList<ManifestProblem> problems,  ManifestOrigin origin)?  $default,) {final _that = this;
+switch (_that) {
+case _TypeCatalog() when $default != null:
+return $default(_that.types,_that.problems,_that.origin);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _TypeCatalog extends TypeCatalog {
+  const _TypeCatalog({required this.types, required this.problems, required this.origin}): super._();
+  
+
+/// Every type by Type ID: the built-ins plus the Manifest's.
+@override final  IMap<TypeId, TypeDescriptor> types;
+/// The Manifest's problems, when it parsed with warnings or failed.
+@override final  IList<ManifestProblem> problems;
+/// Where the types came from.
+@override final  ManifestOrigin origin;
+
+/// Create a copy of TypeCatalog
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$TypeCatalogCopyWith<_TypeCatalog> get copyWith => __$TypeCatalogCopyWithImpl<_TypeCatalog>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TypeCatalog&&(identical(other.types, types) || other.types == types)&&const DeepCollectionEquality().equals(other.problems, problems)&&(identical(other.origin, origin) || other.origin == origin));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,types,const DeepCollectionEquality().hash(problems),origin);
+
+@override
+String toString() {
+  return 'TypeCatalog(types: $types, problems: $problems, origin: $origin)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$TypeCatalogCopyWith<$Res> implements $TypeCatalogCopyWith<$Res> {
+  factory _$TypeCatalogCopyWith(_TypeCatalog value, $Res Function(_TypeCatalog) _then) = __$TypeCatalogCopyWithImpl;
+@override @useResult
+$Res call({
+ IMap<TypeId, TypeDescriptor> types, IList<ManifestProblem> problems, ManifestOrigin origin
+});
+
+
+
+
+}
+/// @nodoc
+class __$TypeCatalogCopyWithImpl<$Res>
+    implements _$TypeCatalogCopyWith<$Res> {
+  __$TypeCatalogCopyWithImpl(this._self, this._then);
+
+  final _TypeCatalog _self;
+  final $Res Function(_TypeCatalog) _then;
+
+/// Create a copy of TypeCatalog
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? types = null,Object? problems = null,Object? origin = null,}) {
+  return _then(_TypeCatalog(
+types: null == types ? _self.types : types // ignore: cast_nullable_to_non_nullable
+as IMap<TypeId, TypeDescriptor>,problems: null == problems ? _self.problems : problems // ignore: cast_nullable_to_non_nullable
+as IList<ManifestProblem>,origin: null == origin ? _self.origin : origin // ignore: cast_nullable_to_non_nullable
+as ManifestOrigin,
+  ));
+}
+
+
+}
+
 // dart format on

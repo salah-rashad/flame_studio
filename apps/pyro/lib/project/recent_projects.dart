@@ -80,14 +80,20 @@ final class RecentProjectsStore {
     }
   }
 
-  /// Writes [value] atomically. Throws the file-system error on failure.
-  Future<void> write(RecentProjects value) => writeAtomically(
-    fileSystem,
-    file.path,
-    utf8.encode(
-      '${const JsonEncoder.withIndent('  ').convert(_toJson(value))}\n',
-    ),
-  );
+  /// Writes [value] atomically, creating Pyro's app-support folder on the
+  /// first write (it does not exist yet on a fresh install). Throws the
+  /// file-system error on failure.
+  Future<void> write(RecentProjects value) async {
+    final folder = fileSystem.directory(fileSystem.path.dirname(file.path));
+    if (!folder.existsSync()) await folder.create(recursive: true);
+    await writeAtomically(
+      fileSystem,
+      file.path,
+      utf8.encode(
+        '${const JsonEncoder.withIndent('  ').convert(_toJson(value))}\n',
+      ),
+    );
+  }
 
   /// [value] with [projectRoot] opened: moved to the front of the list,
   /// remembered as last opened.

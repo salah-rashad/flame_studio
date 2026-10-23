@@ -38,6 +38,15 @@ void main() {
       expect(read.sizes['/proj-a'], const PrShellSizes(left: 300, right: 400));
     });
 
+    test("a fresh install's folder is created on the first write", () async {
+      final s = RecentProjectsStore(
+        fs.file('/fresh-support/recent_projects.json'),
+        fileSystem: fs,
+      );
+      await s.write(RecentProjectsStore.opened(RecentProjects.empty, '/proj'));
+      expect(await s.read().then((r) => r.paths), ['/proj']);
+    });
+
     test('opened moves a project to the front without duplicates', () async {
       var value = RecentProjects.empty;
       value = RecentProjectsStore.opened(value, '/a');

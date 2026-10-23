@@ -93,11 +93,8 @@ class OpenScene {
   final String displayName;
 
   /// This scene with a new [path] and [displayName] after a save.
-  OpenScene savedAs(String newPath, String newName) => OpenScene(
-    sceneId: newPath,
-    path: newPath,
-    displayName: newName,
-  );
+  OpenScene savedAs(String newPath, String newName) =>
+      OpenScene(sceneId: newPath, path: newPath, displayName: newName);
 }
 
 /// The tab strip's model (spec 006, data model).
@@ -117,10 +114,7 @@ class OpenScenesState {
     if (scenes.any((s) => s.sceneId == scene.sceneId)) {
       return OpenScenesState(scenes: scenes, active: scene.sceneId);
     }
-    return OpenScenesState(
-      scenes: scenes.add(scene),
-      active: scene.sceneId,
-    );
+    return OpenScenesState(scenes: scenes.add(scene), active: scene.sceneId);
   }
 
   /// The state with [sceneId] closed; the neighbour to its left becomes
@@ -130,15 +124,15 @@ class OpenScenesState {
     if (index < 0) return this;
     final next = scenes.removeAt(index);
     final neighbours = scenes;
-    final nextActive =
-        neighbours.isEmpty
+    final nextActive = neighbours.isEmpty
         ? null
         : (index < neighbours.length
               ? neighbours[index].sceneId
               : neighbours.last.sceneId);
-    return OpenScenesState(scenes: next, active: active == sceneId
-        ? nextActive
-        : active);
+    return OpenScenesState(
+      scenes: next,
+      active: active == sceneId ? nextActive : active,
+    );
   }
 
   /// The state with [sceneId] focused.
@@ -148,14 +142,13 @@ class OpenScenesState {
       : this;
 
   /// The state with [old] replaced by [updated] after a first save.
-  OpenScenesState renamed(OpenScene old, OpenScene updated) =>
-      OpenScenesState(
-        scenes: IList([
-          for (final s in scenes)
-            if (s.sceneId == old.sceneId) updated else s,
-        ]),
-        active: active == old.sceneId ? updated.sceneId : active,
-      );
+  OpenScenesState renamed(OpenScene old, OpenScene updated) => OpenScenesState(
+    scenes: IList([
+      for (final s in scenes)
+        if (s.sceneId == old.sceneId) updated else s,
+    ]),
+    active: active == old.sceneId ? updated.sceneId : active,
+  );
 }
 
 /// The open project (FR-001): its root, the detected SDK and the Runtime
@@ -251,9 +244,8 @@ class SessionRegistry extends Notifier<Map<String, DocumentSession>> {
 /// its [DocumentNotifier.transact]; mutations never touch the session
 /// directly. AutoDispose closes the session when the last listener and
 /// every `KeepAliveLink` are gone (research §2).
-final documentProvider =
-    NotifierProvider.autoDispose
-        .family<DocumentNotifier, DocumentView, String>(DocumentNotifier.new);
+final documentProvider = NotifierProvider.autoDispose
+    .family<DocumentNotifier, DocumentView, String>(DocumentNotifier.new);
 
 /// [documentProvider]'s notifier; created per sceneId by the family.
 class DocumentNotifier extends Notifier<DocumentView> {
@@ -287,9 +279,7 @@ class DocumentNotifier extends Notifier<DocumentView> {
         // through the unsaved-changes dialog before the last link goes;
         // reaching here still open means the container itself is going
         // down.
-        unawaited(
-          s.state.isDirty ? s.discardAndClose() : s.close(),
-        );
+        unawaited(s.state.isDirty ? s.discardAndClose() : s.close());
       }
     });
     return DocumentView.of(session.state);
@@ -319,10 +309,8 @@ class DocumentNotifier extends Notifier<DocumentView> {
 
 /// The selected Node of one scene (FR-011): editor state outside the
 /// document (*Q25*), single-selection this phase.
-final selectionProvider =
-    NotifierProvider.autoDispose.family<SelectionNotifier, NodeId?, String>(
-      SelectionNotifier.new,
-    );
+final selectionProvider = NotifierProvider.autoDispose
+    .family<SelectionNotifier, NodeId?, String>(SelectionNotifier.new);
 
 /// [selectionProvider]'s notifier.
 class SelectionNotifier extends Notifier<NodeId?> {
@@ -343,8 +331,10 @@ class SelectionNotifier extends Notifier<NodeId?> {
 /// watches only the document and returns the Node object itself, so
 /// structural sharing plus Riverpod's `==` filtering skips notifying every
 /// row whose Node is untouched.
-final nodeProvider =
-    Provider.autoDispose.family<Node?, (String, NodeId)>((ref, key) {
+final nodeProvider = Provider.autoDispose.family<Node?, (String, NodeId)>((
+  ref,
+  key,
+) {
   final (sceneId, nodeId) = key;
   final document = ref.watch(
     documentProvider(sceneId).select((view) => view.document),

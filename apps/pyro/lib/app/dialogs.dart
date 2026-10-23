@@ -15,26 +15,26 @@ Future<UnsavedChangesAnswer> showUnsavedChangesDialog(
   BuildContext context,
   String sceneName,
 ) => showFsDialog<UnsavedChangesAnswer>(
-      context,
-      dialog: PrDialog(
-        title: 'Save changes to "$sceneName"?',
-        body:
-            'The Scene has unsaved changes. They are kept in a recovery '
-            'copy only after a while.',
-        primary: const PrDialogAction(
-          label: 'Save',
-          value: UnsavedChangesAnswer.save,
-        ),
-        secondary: const PrDialogAction(
-          label: 'Cancel',
-          value: UnsavedChangesAnswer.cancel,
-        ),
-        destructive: const PrDialogAction(
-          label: 'Discard',
-          value: UnsavedChangesAnswer.discard,
-        ),
-      ),
-    ).then((answer) => answer ?? UnsavedChangesAnswer.cancel);
+  context,
+  dialog: PrDialog(
+    title: 'Save changes to "$sceneName"?',
+    body:
+        'The Scene has unsaved changes. They are kept in a recovery '
+        'copy only after a while.',
+    primary: const PrDialogAction(
+      label: 'Save',
+      value: UnsavedChangesAnswer.save,
+    ),
+    secondary: const PrDialogAction(
+      label: 'Cancel',
+      value: UnsavedChangesAnswer.cancel,
+    ),
+    destructive: const PrDialogAction(
+      label: 'Discard',
+      value: UnsavedChangesAnswer.discard,
+    ),
+  ),
+).then((answer) => answer ?? UnsavedChangesAnswer.cancel);
 
 /// The new-scene dialog's result (FR-008).
 class NewSceneResult {
@@ -117,7 +117,8 @@ class _NewSceneFormState extends State<_NewSceneForm> {
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController()..addListener(() => widget.onName(_name.text));
+    _name = TextEditingController()
+      ..addListener(() => widget.onName(_name.text));
     _folder = widget.initialFolder;
   }
 
@@ -179,24 +180,24 @@ Future<SaveRefusedAnswer> showSceneChangedOnDiskDialog(
   BuildContext context,
   String path,
 ) => showFsDialog<SaveRefusedAnswer>(
-      context,
-      dialog: PrDialog(
-        title: 'The Scene file changed on disk',
-        body: '"$path" changed since it was opened or last saved.',
-        primary: const PrDialogAction(
-          label: 'Reload from disk',
-          value: SaveRefusedAnswer.reload,
-        ),
-        secondary: const PrDialogAction(
-          label: 'Cancel',
-          value: SaveRefusedAnswer.cancel,
-        ),
-        destructive: const PrDialogAction(
-          label: 'Overwrite',
-          value: SaveRefusedAnswer.overwrite,
-        ),
-      ),
-    ).then((answer) => answer ?? SaveRefusedAnswer.cancel);
+  context,
+  dialog: PrDialog(
+    title: 'The Scene file changed on disk',
+    body: '"$path" changed since it was opened or last saved.',
+    primary: const PrDialogAction(
+      label: 'Reload from disk',
+      value: SaveRefusedAnswer.reload,
+    ),
+    secondary: const PrDialogAction(
+      label: 'Cancel',
+      value: SaveRefusedAnswer.cancel,
+    ),
+    destructive: const PrDialogAction(
+      label: 'Overwrite',
+      value: SaveRefusedAnswer.overwrite,
+    ),
+  ),
+).then((answer) => answer ?? SaveRefusedAnswer.cancel);
 
 /// Shows why a save was refused without a way forward (*Q95*/*Q98*): the
 /// Runtime gate messages.
@@ -221,27 +222,27 @@ Future<RestoreAnswer> showRestoreDialog(
   required String scenePath,
   required DateTime writtenAt,
 }) => showFsDialog<RestoreAnswer>(
-      context,
-      dialog: PrDialog(
-        title: 'Recover unsaved changes?',
-        body:
-            'Pyro kept a recovery copy of "$scenePath" from '
-            '${writtenAt.toLocal()}. Restoring it opens the Scene with '
-            'those changes, unsaved.',
-        primary: const PrDialogAction(
-          label: 'Restore',
-          value: RestoreAnswer.restore,
-        ),
-        secondary: const PrDialogAction(
-          label: 'Cancel',
-          value: RestoreAnswer.discard,
-        ),
-        destructive: const PrDialogAction(
-          label: 'Discard',
-          value: RestoreAnswer.discard,
-        ),
-      ),
-    ).then((answer) => answer ?? RestoreAnswer.discard);
+  context,
+  dialog: PrDialog(
+    title: 'Recover unsaved changes?',
+    body:
+        'Pyro kept a recovery copy of "$scenePath" from '
+        '${writtenAt.toLocal()}. Restoring it opens the Scene with '
+        'those changes, unsaved.',
+    primary: const PrDialogAction(
+      label: 'Restore',
+      value: RestoreAnswer.restore,
+    ),
+    secondary: const PrDialogAction(
+      label: 'Cancel',
+      value: RestoreAnswer.discard,
+    ),
+    destructive: const PrDialogAction(
+      label: 'Discard',
+      value: RestoreAnswer.discard,
+    ),
+  ),
+).then((answer) => answer ?? RestoreAnswer.discard);
 
 /// Shows the repair report of a hand-broken tree (FR-009, *Q96*): every
 /// issue on its own line.
@@ -250,18 +251,19 @@ Future<void> showRepairReportDialog(
   required String scenePath,
   required RepairReport repairs,
 }) => showFsDialog<void>(
-      context,
-      dialog: PrDialog(
-        title: 'The Scene was repaired on open',
-        body: '"$scenePath" had a broken tree; Pyro repaired it. The Scene '
-            'is open with unsaved changes — save to write the repaired '
-            'form.',
-        content: Text(
-          repairs.describe(),
-          style: PrText.monoSmall.copyWith(
-            color: PrColors.of(context).textSecondary,
-          ),
-        ),
-        primary: const PrDialogAction(label: 'OK'),
+  context,
+  dialog: PrDialog(
+    title: 'The Scene was repaired on open',
+    body:
+        '"$scenePath" had a broken tree; Pyro repaired it. The Scene '
+        'is open with unsaved changes — save to write the repaired '
+        'form.',
+    content: Text(
+      repairs.describe(),
+      style: PrText.monoSmall.copyWith(
+        color: PrColors.of(context).textSecondary,
       ),
-    );
+    ),
+    primary: const PrDialogAction(label: 'OK'),
+  ),
+);

@@ -75,8 +75,8 @@ void main() {
       scenePath: scenePath,
       state: dirty,
     );
-    final info = (await command.checkRecovery(scenePath)
-        as RecoveryAvailable).info;
+    final info =
+        (await command.checkRecovery(scenePath) as RecoveryAvailable).info;
 
     final session = await command.open(scenePath, restore: info);
     expect(session.state.origin, OpenedFrom.restored);
@@ -88,9 +88,11 @@ void main() {
   });
 
   test('a hand-broken tree opens dirty with a repair report (*Q96*)', () async {
-    fs.file(scenePath).writeAsBytesSync(
-      readFixtureBytes('damaged/cycle_reachable.scene.json'),
-    );
+    fs
+        .file(scenePath)
+        .writeAsBytesSync(
+          readFixtureBytes('damaged/cycle_reachable.scene.json'),
+        );
     final session = await command.open(scenePath);
     expect(session.state.origin, OpenedFrom.repaired);
     expect(session.state.isDirty, isTrue);
@@ -99,9 +101,9 @@ void main() {
   });
 
   test('a newer schemaVersion names the required version (*Q49*)', () async {
-    fs.file(scenePath).writeAsBytesSync(
-      readFixtureBytes('version/newer.scene.json'),
-    );
+    fs
+        .file(scenePath)
+        .writeAsBytesSync(readFixtureBytes('version/newer.scene.json'));
     await expectLater(
       command.open(scenePath),
       throwsA(

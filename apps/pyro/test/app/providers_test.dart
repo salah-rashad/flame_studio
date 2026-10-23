@@ -125,9 +125,7 @@ void main() {
       expect(
         () => container.read(documentProvider('missing')),
         throwsA(
-          predicate(
-            (e) => '$e'.contains('No session registered for scene'),
-          ),
+          predicate((e) => '$e'.contains('No session registered for scene')),
         ),
       );
     });

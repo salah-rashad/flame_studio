@@ -33,6 +33,14 @@ export 'catalog/parenting.dart'
         canReparent,
         childOffers,
         hitboxUnderRootReason;
+export 'catalog/provider.dart'
+    show
+        TypeCatalogNotifier,
+        catalogFileSystemProvider,
+        manifestQuietPeriod,
+        manifestRelativePath,
+        manifestWatchProvider,
+        typeCatalogProvider;
 export 'recent_projects.dart' show RecentProjects, RecentProjectsStore;
 export 'runtime_compat.dart'
     show RuntimeCompatStatus, RuntimeCompatibility, checkRuntimeCompatibility;

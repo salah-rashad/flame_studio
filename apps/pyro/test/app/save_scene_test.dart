@@ -158,6 +158,59 @@ void main() {
     await closeAll();
   });
 
+  testWidgets('a first save rename keeps the session alive (⌘S/⌘Z)', (
+    tester,
+  ) async {
+    container = openProject();
+    final session = command.create();
+    command.register(
+      container,
+      sceneId: 'new-1',
+      session: session,
+      displayName: 'untitled',
+    );
+    session.transact('Add entity', (doc) {
+      return doc.addNode(
+        EntityNode(
+          id: const NodeId('extra'),
+          name: 'extra',
+          transform: NodeTransform(),
+        ),
+        parentId: doc.rootId,
+      );
+    });
+    // The tab strip's watch on the untitled key; the rename moves it to
+    // the saved path, so this key's provider is the one left to dispose.
+    final link = container.listen(documentProvider('new-1'), (_, _) {});
+    await pumpHost(tester, saveButton());
+
+    await tester.tap(find.text('save'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(PrTextField, 'Scene name'),
+      'bonus2',
+    );
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    // The last watch on the untitled key goes; its provider's last-resort
+    // close must not reach the session now living under the saved path.
+    link.close();
+    await tester.pumpAndSettle();
+
+    // The exact calls the ⌘Z and ⌘S shortcuts make on the renamed tab:
+    // both threw "Scene … is closed" before the registry-owns guard.
+    const saved = '/proj/assets/scenes/bonus2.scene.json';
+    expect(container.read(documentProvider(saved)).canUndo, isTrue);
+    container.read(documentProvider(saved).notifier).undo();
+    expect(container.read(documentProvider(saved)).isDirty, isTrue);
+    expect(
+      () => container.read(documentProvider(saved).notifier).session,
+      returnsNormally,
+    );
+    await closeAll();
+  });
+
   testWidgets('a changed-on-disk refusal offers Overwrite (*Q95*)', (
     tester,
   ) async {

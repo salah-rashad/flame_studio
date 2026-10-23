@@ -222,18 +222,31 @@ final sessionRegistryProvider =
 
 /// [sessionRegistryProvider]'s notifier.
 class SessionRegistry extends Notifier<Map<String, DocumentSession>> {
+  /// The entries, as a plain map that [state] publishes a copy of:
+  /// `owns` reads it from other providers' `onDispose`, where Riverpod's
+  /// life-cycle guard would reject going through `state`.
+  final Map<String, DocumentSession> _live = {};
+
   @override
   Map<String, DocumentSession> build() => const {};
 
   /// Registers [session] under [sceneId].
-  void register(String sceneId, DocumentSession session) =>
-      state = {...state, sceneId: session};
+  void register(String sceneId, DocumentSession session) {
+    _live[sceneId] = session;
+    state = {..._live};
+  }
 
   /// Drops the entry for [sceneId] (the session is already closed).
   void forget(String sceneId) {
-    final next = Map.of(state)..remove(sceneId);
-    state = next;
+    _live.remove(sceneId);
+    state = {..._live};
   }
+
+  /// Whether [sceneId] still maps to [session]: false once a first save
+  /// renamed the Scene and the registry moved the session to the saved
+  /// path — that key's provider owns the close from then on.
+  bool owns(String sceneId, DocumentSession session) =>
+      identical(_live[sceneId], session);
 }
 
 /// One open document per scene (FR-002): the family Notifier owning its
@@ -258,6 +271,7 @@ class DocumentNotifier extends Notifier<DocumentView> {
   @override
   DocumentView build() {
     final sceneId = this.sceneId;
+    final registry = ref.read(sessionRegistryProvider.notifier);
     final session = ref.read(sessionRegistryProvider)[sceneId];
     if (session == null) {
       throw StateError('No session registered for scene "$sceneId"');
@@ -271,11 +285,13 @@ class DocumentNotifier extends Notifier<DocumentView> {
     ref.onDispose(() {
       unawaited(_subscription?.cancel());
       final s = _session;
-      if (s != null && !s.isClosed) {
+      if (s != null && !s.isClosed && registry.owns(sceneId, s)) {
         // Last resort: the close flows in scene_tabs close the session
         // through the unsaved-changes dialog before the last link goes;
-        // reaching here still open means the container itself is going
-        // down.
+        // reaching here still open and still owned by this key means the
+        // container itself is going down. A first save renamed the Scene
+        // to its saved path — that key's provider owns the session now,
+        // and closing it here would kill ⌘S/⌘Z on the renamed tab.
         unawaited(s.state.isDirty ? s.discardAndClose() : s.close());
       }
     });

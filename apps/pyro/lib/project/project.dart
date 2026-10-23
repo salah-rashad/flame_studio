@@ -7,4 +7,4 @@ export 'asset_folders.dart'
 export 'recent_projects.dart' show RecentProjects, RecentProjectsStore;
 export 'runtime_compat.dart'
     show RuntimeCompatStatus, RuntimeCompatibility, checkRuntimeCompatibility;
-export 'sdk.dart' show SdkInfo, SdkSource, detectSdk;
+export 'sdk.dart' show SdkInfo, SdkSource, detectSdk, flutterPathVersion;

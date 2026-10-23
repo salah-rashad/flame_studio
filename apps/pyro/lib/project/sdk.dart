@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, Process, ProcessException;
 
 import 'package:file/file.dart';
 import 'package:file/local.dart';
@@ -74,6 +74,24 @@ Future<SdkInfo> detectSdk(
 }
 
 Future<String?> _noPathVersion() async => null;
+
+/// Runs `flutter --version` and reads its version number: the app's
+/// [PathVersion]. Tests inject a fake instead so they never run a real
+/// SDK (constitution V).
+Future<String?> flutterPathVersion() async {
+  try {
+    final result = await Process.run('flutter', ['--version']);
+    if (result.exitCode != 0) return null;
+    final firstLine = (result.stdout as String)
+        .split('\n')
+        .firstWhere((line) => line.trim().isNotEmpty, orElse: () => '');
+    final match = RegExp(r'Flutter\s+(\S+)').firstMatch(firstLine);
+    return match?.group(1);
+  } on ProcessException {
+    // No `flutter` on PATH; §9.1's last source falls through to none.
+    return null;
+  }
+}
 
 // The fvm configs, newest first: `.fvmrc` names the release;
 // `.fvm/fvm_config.json` may name the version; `.fvm/flutter_sdk/version`

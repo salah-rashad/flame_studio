@@ -1,3 +1,4 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:file/memory.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -165,5 +166,41 @@ void main() {
         );
       },
     );
+  });
+
+  group('OpenScenesState.close (T013, FR-008)', () {
+    OpenScene tab(String id) => OpenScene(
+      sceneId: id,
+      path: null,
+      displayName: id,
+    );
+
+    OpenScenesState openabc() =>
+        const OpenScenesState(scenes: IList<OpenScene>.empty())
+            .open(tab('a'))
+            .open(tab('b'))
+            .open(tab('c'));
+
+    test('closing the active tab activates its left neighbour', () {
+      final state = openabc().focus('b').close('b');
+      expect(state.scenes.map((s) => s.sceneId), ['a', 'c']);
+      expect(state.active, 'a');
+    });
+
+    test('closing the active first tab activates the new first', () {
+      final state = openabc().focus('a').close('a');
+      expect(state.active, 'b');
+    });
+
+    test('closing the last tab clears the active', () {
+      final state = openabc().focus('b').close('a').close('b').close('c');
+      expect(state.scenes, isEmpty);
+      expect(state.active, isNull);
+    });
+
+    test('closing an inactive tab keeps the active', () {
+      final state = openabc().focus('c').close('a');
+      expect(state.active, 'c');
+    });
   });
 }

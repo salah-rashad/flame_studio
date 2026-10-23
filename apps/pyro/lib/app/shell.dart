@@ -144,14 +144,18 @@ class _PyroEditorWindowState extends ConsumerState<PyroEditorWindow> {
         left: dock(0, widget.left, 'Hierarchy'),
         center: dock(
           1,
-          widget.center != null
+          widget.tabs != null
               ? Column(
                   children: [
-                    widget.tabs ?? const SizedBox.shrink(),
-                    Expanded(child: widget.center!),
+                    widget.tabs!,
+                    Expanded(
+                      child:
+                          widget.center ??
+                          const _PanelPlaceholder(label: 'Viewport'),
+                    ),
                   ],
                 )
-              : null,
+              : widget.center,
           'Viewport',
         ),
         right: dock(2, widget.right, 'Inspector'),

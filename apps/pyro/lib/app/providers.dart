@@ -123,12 +123,9 @@ class OpenScenesState {
     final index = scenes.indexWhere((s) => s.sceneId == sceneId);
     if (index < 0) return this;
     final next = scenes.removeAt(index);
-    final neighbours = scenes;
-    final nextActive = neighbours.isEmpty
+    final nextActive = next.isEmpty
         ? null
-        : (index < neighbours.length
-              ? neighbours[index].sceneId
-              : neighbours.last.sceneId);
+        : (index > 0 ? next[index - 1].sceneId : next.first.sceneId);
     return OpenScenesState(
       scenes: next,
       active: active == sceneId ? nextActive : active,

@@ -69,7 +69,11 @@ class _PyroAppState extends State<PyroApp> {
   }
 
   Future<void> _openProject(String root) async {
-    final sdk = await detectSdk(root, fileSystem: widget.fileSystem);
+    final sdk = await detectSdk(
+      root,
+      fileSystem: widget.fileSystem,
+      pathVersion: flutterPathVersion,
+    );
     final compatibility = await checkRuntimeCompatibility(
       root,
       fileSystem: widget.fileSystem,
@@ -157,7 +161,9 @@ class _WelcomeWindowState extends State<_WelcomeWindow> {
     final recent = await widget.settings.read();
     final entries = <(String, SdkInfo)>[];
     for (final root in recent.paths) {
-      entries.add((root, await detectSdk(root)));
+      entries.add(
+        (root, await detectSdk(root, pathVersion: flutterPathVersion)),
+      );
     }
     if (mounted) setState(() => _recent = entries);
   }

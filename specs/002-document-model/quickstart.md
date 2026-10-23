@@ -8,13 +8,13 @@ Everything is headless: there is no editor UI to click yet.
 
 - Flutter 3.44.2 (`/Users/salah/Library/flutter/bin` on `PATH`), and `flutter pub get` run once
   at the repository root.
-- Generated files up to date: `dart run build_runner build -d` in `apps/pyro` after changing a
+- Generated files up to date: `dart run build_runner build -d` in `apps/editor` after changing a
   freezed class (the generated files are committed, so a fresh checkout doesn't need it).
 
 ## 1. Run the tests
 
 ```bash
-cd apps/pyro && flutter test test/document
+cd apps/editor && flutter test test/document
 ```
 
 | Test file | Covers |
@@ -32,7 +32,7 @@ cd apps/pyro && flutter test test/document
 Open any canonical fixture as a document, save it to a copy, and compare:
 
 ```bash
-cd apps/pyro && flutter test test/document/round_trip_test.dart --plain-name all_kinds
+cd apps/editor && flutter test test/document/round_trip_test.dart --plain-name all_kinds
 ```
 
 The test writes nothing outside its in-memory file system; on a mismatch it prints a line diff
@@ -48,7 +48,7 @@ must read back as exactly the old bytes or exactly the new ones, and the folder 
 ## 4. Measure the budgets (SC-005, SC-006)
 
 ```bash
-cd apps/pyro && flutter test --enable-vmservice benchmark/document_benchmark_test.dart
+cd apps/editor && flutter test --enable-vmservice benchmark/document_benchmark_test.dart
 ```
 
 Prints, for a generated 1,000-Node Scene: the median time of a one-Node transaction, an undo

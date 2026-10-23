@@ -446,9 +446,9 @@ Registry and `rootBundle`
 - [X] T048 Run the repository's checks:
   - `dart format --output=none --set-exit-if-changed packages apps`;
   - `dart analyze --fatal-infos packages/pyro_annotations packages/pyro_generator`;
-  - `flutter analyze --fatal-infos packages/pyro_runtime packages/pyro_ui apps/pyro packages/pyro_generator/fixture_game`;
+  - `flutter analyze --fatal-infos packages/pyro_runtime packages/pyro_ui apps/editor packages/pyro_generator/fixture_game`;
   - `flutter analyze --fatal-infos lib/pyro.g.dart` in `game/`;
-  - `dart test` in `gen/`, and `flutter test` in `rt/`, `game/` and `apps/pyro`;
+  - `dart test` in `gen/`, and `flutter test` in `rt/`, `game/` and `apps/editor`;
   - in `game/`, `dart run build_runner build -d && git diff --exit-code -- lib/pyro.g.dart lib/pyro.manifest.json`;
   - walk through [quickstart.md](quickstart.md) §1–§3 and §6.
 - [X] T049 Self-review the change against the constitution (plan.md, Constitution Check):

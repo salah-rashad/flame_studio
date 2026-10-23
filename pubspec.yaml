@@ -18,7 +18,7 @@ workspace:
   - example
   - packages/pyro_ui
   - packages/pyro_ui/example
-  - apps/pyro
+  - apps/editor
 
 dev_dependencies:
   # Provides the base rule set the root analysis_options.yaml includes.

@@ -61,7 +61,7 @@ device list and emulator boot; the full sample game (item 13, v0.1); anything on
 ### Session 2026-10-22
 
 - Q: How does a user start Pyro's client for `example/` before the editor window exists? →
-  A: With a small command-line entry point in the app package (`apps/pyro/bin/`), run from the
+  A: With a small command-line entry point in the app package (`apps/editor/bin/`), run from the
   workspace with the project path as its argument. It prints the client's lifecycle events and the
   game's output lines, and stops the game on Ctrl-C. It exists so the slice can be run and timed
   by hand on the Mac; the Play button of Phase 4 reuses the same client, and the entry point is

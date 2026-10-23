@@ -38,7 +38,7 @@ Each package has one job, and the dependency graph is a rule, not a convention.
     migrations live here and nowhere else.
   - `pyro_ui` depends on Flutter (plus its icon font) only. Its widgets take plain values and
     callbacks and MUST NOT know about scenes, the document, Riverpod or Flame.
-  - The app (`apps/pyro`) MUST NOT depend on the generator and MUST NOT import or execute user
+  - The app (`apps/editor`) MUST NOT depend on the generator and MUST NOT import or execute user
     code (*Q7*).
 - All editor UI MUST be built from `Pr` components in `pyro_ui` (*Q87*). A missing component is
   proposed and the author decides whether it is built; panels never style raw Material widgets

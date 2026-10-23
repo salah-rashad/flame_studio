@@ -1,6 +1,6 @@
 # Contract: Play client API
 
-The public surface of `apps/pyro/lib/process/process.dart`. Its callers are `bin/play.dart` and
+The public surface of `apps/editor/lib/process/process.dart`. Its callers are `bin/play.dart` and
 `benchmark/hot_swap_latency.dart` in this slice, and in Phase 4 the Play button's provider.
 Everything else stays under `lib/process/src/`. The library imports no Flutter (research R2).
 

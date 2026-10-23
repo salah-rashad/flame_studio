@@ -5,7 +5,7 @@ component, through the generated Registry. It is a sample, not a published packa
 
 Three things use it (spec 005):
 
-- **The vertical slice.** `apps/pyro/bin/play.dart` runs it and Hot-swaps the Scene when it is
+- **The vertical slice.** `apps/editor/bin/play.dart` runs it and Hot-swaps the Scene when it is
   saved.
 - **The CI contract test** (*Q59*). CI regenerates its Registry and Manifest, compares them with
   the committed files and the golden, and loads every Scene with the real Registry.
@@ -36,7 +36,7 @@ flutter run -d macos
 To run it through Pyro's Play client, with Hot-swap on save:
 
 ```bash
-cd apps/pyro
+cd apps/editor
 dart run bin/play.dart ../../example
 ```
 

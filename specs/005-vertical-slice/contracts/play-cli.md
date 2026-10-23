@@ -5,7 +5,7 @@ parses arguments, starts a session, prints its events, and maps keys and signals
 
 ## Usage
 
-From `apps/pyro`:
+From `apps/editor`:
 
 ```text
 dart run bin/play.dart <project> [--flutter <path>] [--record <file>]
@@ -58,5 +58,5 @@ service auth code.
 ## Lifetime
 
 It lives as long as the session. After Phase 4 it is either kept as a documented developer tool
-(`apps/pyro/README.md`) or removed when the Play button replaces it (spec FR-025). That is decided
+(`apps/editor/README.md`) or removed when the Play button replaces it (spec FR-025). That is decided
 then, not here.

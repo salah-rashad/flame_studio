@@ -3,7 +3,7 @@
 // saved. It is the vertical slice's entry point until the Play button
 // (spec 005, contracts/play-cli.md); the work is done by lib/process/.
 //
-// Usage, from apps/pyro:
+// Usage, from apps/editor:
 //   dart run bin/play.dart <project> [--flutter <path>] [--record <file>]
 //
 // Type `r` + Enter to hot-reload, `q` + Enter (or Ctrl-C) to stop.

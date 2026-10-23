@@ -1,7 +1,7 @@
 # pyro_ui
 
 The Pyro design system in Flutter: design tokens, the theme and (as
-they are built) the editor's widgets. Only the Pyro app (`apps/pyro`)
+they are built) the editor's widgets. Only the Pyro app (`apps/editor`)
 uses it; it is never published.
 
 ```dart

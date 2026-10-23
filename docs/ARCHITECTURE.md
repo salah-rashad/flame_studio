@@ -529,7 +529,7 @@ modest on a 1,000-Node Scene ([`specs/002-document-model/`](../specs/002-documen
 SC-005, a one-Node transaction, undo or redo under 1 ms; SC-006, a 200-step history under
 2 MB), and does opening or saving keep the UI isolate free?
 
-**Answer:** yes. Measured with `apps/pyro/benchmark/document_benchmark_test.dart`
+**Answer:** yes. Measured with `apps/editor/benchmark/document_benchmark_test.dart`
 (`flutter test --enable-vmservice`, so JIT numbers, an upper bound for the release build) on a
 1,000-Node Scene of entities, each with a sprite and a rectangle hitbox.
 
@@ -697,7 +697,7 @@ change to the default Play target is proposed (*Q82*, SC-010). Results:
 
 | What | Result |
 |---|---|
-| Play client tests (`flutter test test/process/` in `apps/pyro`, transcripts, no device) | ✅ 48 pass |
+| Play client tests (`flutter test test/process/` in `apps/editor`, transcripts, no device) | ✅ 48 pass |
 | `example/` tests: Scene loads with every Override, `Spin` turns, HUD, no-op reload | ✅ |
 | Contract checks locally: committed files, golden, every Scene, analysis | ✅ |
 | Each deliberate breakage fails at its own check (quickstart §3) | ✅ all five |
@@ -763,7 +763,7 @@ minor, no difference seen), `-d macos --debug`.
 | §5.7 five start and stop cycles (`q` ×3, SIGINT, window close) | ✅ each exits 0 and leaves no `pyro_example` or `flutter run` process |
 | §5.8 start errors | ✅ no `macos/`: exit 1 naming the path; syntax error in `lib/main.dart`: exit 1 quoting the compile error |
 | §5.9 release build | ✅ 0 matches for `couldn't Hot-swap` in `App.framework/App`; the string is in the Debug build's kernel (2) and `Scene loaded` is in the Release binary (2), so the search works |
-| §5.10 transcripts | ✅ replaced with recordings, see `apps/pyro/test/fixtures/daemon/README.md` |
+| §5.10 transcripts | ✅ replaced with recordings, see `apps/editor/test/fixtures/daemon/README.md` |
 
 **Looked at in the window** (a second run, with screenshots): the ship turns clockwise, the banner
 "Hello from Pyro" is white and the HUD reads `time: …s  swaps: 0  code: v1`. A save changed the

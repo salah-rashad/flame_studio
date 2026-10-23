@@ -1,6 +1,6 @@
 # Data Model: Document Model
 
-The types in `apps/pyro/lib/document/`. Node classes, `Scene`, `SceneCodec`, `RepairReport`
+The types in `apps/editor/lib/document/`. Node classes, `Scene`, `SceneCodec`, `RepairReport`
 and `SceneFormatException` are `pyro_runtime`'s ([spec 001 data model](../001-scene-format/data-model.md))
 and are used unchanged. Signatures are in [contracts/document-api.md](contracts/document-api.md);
 decisions cited as R*n* are in [research.md](research.md).

@@ -12,14 +12,14 @@
 
 - **[P]**: Can run in parallel (different files, no dependencies on incomplete tasks)
 - **[Story]**: Which user story this task belongs to (US1–US7)
-- File paths are under `apps/pyro/` unless stated otherwise
+- File paths are under `apps/editor/` unless stated otherwise
 
 ---
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [x] T001 Add `yaml: ^1.14.0` to `apps/pyro/pubspec.yaml` dependencies (BSD-3, MIT-distribution compatible — the one new dependency flagged in plan.md's Constitution Check) and resolve the workspace from the repo root (`dart pub get`); commit the lock change alone.
-- [x] T002 [P] Create `apps/pyro/test/flutter_test_config.dart` loading the app's font manifest the gallery's way (copy the pattern from `packages/pyro_ui/example/test/flutter_test_config.dart`) so `Pr` widgets and `PrIcons` glyphs render in tests instead of squares.
+- [x] T001 Add `yaml: ^1.14.0` to `apps/editor/pubspec.yaml` dependencies (BSD-3, MIT-distribution compatible — the one new dependency flagged in plan.md's Constitution Check) and resolve the workspace from the repo root (`dart pub get`); commit the lock change alone.
+- [x] T002 [P] Create `apps/editor/test/flutter_test_config.dart` loading the app's font manifest the gallery's way (copy the pattern from `packages/pyro_ui/example/test/flutter_test_config.dart`) so `Pr` widgets and `PrIcons` glyphs render in tests instead of squares.
 - [x] T003 [P] Create the four feature folders with empty public barrels per plan.md's structure: `lib/app/app.dart`, `lib/project/project.dart`, `lib/viewport/viewport.dart`, `lib/panels/panels.dart` (export lists grow with the stories; nothing else lives at `lib/` top level beside `main.dart` and the existing `document/`, `process/`).
 
 ---
@@ -28,8 +28,8 @@
 
 **⚠️** No user story starts before this phase is green.
 
-- [x] T004 [P] Add the app widget-test harness `pumpPyro` to `apps/pyro/test/helpers/pump.dart`: `MaterialApp` + `PrTheme.dark()` + `ProviderScope` over a `surfacePanel` background, plus real-mouse gesture helpers (`hover`, `mouseDrag`), modeled on `packages/pyro_ui/test/helpers.dart`.
-- [x] T005 [P] Add catalog and project fixtures to `apps/pyro/test/helpers/`: loaders for `example/lib/pyro.manifest.json` (read in place, like the document tests read runtime scene fixtures), fixture `pubspec.lock`/`pubspec.yaml` texts (ok / tooOld / tooNew / no pyro_runtime / undeclared folders), and a manifest-error sample; reuse the existing scene builders in `test/document/helpers/scenes.dart` (incl. `generatedScene(1000)`).
+- [x] T004 [P] Add the app widget-test harness `pumpPyro` to `apps/editor/test/helpers/pump.dart`: `MaterialApp` + `PrTheme.dark()` + `ProviderScope` over a `surfacePanel` background, plus real-mouse gesture helpers (`hover`, `mouseDrag`), modeled on `packages/pyro_ui/test/helpers.dart`.
+- [x] T005 [P] Add catalog and project fixtures to `apps/editor/test/helpers/`: loaders for `example/lib/pyro.manifest.json` (read in place, like the document tests read runtime scene fixtures), fixture `pubspec.lock`/`pubspec.yaml` texts (ok / tooOld / tooNew / no pyro_runtime / undeclared folders), and a manifest-error sample; reuse the existing scene builders in `test/document/helpers/scenes.dart` (incl. `generatedScene(1000)`).
 
 **Checkpoint**: `flutter analyze` and `flutter test` still green; stories can start.
 

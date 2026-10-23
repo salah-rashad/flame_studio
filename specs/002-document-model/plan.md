@@ -6,7 +6,7 @@
 
 ## Summary
 
-Build Pyro's Document model in the app (`apps/pyro/lib/document/`), headless: an immutable
+Build Pyro's Document model in the app (`apps/editor/lib/document/`), headless: an immutable
 `SceneDocument` (flat `IMap<NodeId, Node>` plus a parent index, over `pyro_runtime`'s Node
 classes) with four tree-safe edit operations; a pure `DocumentHistory` with named transactions,
 coalescing, a 200-entry cap and an identity-based dirty flag; `SceneFiles` for opening and
@@ -31,7 +31,7 @@ choice; R1)
 recovery copies as Scene files plus a small JSON metadata file in a recovery folder outside the
 project ([contracts/recovery-copies.md](contracts/recovery-copies.md))
 
-**Testing**: `flutter test` in `apps/pyro` with `MemoryFileSystem`, a forwarding file system
+**Testing**: `flutter test` in `apps/editor` with `MemoryFileSystem`, a forwarding file system
 that fails or pauses on demand, `fake_async`, an injected clock and an inline `Offload` runner
 (R9, R10); `pyro_runtime`'s fixtures for round trips; a benchmark run by hand with
 `flutter test --enable-vmservice benchmark/` (JIT, so an upper bound), with SC-006 measured
@@ -40,7 +40,7 @@ from a heap snapshot taken through the VM service
 **Target Platform**: Pyro desktop on macOS (first class), Windows and Linux (built and tested
 in CI, best effort)
 
-**Project Type**: desktop app module (a feature folder inside `apps/pyro`)
+**Project Type**: desktop app module (a feature folder inside `apps/editor`)
 
 **Performance Goals**: one-Node transaction, undo and redo < 1 ms median on a 1,000-Node Scene
 (SC-005); a 200-step history holds < 2 MB on a 1,000-Node Scene (SC-006); open and save never
@@ -94,7 +94,7 @@ specs/002-document-model/
 ### Source Code (repository root)
 
 ```text
-apps/pyro/
+apps/editor/
 ├── pubspec.yaml                       # + the dependencies in research R1
 ├── lib/
 │   ├── main.dart                      # unchanged (the shell is #1)

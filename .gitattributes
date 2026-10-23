@@ -17,4 +17,4 @@ packages/pyro_generator/fixture_game/assets/** -text
 example/lib/pyro.* -text
 example/assets/** -text
 example/test/goldens/** -text
-apps/pyro/test/fixtures/daemon/** -text
+apps/editor/test/fixtures/daemon/** -text

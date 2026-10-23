@@ -29,10 +29,10 @@ but a one-function typedef does the same job (R3).
 ## R2. Where the client lives, and the CLI
 
 **Decision:** the client is the app's `process/` feature (constitution II's feature list):
-`apps/pyro/lib/process/process.dart` is the public library and the code sits under
+`apps/editor/lib/process/process.dart` is the public library and the code sits under
 `lib/process/src/`. It imports only `dart:io`, `dart:async`, `dart:convert`, `clock` and `meta`.
 It imports no Flutter and no Riverpod, so a plain Dart entry point can run it. The CLI is
-`apps/pyro/bin/play.dart`, run as `dart run bin/play.dart <project>` from `apps/pyro`
+`apps/editor/bin/play.dart`, run as `dart run bin/play.dart <project>` from `apps/editor`
 (contracts/play-cli.md). In Phase 4 a Riverpod provider wraps the same `PlayClient` for the
 Play button.
 
@@ -122,7 +122,7 @@ a consumer.
 
 ## R6. Transcripts for the parsing tests
 
-**Decision:** daemon transcripts are text files under `apps/pyro/test/fixtures/daemon/`. Each
+**Decision:** daemon transcripts are text files under `apps/editor/test/fixtures/daemon/`. Each
 line is what `flutter run --machine` wrote, in order: `start.txt` (build progress, a raw
 VM-service line with an auth code, `app.start`, `app.debugPort`, `app.started`), `reload_ok.txt`,
 `reload_failed.txt` (a compile error: a non-zero `code` and a message), `stop.txt`,
@@ -313,7 +313,7 @@ documented (US2 #7).
 
 ## R14. Measuring save-to-screen
 
-**Decision:** `apps/pyro/benchmark/hot_swap_latency.dart` is a Dart script that uses
+**Decision:** `apps/editor/benchmark/hot_swap_latency.dart` is a Dart script that uses
 `PlayClient` against a project path (default `../../example`). It starts the game and waits for
 `started` and for the game's first frame line. Then it runs three timed sections, printing a
 table and exiting non-zero on a failed criterion:

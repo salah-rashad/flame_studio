@@ -7,7 +7,7 @@ Flutter 3.44.2 on macOS, `example/`'s generated files committed (they are).
 ## 1. Automated checks (every change)
 
 ```sh
-cd apps/pyro && flutter analyze && flutter test    # document, process, app, project, viewport, panels
+cd apps/editor && flutter analyze && flutter test    # document, process, app, project, viewport, panels
 cd ../../packages/pyro_ui && flutter test          # untouched, but the panels lean on it
 cd ../../../example && flutter test                # contract side, incl. scene_canonical_test
 ```
@@ -19,7 +19,7 @@ font-loading config so `Pr` glyphs render.
 
 ## 2. The capstone run (spec story 7, FR-040)
 
-1. `cd apps/pyro && flutter run -d macos` — the project list appears with `example/` (add it
+1. `cd apps/editor && flutter run -d macos` — the project list appears with `example/` (add it
    by folder if not listed) and its detected Flutter version.
 2. Open the project; the status area shows the Runtime compatibility result (in range).
 3. New scene (⌘N): an untitled tab with one root Node. Save it as
@@ -36,7 +36,7 @@ font-loading config so `Pr` glyphs render.
 7. Contract side: `cd example && flutter test test/contract` — the new scene loads against
    the real Registry with no warnings; `dart run build_runner build && git diff --exit-code`
    stays clean.
-8. Hot-swap (the Phase 3 loop): run the game (`dart run bin/play.dart ../..` from `apps/pyro`
+8. Hot-swap (the Phase 3 loop): run the game (`dart run bin/play.dart ../..` from `apps/editor`
    or the example's own runner) and save the scene from Pyro — the running game swaps it.
 
 ## 3. The Missing drill (SC-002)
@@ -60,7 +60,7 @@ font-loading config so `Pr` glyphs render.
 ## 5. Frame budget (SC-004, profile mode)
 
 ```sh
-cd apps/pyro && flutter run --profile -d macos
+cd apps/editor && flutter run --profile -d macos
 ```
 
 Open a generated 1,000-Node scene (the test helpers' `generatedScene(1000)` writer, or paste

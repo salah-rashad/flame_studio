@@ -21,7 +21,7 @@ Phase 3 joins the data contract end to end, with no editor UI:
 - **The first slice of Play** (#11). The app's `process/` feature gets a Flutter-free
   `PlayClient`. It spawns `flutter run --machine -d macos`, parses the daemon's messages, masks
   auth codes, watches `assets/scenes/`, and turns settled changes into one `app.restart` at a
-  time. A thin CLI, `apps/pyro/bin/play.dart`, drives it (R2–R11). A benchmark script measures
+  time. A thin CLI, `apps/editor/bin/play.dart`, drives it (R2–R11). A benchmark script measures
   SC-004–SC-006 on the Mac (R14).
 
 It ends with a manual run on the reference Mac (quickstart §5), recorded in
@@ -33,14 +33,14 @@ It ends with a manual run on the reference Mac (quickstart §5), recorded in
 
 **Primary Dependencies**: `example/`: `flame` (>=1.36 <2), `flame_behaviors` ^1.4.0,
 `pyro_runtime`, `pyro_annotations`; dev `pyro_generator`, `build_runner` ^2.15.1, `flame_test`,
-`flutter_lints`, the same as `fixture_game`. `apps/pyro`: **no new dependency**. The client uses
+`flutter_lints`, the same as `fixture_game`. `apps/editor`: **no new dependency**. The client uses
 `dart:io` plus the existing `clock` and `file` (a `FileSystem` seam), and, in tests,
 `fake_async` and `MemoryFileSystem` (R1, R3).
 
 **Storage**: none new. The client writes nothing in the project (FR-020). `example/` reads its
 Scene and image through the bundle.
 
-**Testing**: `flutter test` in `apps/pyro/test/process/` against transcript files and a fake
+**Testing**: `flutter test` in `apps/editor/test/process/` against transcript files and a fake
 process and watcher (constitution V, R6). `flutter test` in `example/`, including
 `test/contract/`. CI steps per contracts/contract-job.md. A latency benchmark script and a manual
 end-to-end check on the reference Mac (quickstart §5).
@@ -131,7 +131,7 @@ example/
 │   └── example_game_test.dart               # the game loads; HUD counts a reload (onHotReload driven)
 └── tool/draw_ship.dart                      # writes assets/images/ship.png
 
-apps/pyro/
+apps/editor/
 ├── README.md                                # + "Play from the command line" (FR-025)
 ├── bin/play.dart                            # the CLI (contracts/play-cli.md)
 ├── benchmark/hot_swap_latency.dart          # SC-004–SC-006 on the Mac (R14)
@@ -168,7 +168,7 @@ callers in this slice. The Play button's provider is the third, in Phase 4.
   launch) and **Contract test** (the CI check that `example/`'s generated files and Scenes still
   agree with the Generator and the Runtime).
 - `docs/decisions.md`, from Q117:
-  - the client's entry point is a CLI in `apps/pyro/bin/` until the Play button (spec
+  - the client's entry point is a CLI in `apps/editor/bin/` until the Play button (spec
     Clarifications);
   - the contract job's committed-files check runs on all three OSes, and the golden and Scene
     checks on Linux (spec Clarifications);

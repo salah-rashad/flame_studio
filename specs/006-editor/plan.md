@@ -21,7 +21,7 @@ operations — is the phase's heavily-tested pure seam (constitution V).
 **Language/Version**: Dart SDK `^3.12.0`, Flutter 3.44.2 stable (toolchain pinned by *Q94*;
 reference machine: macOS, Apple M4).
 
-**Primary Dependencies** (already in `apps/pyro/pubspec.yaml` unless noted):
+**Primary Dependencies** (already in `apps/editor/pubspec.yaml` unless noted):
 
 - `flutter_riverpod` 3.3.2 + `riverpod_annotation` 4.0.3 (codegen via `riverpod_generator`
   4.0.4, generated files committed, *Q94*)
@@ -40,16 +40,16 @@ reference machine: macOS, Apple M4).
 application-support folder (recent projects, per-project `PrShellSizes`), written atomically,
 never inside a user project.
 
-**Testing**: `flutter test` in `apps/pyro`; reconciler as pure-function unit tests; panel
+**Testing**: `flutter test` in `apps/editor`; reconciler as pure-function unit tests; panel
 widget tests (reparent-by-drag, Reset-to-default, Missing behavior) on the gallery's
-font-loading pattern (new `apps/pyro/test/flutter_test_config.dart`); deterministic —
+font-loading pattern (new `apps/editor/test/flutter_test_config.dart`); deterministic —
 `package:file` memory FS, `fake_async`, injected `NodeIdSource`, recorded/fixture data only
 (existing `test/document/helpers/` extend to the new features).
 
 **Target Platform**: macOS first-class (unsandboxed desktop); CI analyzes and tests on macOS,
 Windows, Linux (no new platform work; no signing until Phase 8).
 
-**Project Type**: Flutter desktop app (`apps/pyro`) inside the pub workspace.
+**Project Type**: Flutter desktop app (`apps/editor`) inside the pub workspace.
 
 **Performance Goals** (constitution III, spec SC-004/SC-005): 60 fps (≤ 16 ms frames, profile
 mode, reference Mac) during interactive editing on a 1,000-Node scene; a changed image file
@@ -109,7 +109,7 @@ specs/006-editor/
 ### Source Code (repository root)
 
 ```text
-apps/pyro/
+apps/editor/
 ├── bin/play.dart               # existing CLI (spec 005) — unchanged, kept until the Play button
 ├── lib/
 │   ├── main.dart               # runner: window config (hidden macOS title bar), PyroApp

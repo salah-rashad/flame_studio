@@ -15,7 +15,7 @@ Runtime-version reader (only the `runtimeReadsUpTo` *parameter* exists, spec 002
 `RecoveryStore.find` orchestration (only tests call it today; `DocumentSession.open`'s doc
 delegates it to the caller), the project list, SDK detection, scene discovery from declared
 asset folders, and the whole `app/`, `project/`, `viewport/`, `panels/` features
-(`apps/pyro/lib` today holds only `document/`, `process/` and a placeholder `main.dart`).
+(`apps/editor/lib` today holds only `document/`, `process/` and a placeholder `main.dart`).
 
 **Rationale**: avoids re-planning existing code and names the true scope.
 **Alternatives**: none — this is a survey result. Reusable as-is: spike 3's

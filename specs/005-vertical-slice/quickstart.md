@@ -15,7 +15,7 @@ dart pub get
 ## §1. Play client tests (no device, no real `flutter run`)
 
 ```bash
-cd apps/pyro && flutter test test/process/
+cd apps/editor && flutter test test/process/
 ```
 
 Expected: all pass. They cover:
@@ -74,7 +74,7 @@ clone to the window is under 5 minutes (SC-001).
 Record every result in `docs/ARCHITECTURE.md`, section "Vertical slice" (FR-026).
 
 1. **Play through the client.** Run
-   `cd apps/pyro && dart run bin/play.dart ../../example --record /tmp/start.txt`. The window
+   `cd apps/editor && dart run bin/play.dart ../../example --record /tmp/start.txt`. The window
    opens. The CLI prints `started` and the game's `Scene loaded` line, and no line shows an auth
    code.
 2. **Save by hand.** Open `example/assets/scenes/level1.scene.json`, change `turnsPerSecond` to
@@ -90,7 +90,7 @@ Record every result in `docs/ARCHITECTURE.md`, section "Vertical slice" (FR-026)
    `couldn't Hot-swap` message naming the Scene, Node and type or field. A valid save recovers
    (US3 #6, SC-008).
 6. **Timings.** Stop the CLI (`q`) and run
-   `cd apps/pyro && dart run benchmark/hot_swap_latency.dart ../../example`. Expected: SC-004
+   `cd apps/editor && dart run benchmark/hot_swap_latency.dart ../../example`. Expected: SC-004
    median < 500 ms and worst < 1 s; SC-005 zero rebuilds; SC-006 ≤ 2 reloads with the last content
    shown. Paste its table into ARCHITECTURE.md.
 7. **Start and stop.** Five times: start with `bin/play.dart`, then stop with `q` (three times),
@@ -105,7 +105,7 @@ Record every result in `docs/ARCHITECTURE.md`, section "Vertical slice" (FR-026)
    strings build/macos/Build/Products/Release/pyro_example.app/Contents/Frameworks/App.framework/App | grep -c "couldn't Hot-swap"
    ```
    Expected: `0`.
-10. **Transcripts.** Replace the hand-written files in `apps/pyro/test/fixtures/daemon/` with the
+10. **Transcripts.** Replace the hand-written files in `apps/editor/test/fixtures/daemon/` with the
     recordings from steps 1, 5 and 7 (`--record`), check that no auth code is in them
     (`grep -E "/[A-Za-z0-9_-]+=/" …` finds only `<auth-code>`), and rerun §1.
 

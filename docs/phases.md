@@ -146,7 +146,7 @@ run of the whole loop both met every limit (ARCHITECTURE.md, "Vertical slice").
 - [x] **First slice of #11:** Pyro's `flutter run --machine` client starts `example/` on macOS,
   saving the Scene JSON triggers `app.restart`, and the scene hot-swaps; a Dart-only reload leaves
   it alone (§9.3). This is the "verify Hot-swap on macOS" check. *Built:* `PlayClient` and
-  `apps/pyro/bin/play.dart` (*Q117*, *Q121*, *Q122*), tested on transcripts and run end to end
+  `apps/editor/bin/play.dart` (*Q117*, *Q121*, *Q122*), tested on transcripts and run end to end
   on Linux and on the reference Mac (spec 005, quickstart §5): every *Q119* limit met there —
   save → swap median 321 ms < 500 ms, worst 334 ms < 1000 ms, 0 rebuilds after ten no-op saves
   and Dart-only reloads, 1 reload for ten saves 100 ms apart (≤ 2) — and the release build is

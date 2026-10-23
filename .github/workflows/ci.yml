@@ -52,7 +52,7 @@ jobs:
       # must change nothing (spec 002).
       - name: Check generated code
         if: runner.os == 'Linux'
-        working-directory: apps/pyro
+        working-directory: apps/editor
         run: dart run build_runner build -d && git diff --exit-code -- lib
       # The generator's fixture game commits its Registry and Manifest;
       # regenerating them from a fresh checkout must change nothing, on every
@@ -74,7 +74,7 @@ jobs:
       - name: Analyze pure-Dart packages
         run: dart analyze --fatal-infos packages/pyro_annotations packages/pyro_generator
       - name: Analyze Flutter packages and the app
-        run: flutter analyze --fatal-infos packages/pyro_runtime packages/pyro_ui apps/pyro packages/pyro_generator/fixture_game example
+        run: flutter analyze --fatal-infos packages/pyro_runtime packages/pyro_ui apps/editor packages/pyro_generator/fixture_game example
       # Excluded files are still analyzed when named; the root options exclude
       # **/*.g.dart, so the Registry is checked this way (SC-005).
       - name: Analyze the fixture game's Registry
@@ -116,7 +116,7 @@ jobs:
           path: packages/pyro_ui/example/test/failures/
           if-no-files-found: ignore
       - name: Test the Pyro app
-        working-directory: apps/pyro
+        working-directory: apps/editor
         run: flutter test
 
   build-studio:
@@ -150,7 +150,7 @@ jobs:
       - name: Resolve the workspace
         run: dart pub get
       - name: Build (unsigned release)
-        working-directory: apps/pyro
+        working-directory: apps/editor
         run: flutter build ${{ matrix.platform }} --release
 
   contract:

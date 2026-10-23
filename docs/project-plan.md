@@ -616,7 +616,7 @@ The format is fixed now; the grid slicer that writes it ships in v0.1.1 (*Q65*).
 - Four tree-safe edits (add, remove with its subtree, move, replace) are the only way to a new
   state; `replaceNode` refuses changed children.
 - Selection, camera, panel sizes and hover live **outside** the document (*Q25*).
-- Built in [`specs/002-document-model/`](../specs/002-document-model/spec.md) (`apps/pyro/lib/document/`).
+- Built in [`specs/002-document-model/`](../specs/002-document-model/spec.md) (`apps/editor/lib/document/`).
 
 ### 8.2 Transactions and history (*Q22*)
 
@@ -763,7 +763,7 @@ sequenceDiagram
   (scene reload 60–250 ms); a Dart-only reload leaves the scene alone.
 - **Built in the vertical slice (spec 005, *Q117–Q122*):** the daemon client in the app's
   `process/` feature (`PlayClient`, `PlaySession`) and its command-line entry point
-  `apps/pyro/bin/play.dart`. It runs `flutter run --machine -d macos --debug` and watches
+  `apps/editor/bin/play.dart`. It runs `flutter run --machine -d macos --debug` and watches
   `assets/scenes/` from the spawn. Settled saves become one `app.restart` at a time (150 ms
   quiet, at most one queued). It stops with `app.stop`, then SIGTERM, then SIGKILL. It drops
   every VM service address and masks auth codes in all output. The run link, the asset
@@ -957,7 +957,7 @@ before display (§9.3, *Q81*).
 | Generator | golden tests: annotated source → Registry + Manifest; error cases (Type ID collision, unsupported field, bad constructor) | Heavy |
 | Runtime loader | load fixture scenes into a `FlameGame` with `flame_test`; reference resolution; asset loading; unknown Type ID; Hot-swap hash check | Heavy |
 | **Contract (*Q59*)** | CI runs the generator on `example/`, checks the Manifest against its golden file, then loads every `example/` scene with `flame_test` against the real generated Registry | Heavy |
-| Process clients | daemon protocol parsing with recorded transcripts (`apps/pyro/test/fixtures/daemon/`, no real Flutter); build_runner lock probe | Medium |
+| Process clients | daemon protocol parsing with recorded transcripts (`apps/editor/test/fixtures/daemon/`, no real Flutter); build_runner lock probe | Medium |
 | Design system (`pyro_ui`, *Q84*) | widget tests per component state; one golden per gallery grid (macOS CI only) | Medium |
 | Panels | a few widget tests for critical interactions | Light |
 | End-to-end | `example/` game smoke test on a device before each release, incl. Play, Hot-swap, Attach (manual in v0.1) | Manual |

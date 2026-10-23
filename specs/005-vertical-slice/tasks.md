@@ -31,13 +31,13 @@ own.
 All paths are relative to the repository root. Shortened below:
 
 - `ex/` = `example/`
-- `app/` = `apps/pyro/`
-- `proc/` = `apps/pyro/lib/process/`
-- `ptest/` = `apps/pyro/test/process/`
+- `app/` = `apps/editor/`
+- `proc/` = `apps/editor/lib/process/`
+- `ptest/` = `apps/editor/test/process/`
 
-Commands: client tests `cd apps/pyro && flutter test test/process/`; example game
+Commands: client tests `cd apps/editor && flutter test test/process/`; example game
 `cd example && dart run build_runner build -d && flutter test`; the CLI
-`cd apps/pyro && dart run bin/play.dart ../../example`.
+`cd apps/editor && dart run bin/play.dart ../../example`.
 
 **Messages** (used throughout): every client error names what failed and where (constitution I):
 the project path, the executable, the exit code, or the daemon's message. Tests check these parts
@@ -102,7 +102,7 @@ that are compared byte for byte.
   `ex/analysis_options.yaml`, fixing its relative include. Run `dart pub get` at the root.
 - [X] T002 [P] Add to `.gitattributes`, with a comment in the existing style:
   `example/lib/pyro.* -text`, `example/assets/** -text`, `example/test/goldens/** -text` and
-  `apps/pyro/test/fixtures/daemon/** -text` (research R6, R13)
+  `apps/editor/test/fixtures/daemon/** -text` (research R6, R13)
 - [X] T003 [P] Write `ex/tool/draw_ship.dart`. It encodes a 32×32 RGBA PNG (a simple ship
   silhouette on transparency) with `dart:io`'s `zlib` and a CRC-32 written in the script, with no
   image package, and writes it to `ex/assets/images/ship.png`. Run it and commit both files.
@@ -562,7 +562,7 @@ the path or compile error named.
 - [X] T051 Tick or annotate `specs/004-runtime/tasks.md` T038 and T043 and
   `specs/003-generator/tasks.md` T043 to match what T031, T039 and T046 did.
 - [X] T052 Final pass. Run `dart format --set-exit-if-changed packages apps example`, both
-  analyze steps of CI, `flutter test` in `apps/pyro` and `example`, and quickstart §1–§3. Then
+  analyze steps of CI, `flutter test` in `apps/editor` and `example`, and quickstart §1–§3. Then
   re-read the diff against the constitution: no Flutter import in `proc/`, no auth code in any
   fixture or test output, every public member documented, glossary terms used.
 
@@ -574,7 +574,7 @@ the path or compile error named.
 
 - **Setup (Phase 1)**: none. T004 needs Flutter and can wait until it's available. Nothing in
   CI builds `macos/`.
-- **Foundational (Phase 2)**: none on Setup (it is all in `apps/pyro`). It blocks US3 and US4 only.
+- **Foundational (Phase 2)**: none on Setup (it is all in `apps/editor`). It blocks US3 and US4 only.
 - **US1 (Phase 3)**: after T001–T003. T022 and T024 need Flutter, and T025 needs T004 and the Mac.
 - **US2 (Phase 4)**: after US1's T022 (the golden copies the generated Manifest). T026, T028 and
   T029 can be written earlier.
@@ -608,9 +608,9 @@ the path or compile error named.
 
 ```bash
 # The client's leaf modules and the example game's classes, side by side:
-Task: "Implement apps/pyro/lib/process/src/redact.dart"
-Task: "Implement apps/pyro/lib/process/src/daemon_message.dart"
-Task: "Implement apps/pyro/lib/process/src/play_event.dart"
+Task: "Implement apps/editor/lib/process/src/redact.dart"
+Task: "Implement apps/editor/lib/process/src/daemon_message.dart"
+Task: "Implement apps/editor/lib/process/src/play_event.dart"
 Task: "Write example/lib/behaviors/spin.dart"
 Task: "Write example/lib/components/banner.dart"
 ```
@@ -619,9 +619,9 @@ Task: "Write example/lib/components/banner.dart"
 
 ```bash
 # Their tests, together:
-Task: "Write apps/pyro/test/process/scene_watcher_test.dart"
-Task: "Write the reload group of apps/pyro/test/process/play_session_test.dart"
-Task: "Extend apps/pyro/test/process/play_client_test.dart with start failures"
+Task: "Write apps/editor/test/process/scene_watcher_test.dart"
+Task: "Write the reload group of apps/editor/test/process/play_session_test.dart"
+Task: "Extend apps/editor/test/process/play_client_test.dart with start failures"
 ```
 
 ---
@@ -648,7 +648,7 @@ Task: "Extend apps/pyro/test/process/play_client_test.dart with start failures"
 
 Foundational, US3 and US4 (except their Mac tasks), T001–T003, T015–T021, T023, T026, T028 and
 T029 need no device and no running game: the client's tests replay transcripts (SC-009). Running
-any test still needs Flutter, because `apps/pyro` and `example/` are Flutter packages, so a
+any test still needs Flutter, because `apps/editor` and `example/` are Flutter packages, so a
 session without it can write that code but not verify it. These wait for a session with Flutter:
 T004, T022, T024, T027, T030 and T031. These wait for the reference Mac: T025, T039, T045 and
 T046.

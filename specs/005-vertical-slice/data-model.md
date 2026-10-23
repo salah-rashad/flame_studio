@@ -4,7 +4,7 @@ Phase 1 of [plan.md](plan.md). The slice adds no file format: the Scene, Registr
 specs 001 and 003's. What is new is the Play client's runtime state, below, and the shape of
 `example/` ([contracts/example-game.md](contracts/example-game.md)).
 
-## PlayClient (`apps/pyro/lib/process/`)
+## PlayClient (`apps/editor/lib/process/`)
 
 Starts Play sessions. It is stateless apart from its injected seams.
 

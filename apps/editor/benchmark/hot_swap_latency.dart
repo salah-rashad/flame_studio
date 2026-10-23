@@ -3,7 +3,7 @@
 // no-op save or a Dart-only reload) and SC-006 (a burst of saves is at most
 // two reloads). Rerun on each Flutter release (project plan §13).
 //
-// Usage, from apps/pyro, with the game not already running:
+// Usage, from apps/editor, with the game not already running:
 //   dart run benchmark/hot_swap_latency.dart [project]   (default ../../example)
 //
 // It drives `example/`: it rewrites assets/scenes/level1.scene.json and

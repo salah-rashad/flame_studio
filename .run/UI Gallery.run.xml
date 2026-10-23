@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Pyro UI Gallery" type="FlutterRunConfigurationType" factoryName="Flutter">
+  <configuration default="false" name="UI Gallery" type="FlutterRunConfigurationType" factoryName="Flutter">
     <option name="filePath" value="$PROJECT_DIR$/packages/pyro_ui/example/lib/main.dart" />
     <method v="2" />
   </configuration>

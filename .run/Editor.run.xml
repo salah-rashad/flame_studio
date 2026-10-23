@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Pyro App" type="FlutterRunConfigurationType" factoryName="Flutter">
+  <configuration default="false" name="Editor" type="FlutterRunConfigurationType" factoryName="Flutter">
     <option name="filePath" value="$PROJECT_DIR$/apps/editor/lib/main.dart" />
     <method v="2" />
   </configuration>

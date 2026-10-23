@@ -130,43 +130,45 @@ class _PyroEditorWindowState extends ConsumerState<PyroEditorWindow> {
       child: slot ?? _PanelPlaceholder(label: label),
     );
 
-    return PyroShortcuts(
-      command: widget.command,
-      panels: panelNodes,
-      child: PrEditorShell(
-        titleBar: Text(
-          title,
-          style: PrText.small.copyWith(
-            color: PrColors.of(context).textSecondary,
+    return Scaffold(
+      body: PyroShortcuts(
+        command: widget.command,
+        panels: panelNodes,
+        child: PrEditorShell(
+          titleBar: Text(
+            title,
+            style: PrText.small.copyWith(
+              color: PrColors.of(context).textSecondary,
+            ),
           ),
+          toolbar: const SizedBox(height: PrSizes.toolbar),
+          left: dock(0, widget.left, 'Hierarchy'),
+          center: dock(
+            1,
+            widget.tabs != null
+                ? Column(
+                    children: [
+                      widget.tabs!,
+                      Expanded(
+                        child:
+                            widget.center ??
+                            const _PanelPlaceholder(label: 'Viewport'),
+                      ),
+                    ],
+                  )
+                : widget.center,
+            'Viewport',
+          ),
+          right: dock(2, widget.right, 'Inspector'),
+          bottom: null,
+          statusBar: _StatusBar(
+            project: project,
+            catalog: ref.watch(typeCatalogProvider),
+          ),
+          sizes: _sizes,
+          onSizesChanged: (sizes) => setState(() => _sizes = sizes),
+          onSizesChangeEnd: _persistSizes,
         ),
-        toolbar: const SizedBox(height: PrSizes.toolbar),
-        left: dock(0, widget.left, 'Hierarchy'),
-        center: dock(
-          1,
-          widget.tabs != null
-              ? Column(
-                  children: [
-                    widget.tabs!,
-                    Expanded(
-                      child:
-                          widget.center ??
-                          const _PanelPlaceholder(label: 'Viewport'),
-                    ),
-                  ],
-                )
-              : widget.center,
-          'Viewport',
-        ),
-        right: dock(2, widget.right, 'Inspector'),
-        bottom: null,
-        statusBar: _StatusBar(
-          project: project,
-          catalog: ref.watch(typeCatalogProvider),
-        ),
-        sizes: _sizes,
-        onSizesChanged: (sizes) => setState(() => _sizes = sizes),
-        onSizesChangeEnd: _persistSizes,
       ),
     );
   }
@@ -267,7 +269,7 @@ class _StatusBar extends StatelessWidget {
   /// ancestor (only `PrDialog` brings its own), and the `Pr` widgets are
   /// built without one.
   Widget _typesItem(BuildContext context, TypeCatalog catalog) {
-    return Tooltip(
+    return PrTooltip(
       message: 'Show the Type catalog',
       child: PrInteractive(
         onPressed: () => showCatalogProblemsDialog(context, catalog: catalog),
@@ -275,27 +277,30 @@ class _StatusBar extends StatelessWidget {
         semanticsLabel: 'Type catalog',
         builder: (context, states) {
           final c = PrColors.of(context);
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: PrSpacing.s1),
-            decoration: BoxDecoration(
-              color: states.contains(WidgetState.hovered)
-                  ? c.surfaceHover
-                  : null,
-              borderRadius: PrRadii.sm,
-            ),
-            child: Row(
-              spacing: PrSpacing.s1,
-              children: [
-                Icon(PrIcons.code, size: 12, color: c.textSecondary),
-                Text(
-                  _typesStatus(catalog),
-                  style: PrText.small.copyWith(
-                    color: states.contains(WidgetState.hovered)
-                        ? c.textPrimary
-                        : c.textSecondary,
+          return PrFocusRing.outside(
+            visible: states.contains(WidgetState.focused),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: PrSpacing.s1),
+              decoration: BoxDecoration(
+                color: states.contains(WidgetState.hovered)
+                    ? c.surfaceHover
+                    : null,
+                borderRadius: PrRadii.sm,
+              ),
+              child: Row(
+                spacing: PrSpacing.s1,
+                children: [
+                  Icon(PrIcons.code, size: 12, color: c.textSecondary),
+                  Text(
+                    _typesStatus(catalog),
+                    style: PrText.small.copyWith(
+                      color: states.contains(WidgetState.hovered)
+                          ? c.textPrimary
+                          : c.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },

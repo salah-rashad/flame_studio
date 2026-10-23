@@ -224,6 +224,7 @@ pyro/                      ← repo root (this folder)
 │  │  └─ lib/src/{introspect,registry_emitter,manifest_emitter}.dart
 │  └─ pyro_ui/             ← not published; Pyro's design system (Q83)
 │     ├─ design/tokens.json        ← copy of the Claude Design tokens; a test checks the Dart side
+│     ├─ design/*.html             ← exported view designs (reference for agents; no test reads them)
 │     └─ lib/src/                  ← tokens, PrTheme, widgets (buttons, fields, rows, menus…)
 ├─ apps/
 │  └─ pyro/                ← the desktop app (released as binaries, not on pub)

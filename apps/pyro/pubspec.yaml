@@ -28,6 +28,10 @@ dependencies:
   pyro_ui: ^0.0.1
   riverpod_annotation: 4.0.3
   uuid: ^4.6.0
+  # Parses the open project's pubspec.yaml (asset folders) and pubspec.lock
+  # (Runtime version) — the editor's only new dependency (spec 006, plan.md's
+  # Constitution Check).
+  yaml: ^3.1.4
 
 dev_dependencies:
   build_runner: ^2.15.1

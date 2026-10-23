@@ -4,6 +4,7 @@
 |---|---|
 | **Last synced** | 2026-10-22, against [`decisions.md`](decisions.md) (Q1–Q124, so specs 001–005), [`project-plan.md`](project-plan.md), [`GLOSSARY.md`](../GLOSSARY.md), [`ui-components-plan.md`](ui-components-plan.md) and `packages/pyro_ui` |
 | **Design system** | Made in Claude Design from Prompt 0. Its `tokens.json` is copied to `packages/pyro_ui/design/tokens.json`; its 29 components, the EditorShell and the 60 icons are built in Flutter in `packages/pyro_ui` (*Q83, Q84*) |
+| **Exported views** | Each finished view is exported as one HTML file into `packages/pyro_ui/design/`, next to `tokens.json`, as a visual reference for AI agents and contributors. Done so far: Prompt 1 (`Pyro — Welcome window (merged).html`), Prompt 2 (`Flame Studio Editor.html`) |
 | **Sync rule** | When a decision in [`decisions.md`](decisions.md) changes what a view shows, change the prompt in the same commit and add a Sync log entry. A view designed from a stale prompt costs more than the sync does |
 
 ## How to use
@@ -25,16 +26,21 @@
    the component set doesn't have. Add those to the design system with a delta prompt (step 1)
    and to `ui-components-plan.md` before the panel is built, rather than letting them live only
    in a view document.
-5. The output is a *reference design*, re-implemented by hand in Flutter: the app's panels compose
+5. **Export every finished view** as a single HTML file into `packages/pyro_ui/design/` and add it
+   to the table in that package's README. Agents implementing a panel read the matching file (and
+   `tokens.json`) to match the layout, spacing and states; they search it rather than reading it
+   whole, since the exports are 1–2 MB. The HTML is a reference only: if it disagrees with
+   `tokens.json` or a decision in `decisions.md`, those win, and the prompt gets a Sync log entry.
+6. The output is a *reference design*, re-implemented by hand in Flutter: the app's panels compose
    `pyro_ui` widgets. Wording in the prompts uses the project vocabulary
    ([`GLOSSARY.md`](../GLOSSARY.md)) so the designs show the words the app will use.
 
 | Prompt | View | Phase | Needed for | Run |
 |---|---|---|---|---|
 | 0 | Design system | 1 | — | ✅ |
-| 2 | Editor shell, toolbar, scene tabs | **4** (#1) | early preview (its panels use the `Pr` widgets, `PrEditorShell` included, *Q87*); v0.1 rest | |
+| 2 | Editor shell, toolbar, scene tabs | **4** (#1) | early preview (its panels use the `Pr` widgets, `PrEditorShell` included, *Q87*); v0.1 rest | ✅ exported |
 | 9 | Play, devices, Attach | **4** (#1) / 5 (#11) | early preview (macOS target, copy URI); v0.1 rest. The Play cluster is part of the toolbar, so it is designed with Prompt 2; the flow itself is Phase 5 | |
-| 1 | Project list (welcome window) | **4** (#1) | early preview (list, open, SDK, Runtime check); v0.1 rest | |
+| 1 | Project list (welcome window) | **4** (#1) | early preview (list, open, SDK, Runtime check); v0.1 rest | ✅ exported |
 | 4 | Viewport | **4** (#4, #6) | early preview (selection, move gizmo, pan/zoom); v0.1 rest; animated sprites v0.1.1; Tiled v0.2 | |
 | 3 | Hierarchy | **4** (#3) | early preview (add, delete, rename, reparent); v0.1 rest; prefabs v0.2 | |
 | 5 | Inspector | **4** (#5, #9) | early preview (core field types); v0.1 rest; mixed values v0.1.1 | |
@@ -708,6 +714,15 @@ C. A sheet of the global warning / error / empty patterns used across the app. T
 ---
 
 ## Sync log
+
+**2026-10-23** — first two view designs exported to `packages/pyro_ui/design/`:
+
+- Prompt 1 → `Pyro — Welcome window (merged).html`, Prompt 2 → `Flame Studio Editor.html`. The Run
+  column marks them; "How to use" gains step 5 (export each view next to `tokens.json`, list it in
+  the `pyro_ui` README) and the header an "Exported views" row. The HTML files are references for
+  agents; `tokens.json` stays the only file a test checks. The prompts themselves were not changed,
+  so they may be behind what the exports show: when a view is built and differs, change the prompt
+  and log it here.
 
 **2026-10-22** — synced with Q89–Q124, the decisions of specs 001–005, before the first view is
 designed:

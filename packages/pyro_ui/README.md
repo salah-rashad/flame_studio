@@ -33,6 +33,25 @@ The design system was made in Claude Design from prompt 0 of
 it. To pick up a design change, replace the file and fix the Dart side until
 the test passes.
 
+## Reference designs (HTML)
+
+[`design/`](design) also holds the views designed in Claude Design from the
+view prompts, each exported as one self-contained HTML file, so AI agents and
+people can match the app's UI to them:
+
+| File | View (prompt) |
+|---|---|
+| [`Pyro — Welcome window (merged).html`](<design/Pyro — Welcome window (merged).html>) | Project list / welcome window (Prompt 1) |
+| [`Flame Studio Editor.html`](<design/Flame Studio Editor.html>) | Editor shell, toolbar and scene tabs (Prompt 2) |
+
+They are references, not sources: nothing is generated from them and no test
+reads them (unlike `tokens.json`). Open one in a browser, or grep it for exact
+values, then build the screen from `pyro_ui` widgets. Where a design and
+`tokens.json` disagree, `tokens.json` wins. The files are large (1.5–2.2 MB,
+mostly embedded assets), so search them rather than reading them whole. More
+views are added here as they are designed from
+[`docs/claude-design-prompts.md`](../../docs/claude-design-prompts.md).
+
 Naming: token `surface-panel` is `PrColors.surfacePanel`, `space-2` is
 `PrSpacing.s2`, `radius-sm` is `PrRadii.sm`, `size-row-tree` is
 `PrSizes.rowTree`, text style `body-strong` is `PrText.bodyStrong`.

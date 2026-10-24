@@ -139,6 +139,27 @@ void main() {
     expect(component.assetPaths, {hero});
   });
 
+  testWithFlameGame('a sprite keeps its image when it is moved to another '
+      'parent, however often (hierarchy reparenting)', (game) async {
+    final component = previewOf(spriteNode(), context) as SpritePreview;
+    final first = PositionComponent();
+    final second = PositionComponent();
+    await game.world.addAll([first, second]);
+    await first.add(component);
+    await game.ready();
+    await settle();
+    expect(component.sprite, isNotNull);
+
+    for (final parent in [second, first, second]) {
+      component.parent = parent;
+      game.update(0);
+      await game.ready();
+      await settle();
+      expect(component.sprite, isNotNull);
+      expect(component.failed, isFalse);
+    }
+  });
+
   testWithFlameGame('a sprite region crops the image', (game) async {
     final component =
         previewOf(

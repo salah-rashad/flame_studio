@@ -52,6 +52,9 @@ mixin _LeasedImage on PreviewComponent {
   /// The image could not be read (missing or undecodable file).
   bool failed = false;
 
+  PreviewContext? _context;
+  bool _released = false;
+
   @override
   Set<AssetPath> get assetPaths => {?_path};
 
@@ -62,6 +65,7 @@ mixin _LeasedImage on PreviewComponent {
     PreviewContext context, {
     bool force = false,
   }) {
+    _context = context;
     if (!force && path == _path) return;
     _path = path;
     unawaited(_load(context));
@@ -115,8 +119,21 @@ mixin _LeasedImage on PreviewComponent {
   @override
   void onRemove() {
     _generation++;
+    _released = true;
     _swap(null);
     super.onRemove();
+  }
+
+  /// Flame removes a component and mounts it again when it moves to another
+  /// parent; the image went back on removal, so it is read again here.
+  @override
+  void onMount() {
+    super.onMount();
+    final context = _context;
+    if (_released && context != null) {
+      _released = false;
+      unawaited(_load(context));
+    }
   }
 }
 

@@ -10,6 +10,7 @@ import 'package:pyro/project/project.dart';
 import 'package:pyro_ui/pyro_ui.dart';
 
 import 'app/app.dart';
+import 'viewport/viewport.dart';
 
 void main() {
   runApp(const PyroApp());
@@ -130,6 +131,7 @@ class _EditorWindow extends StatelessWidget {
       command: command,
       settings: settings,
       tabs: SceneTabs(command: command),
+      center: const ViewportPane(),
     );
   }
 }

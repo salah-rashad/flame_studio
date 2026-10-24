@@ -241,6 +241,12 @@ final class AssetDependents<T> {
     }
   }
 
+  /// Drops every record.
+  void clear() {
+    _paths.clear();
+    _dependents.clear();
+  }
+
   /// The dependents reading any of [paths].
   Set<T> of(Set<AssetPath> paths) => {
     for (final path in paths) ...?_dependents[path],

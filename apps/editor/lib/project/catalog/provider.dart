@@ -66,12 +66,15 @@ class TypeCatalogNotifier extends Notifier<TypeCatalog> {
 
   void _startWatching(String root) {
     final fs = ref.read(catalogFileSystemProvider);
-    final lib = fs.directory(fs.path.join(root, 'lib'));
-    if (!lib.existsSync()) return;
+    final project = fs.directory(root);
+    // The root, not `lib`: `build_runner` can create the folder and the
+    // Manifest while Pyro is open, and `_onEvent` filters to the Manifest
+    // anyway.
+    if (!project.existsSync()) return;
     // A watch that fails (the folder went away) just stops the live
     // reload; opening a project again restarts it.
     _watch = ref
-        .read(manifestWatchProvider)(lib)
+        .read(manifestWatchProvider)(project)
         .listen((event) => _onEvent(root, event), onError: (Object _) {});
   }
 
@@ -135,19 +138,36 @@ class TypeCatalogNotifier extends Notifier<TypeCatalog> {
 
   /// The [manifestTypes] (or the last good ones) joined with the
   /// built-ins, which win over a Manifest type of the same Type ID: the
-  /// engine kinds are never the user's to redefine.
+  /// engine kinds are never the user's to redefine. Each shadowed
+  /// Manifest type is reported as a warning, so no Manifest type is
+  /// silently missing from the catalog (FR-012).
   TypeCatalog _join(
     IList<TypeDescriptor> manifestTypes,
     ManifestOrigin origin, [
     IList<ManifestProblem>? problems,
-  ]) => TypeCatalog(
-    types: IMap({
-      for (final type in manifestTypes) type.id: type,
-      for (final type in builtInTypes) type.id: type,
-    }),
-    problems: problems ?? const IList.empty(),
-    origin: origin,
-  );
+  ]) {
+    final builtInIds = {for (final type in builtInTypes) type.id};
+    final shadowed = [
+      for (final type in manifestTypes)
+        if (builtInIds.contains(type.id))
+          ManifestProblem(
+            code: 'builtInShadowed',
+            className: type.id.value,
+            message:
+                'The type "${type.id.value}" uses a built-in Type ID; the '
+                'built-in descriptor is used instead.',
+            isWarning: true,
+          ),
+    ];
+    return TypeCatalog(
+      types: IMap({
+        for (final type in manifestTypes) type.id: type,
+        for (final type in builtInTypes) type.id: type,
+      }),
+      problems: IList([...?problems, ...shadowed]),
+      origin: origin,
+    );
+  }
 
   void _stopWatching() {
     _quiet?.cancel();

@@ -105,10 +105,32 @@ void main() {
       write(manifestWithShip.replaceAll('Ship', 'sprite'));
       final c = container();
       openProject(c);
-      expect(
-        c.read(typeCatalogProvider)[const TypeId('sprite')]!.builtIn,
-        isTrue,
-      );
+      final catalog = c.read(typeCatalogProvider);
+      expect(catalog[const TypeId('sprite')]!.builtIn, isTrue);
+      // The shadowed type is warned about, not silently missing (FR-012).
+      expect(catalog.problems, hasLength(1));
+      expect(catalog.problems.single.code, 'builtInShadowed');
+      expect(catalog.problems.single.isWarning, isTrue);
+      expect(catalog.problems.single.className, 'sprite');
+    });
+
+    test('a Manifest created after the open reloads the catalog (FR-013)', () {
+      fakeAsync((async) {
+        // `build_runner` may create lib/ and the Manifest while Pyro is
+        // open; the project root is watched from the start.
+        fs.directory('/proj/lib').deleteSync();
+        final c = container(watch: (_) => events.stream);
+        openProject(c);
+        expect(c.read(typeCatalogProvider).origin, isA<ManifestAbsent>());
+
+        fs.directory('/proj/lib').createSync(recursive: true);
+        write(manifestWithShip);
+        manifestChanged();
+        async.elapse(manifestQuietPeriod);
+        final catalog = c.read(typeCatalogProvider);
+        expect(catalog.origin, isA<ManifestUpToDate>());
+        expect(catalog[const TypeId('Ship')], isNotNull);
+      });
     });
 
     test('a Manifest write reloads the catalog, debounced (FR-013)', () {

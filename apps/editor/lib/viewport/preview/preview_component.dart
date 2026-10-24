@@ -88,8 +88,15 @@ final class CanvasLabel {
     painter.paint(canvas, above ? at.translate(0, -painter.height) : at);
   }
 
-  /// Frees the layout.
-  void dispose() => _painter?.dispose();
+  /// Frees the layout. The label stays usable: Flame removes a component
+  /// from the tree when it moves to another parent, then reuses it, so the
+  /// next [paint] lays the text out again.
+  void dispose() {
+    _painter?.dispose();
+    _painter = null;
+    _text = null;
+    _color = null;
+  }
 }
 
 /// The component one Node shows as in the viewport (FR-015). It never runs

@@ -239,6 +239,35 @@ void main() {
     game.render(PictureRecorder().let(Canvas.new));
   });
 
+  testWithFlameGame(
+    'a labelled placeholder still draws after it is reparented',
+    (game) async {
+      final component =
+          previewOf(
+                CustomNode(
+                  id: const NodeId('g'),
+                  type: const TypeId('goblin'),
+                  transform: NodeTransform(),
+                ),
+                context,
+              )
+              as PlaceholderPreview;
+      final first = PositionComponent();
+      final second = PositionComponent();
+      await game.world.addAll([first, second]);
+      await first.add(component);
+      await game.ready();
+      component.showLabel = true;
+      game.render(PictureRecorder().let(Canvas.new));
+      // Flame removes the component and mounts it again under the new
+      // parent; its label must lay out again rather than reuse a freed one.
+      component.parent = second;
+      game.update(0);
+      await game.ready();
+      game.render(PictureRecorder().let(Canvas.new));
+    },
+  );
+
   testWithFlameGame('a Custom component draws its Manifest preview image', (
     game,
   ) async {

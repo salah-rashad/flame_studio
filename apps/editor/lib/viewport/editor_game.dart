@@ -26,10 +26,10 @@ final class EditorCamera {
   /// Screen pixels per world unit.
   final double zoom;
 
-  /// The zoom range the wheel stays in.
+  /// The farthest out the wheel zooms.
   static const double minZoom = 0.05;
 
-  /// The zoom range the wheel stays in.
+  /// The farthest in the wheel zooms.
   static const double maxZoom = 32;
 
   @override
@@ -40,9 +40,10 @@ final class EditorCamera {
   int get hashCode => Object.hash(position, zoom);
 }
 
-/// Moves Node [id] to [position] in its parent, as one step of the drag
-/// gesture [gesture] (one undo per gesture, FR-020).
-typedef MoveNode = void Function(NodeId id, Vec2 position, Object gesture);
+/// Moves Node [id] to [position] in its parent, as one step of a drag:
+/// every step of one drag shares [coalesceKey], so the drag is one undo
+/// step (FR-020).
+typedef MoveNode = void Function(NodeId id, Vec2 position, Object coalesceKey);
 
 /// One open Scene's preview world (FR-016): Pyro's own Flame, drawing only
 /// what the document, the catalog and the files on disk say — it never
@@ -132,20 +133,15 @@ class EditorGame extends FlameGame<EditorWorld> {
     onCamera?.call(editorCamera);
   }
 
-  /// The topmost Node under [worldPoint], or null.
+  /// The topmost Node under [worldPoint], or null. An entity group has no
+  /// area of its own, so a click lands on what it draws (its sprite or
+  /// hitbox); the hierarchy selects the entity itself.
   NodeId? pick(Vector2 worldPoint) {
     for (final component in world.componentsAtPoint(worldPoint)) {
       if (component is PreviewComponent) return component.nodeId;
     }
     return null;
   }
-
-  /// Shows the tab: the engine runs again (the wiring re-seeds the world
-  /// from the current document, research §2).
-  void show() => resumeEngine();
-
-  /// Hides the tab: nothing ticks or draws while it is in the background.
-  void hide() => pauseEngine();
 }
 
 /// The world of an [EditorGame]: it takes the pointer wherever the overlay

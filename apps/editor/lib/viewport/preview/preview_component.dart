@@ -1,8 +1,10 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flutter/painting.dart' show TextPainter, TextSpan, TextStyle;
 import 'package:pyro/project/project.dart';
 import 'package:pyro_runtime/pyro_runtime.dart';
+import 'package:pyro_ui/pyro_ui.dart' show PrColors;
 
 import '../disk_assets.dart';
 
@@ -19,18 +21,75 @@ final class PreviewContext {
   final TypeCatalog catalog;
 }
 
-/// The colours the preview world draws its own shapes in: hitbox outlines,
-/// placeholders and error states (no `BuildContext` reaches the game, so
-/// these are the dark theme's values).
+/// The colours the viewport draws its own shapes in — previews and the
+/// overlay — from the dark theme's tokens (no `BuildContext` reaches the
+/// game).
 abstract final class PreviewColors {
+  static const PrColors _theme = PrColors.dark;
+
   /// Hitbox outlines.
-  static const Color hitbox = Color(0xFF3DD68C);
+  static final Color hitbox = _theme.success;
 
   /// Placeholder boxes of Custom components.
-  static const Color placeholder = Color(0xFF7C9CF5);
+  static final Color placeholder = _theme.info;
 
-  /// Missing types, unknown kinds and unreadable images.
-  static const Color error = Color(0xFFE5484D);
+  /// Missing types, unknown Node kinds and unreadable images.
+  static final Color error = _theme.error;
+
+  /// The selection outline and the gizmo's free handle.
+  static final Color selection = _theme.accent;
+
+  /// The hover highlight and its name label.
+  static final Color hover = _theme.textPrimary;
+
+  /// The gizmo's x handle.
+  static final Color axisX = _theme.axisX;
+
+  /// The gizmo's y handle.
+  static final Color axisY = _theme.axisY;
+}
+
+/// One line of text drawn on the canvas, laid out again only when its text
+/// or colour changes — text layout per Node per frame would cost the frame
+/// budget (research §4).
+final class CanvasLabel {
+  /// Creates a label of [fontSize] logical pixels.
+  CanvasLabel({required this.fontSize});
+
+  /// The font size.
+  final double fontSize;
+
+  String? _text;
+  Color? _color;
+  TextPainter? _painter;
+
+  /// Draws [text] in [color] with its top-left corner at [at], or with its
+  /// bottom-left there when [above].
+  void paint(
+    Canvas canvas,
+    String text, {
+    required Color color,
+    Offset at = Offset.zero,
+    bool above = false,
+  }) {
+    if (text != _text || color != _color) {
+      _text = text;
+      _color = color;
+      _painter?.dispose();
+      _painter = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: TextStyle(fontSize: fontSize, color: color),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+    }
+    final painter = _painter!;
+    painter.paint(canvas, above ? at.translate(0, -painter.height) : at);
+  }
+
+  /// Frees the layout.
+  void dispose() => _painter?.dispose();
 }
 
 /// The component one Node shows as in the viewport (FR-015). It never runs
@@ -51,8 +110,8 @@ mixin PreviewComponent on PositionComponent {
   /// Reads this component's files again after they changed on disk.
   Future<void> reloadAssets(PreviewContext context) async {}
 
-  /// Whether the Type ID label shows (selected or hovered placeholders;
-  /// text layout per Node per frame would cost the frame budget).
+  /// Whether the Type ID label shows: only for the selected or hovered
+  /// Node (see [CanvasLabel]).
   bool showLabel = false;
 }
 

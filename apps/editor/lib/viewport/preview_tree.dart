@@ -49,6 +49,9 @@ final class PreviewTree implements PreviewWorld {
   /// The document last applied, or null before the first.
   SceneDocument? get document => _document;
 
+  /// Node [id] as last applied, or null (also for a null [id]).
+  Node? nodeOf(NodeId? id) => id == null ? null : _document?.node(id);
+
   /// The component of Node [id], or null.
   PreviewComponent? componentOf(NodeId id) => _components[id];
 

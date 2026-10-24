@@ -86,12 +86,13 @@ class _SceneViewportState extends ConsumerState<SceneViewport> {
     );
     _binding = PreviewBinding(_sceneId, _game.tree);
     _game.overlay.select(ref.read(selectionProvider(_sceneId)));
-    if (!widget.visible) _game.hide();
+    // Hidden tabs neither tick nor draw (desktop has no lifecycle hook to
+    // do it for us, research §4).
+    if (!widget.visible) _game.pauseEngine();
   }
 
-  void _move(NodeId id, Vec2 position, Object gesture) {
-    final node = ref.read(documentProvider(_sceneId)).document.node(id);
-    final label = switch (node) {
+  void _move(NodeId id, Vec2 position, Object coalesceKey) {
+    final label = switch (_game.tree.nodeOf(id)) {
       NamedNode(:final name?) => 'Move $name',
       _ => 'Move',
     };
@@ -100,7 +101,7 @@ class _SceneViewportState extends ConsumerState<SceneViewport> {
         .transact(
           label,
           (doc) => doc.replaceNode(withPosition(doc.node(id)!, position)),
-          coalesceKey: gesture,
+          coalesceKey: coalesceKey,
         );
   }
 
@@ -109,7 +110,7 @@ class _SceneViewportState extends ConsumerState<SceneViewport> {
     super.didUpdateWidget(old);
     if (widget.visible == old.visible) return;
     if (widget.visible) {
-      _game.show();
+      _game.resumeEngine();
       // The paused listener may have missed changes: re-seed from the
       // current document — after this frame, not while the tree builds.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -118,7 +119,7 @@ class _SceneViewportState extends ConsumerState<SceneViewport> {
         _game.overlay.select(ref.read(selectionProvider(_sceneId)));
       });
     } else {
-      _game.hide();
+      _game.pauseEngine();
     }
   }
 

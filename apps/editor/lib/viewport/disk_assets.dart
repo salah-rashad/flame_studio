@@ -125,6 +125,9 @@ final class DiskAssetSource implements AssetSource {
     return _file(path).readAsString();
   }
 
+  /// The image at [path], unleased: it is freed as soon as its file
+  /// changes. Preview components draw through [leaseImage] instead, which
+  /// keeps an image until its last holder lets go (*Q79*).
   @override
   Future<ui.Image> loadImage(AssetPath path) => _generation(path).future;
 

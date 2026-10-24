@@ -3,7 +3,6 @@ import 'dart:developer' as developer;
 import 'dart:ui';
 
 import 'package:flame/components.dart';
-import 'package:flutter/painting.dart' show TextPainter, TextSpan, TextStyle;
 import 'package:pyro_runtime/pyro_runtime.dart';
 
 import '../disk_assets.dart';
@@ -222,7 +221,7 @@ class CircleHitboxPreview extends PositionComponent with PreviewComponent {
 
 /// A Custom component as a labelled box with its Type ID, or its Manifest
 /// `preview:` image (*Q6*); a type missing from the catalog, or a Node of
-/// an unknown kind, shows error-toned (Missing component).
+/// an unknown Node kind, shows error-toned (Missing component).
 class PlaceholderPreview extends PositionComponent
     with PreviewComponent, _LeasedImage {
   /// Creates the component of Node [nodeId].
@@ -234,17 +233,18 @@ class PlaceholderPreview extends PositionComponent
   /// The side of a placeholder whose Node has no size of its own.
   static const double defaultSide = 32;
 
-  /// What the label says: the Type ID, or the unknown kind.
+  /// What the label says: the Type ID, or the unknown Node kind.
   String label = '';
 
-  /// Whether the type is missing from the catalog (or the kind unknown).
+  /// Whether the type is missing from the catalog (or the Node kind is
+  /// unknown).
   bool missing = false;
 
   Image? _image;
   final Vector2 _drawSize = Vector2.zero();
-  String? _laidOut;
-  TextPainter? _text;
+  final CanvasLabel _label = CanvasLabel(fontSize: 10);
 
+  static final Paint _imagePaint = Paint()..filterQuality = FilterQuality.none;
   static final Paint _fill = Paint()
     ..color = PreviewColors.placeholder.withValues(alpha: 0.2);
   static final Paint _stroke = strokeOf(PreviewColors.placeholder);
@@ -263,7 +263,7 @@ class PlaceholderPreview extends PositionComponent
         missing = true;
         showImage(null, context);
       default:
-        throw ArgumentError.value(node, 'node', 'not a placeholder kind');
+        throw ArgumentError.value(node, 'node', 'not a placeholder Node kind');
     }
     if (size.x == 0 || size.y == 0) {
       size.setValues(defaultSide, defaultSide);
@@ -280,40 +280,26 @@ class PlaceholderPreview extends PositionComponent
       renderError(canvas, size);
     } else if (_image case final image?) {
       _drawSize.setValues(image.width.toDouble(), image.height.toDouble());
-      canvas.drawImageRect(
-        image,
-        _drawSize.toRect(),
-        rect,
-        Paint()..filterQuality = FilterQuality.none,
-      );
+      canvas.drawImageRect(image, _drawSize.toRect(), rect, _imagePaint);
     } else {
       canvas
         ..drawRect(rect, _fill)
         ..drawRect(rect, _stroke);
     }
-    if (showLabel) _paintLabel(canvas);
-  }
-
-  void _paintLabel(Canvas canvas) {
-    if (_laidOut != label) {
-      _laidOut = label;
-      _text = TextPainter(
-        text: TextSpan(
-          text: label,
-          style: TextStyle(
-            fontSize: 10,
-            color: missing ? PreviewColors.error : PreviewColors.placeholder,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
+    // Inside the box: the overlay's name label sits above it.
+    if (showLabel) {
+      _label.paint(
+        canvas,
+        label,
+        color: missing ? PreviewColors.error : PreviewColors.placeholder,
+        at: const Offset(2, 2),
+      );
     }
-    _text!.paint(canvas, Offset(0, -_text!.height - 2));
   }
 
   @override
   void onRemove() {
-    _text?.dispose();
+    _label.dispose();
     super.onRemove();
   }
 }

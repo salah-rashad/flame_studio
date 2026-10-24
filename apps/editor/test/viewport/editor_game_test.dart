@@ -3,6 +3,7 @@ import 'dart:io' show FileSystemEvent;
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:file/memory.dart';
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pyro/document/document.dart';
@@ -70,7 +71,7 @@ void main() {
         origin: const ManifestAbsent(),
       ),
       onSelect: selected.add,
-      onMove: (id, position, gesture) => moves.add((id, position, gesture)),
+      onMove: (id, position, key) => moves.add((id, position, key)),
       onCamera: cameras.add,
     );
   }
@@ -191,7 +192,7 @@ void main() {
   );
 
   testWithGame<EditorGame>(
-    'a gizmo drag is one gesture, constrained to its axis',
+    'a gizmo drag is one Coalescing key, constrained to its axis',
     create,
     (game) async {
       await seed(game, layered());
@@ -223,7 +224,7 @@ void main() {
       expect(
         identical(moves.last.$3, moves.first.$3),
         isFalse,
-        reason: 'a new drag is a new gesture',
+        reason: 'a new drag is a new Coalescing key',
       );
     },
   );
@@ -249,4 +250,21 @@ void main() {
     game.update(0);
     expect(game.overlay.gizmo.active, isFalse);
   });
+
+  testWithGame<EditorGame>(
+    'a click on the gizmo is the handle\'s, never the world\'s',
+    create,
+    (game) async {
+      await seed(game, layered());
+      game.overlay.select(const NodeId('low'));
+      game.update(0);
+      await game.ready();
+      final onScreen = game.camera.localToGlobal(Vector2(-50, -50));
+      final taker = game
+          .componentsAtPoint(onScreen)
+          .firstWhere((c) => c is TapCallbacks);
+      expect(taker, isNot(isA<EditorWorld>()));
+      expect(taker.parent, game.overlay.gizmo);
+    },
+  );
 }

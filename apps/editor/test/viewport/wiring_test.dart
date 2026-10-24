@@ -127,12 +127,12 @@ void main() {
     watch();
     world.ops.clear();
     final before = current();
-    final gesture = Object();
+    final coalesceKey = Object();
     for (var x = 1; x <= 5; x++) {
       document.transact('Move a', (doc) {
         final a = doc.node(const NodeId('a'))!;
         return doc.replaceNode(withPosition(a, Vec2(x * 10.0, 0)));
-      }, coalesceKey: gesture);
+      }, coalesceKey: coalesceKey);
     }
     expect(positionOf(current().node(const NodeId('a'))!), const Vec2(50, 0));
     expect(world.ops, everyElement(const PatchNode(NodeId('a'))));

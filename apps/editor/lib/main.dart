@@ -144,6 +144,7 @@ class _EditorWindow extends StatelessWidget {
       tabs: SceneTabs(command: command),
       left: const HierarchyPanel(),
       center: const ViewportPane(),
+      right: const InspectorPanel(),
     );
   }
 }

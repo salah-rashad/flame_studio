@@ -3,3 +3,4 @@
 library;
 
 export 'hierarchy/hierarchy_panel.dart' show HierarchyPanel;
+export 'inspector/inspector_panel.dart' show InspectorPanel;

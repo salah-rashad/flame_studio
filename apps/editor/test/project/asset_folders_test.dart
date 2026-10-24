@@ -62,4 +62,33 @@ void main() {
       );
     });
   });
+
+  group('discoverImages (T037, Q31)', () {
+    test('lists images under declared folders only, read fresh', () async {
+      final fs = MemoryFileSystem.test();
+      fs.directory('/proj/assets/images/ui').createSync(recursive: true);
+      fs.directory('/proj/other').createSync(recursive: true);
+      fs.file('/proj/pubspec.yaml').writeAsStringSync(pubspecDeclaredFolders);
+      fs.file('/proj/assets/images/ship.png').writeAsStringSync('x');
+      fs.file('/proj/assets/images/ui/Button.PNG').writeAsStringSync('x');
+      fs.file('/proj/assets/images/readme.txt').writeAsStringSync('x');
+      fs.file('/proj/other/hidden.png').writeAsStringSync('x');
+      expect(await discoverImages('/proj', fileSystem: fs), [
+        'assets/images/ship.png',
+        'assets/images/ui/Button.PNG',
+      ]);
+
+      fs.file('/proj/assets/images/new.webp').writeAsStringSync('x');
+      expect(
+        await discoverImages('/proj', fileSystem: fs),
+        contains('assets/images/new.webp'),
+      );
+    });
+
+    test('no pubspec means no images', () async {
+      final fs = MemoryFileSystem.test();
+      fs.directory('/proj').createSync(recursive: true);
+      expect(await discoverImages('/proj', fileSystem: fs), isEmpty);
+    });
+  });
 }

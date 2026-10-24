@@ -96,3 +96,48 @@ void _collectScenes(
     }
   }
 }
+
+/// The image extensions an image-path Field offers.
+const Set<String> imageExtensions = {
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'webp',
+  'bmp',
+};
+
+/// The image files under the project's declared asset folders, as
+/// project-relative `/`-separated paths in name order (*Q31*). Read from
+/// disk on every call, so a file added meanwhile shows up without a
+/// restart.
+Future<IList<String>> discoverImages(
+  String projectRoot, {
+  FileSystem fileSystem = const LocalFileSystem(),
+}) async {
+  final folders = await discoverAssetFolders(
+    projectRoot,
+    fileSystem: fileSystem,
+  );
+  final images = <String>{};
+  for (final folder in folders.declared) {
+    final dir = fileSystem.directory(
+      fileSystem.path.joinAll([projectRoot, ...folder.split('/')]),
+    );
+    if (!dir.existsSync()) continue;
+    for (final entity in dir.listSync(recursive: true)) {
+      if (entity is! File) continue;
+      final extension = fileSystem.path
+          .extension(entity.path)
+          .toLowerCase()
+          .replaceFirst('.', '');
+      if (!imageExtensions.contains(extension)) continue;
+      images.add(
+        fileSystem.path
+            .split(fileSystem.path.relative(entity.path, from: projectRoot))
+            .join('/'),
+      );
+    }
+  }
+  return IList(images.toList()..sort());
+}

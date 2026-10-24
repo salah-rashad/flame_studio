@@ -63,6 +63,9 @@ final class CanvasLabel {
   Color? _color;
   TextPainter? _painter;
 
+  /// The size [text] takes in [color].
+  Size measure(String text, Color color) => _layout(text, color).size;
+
   /// Draws [text] in [color] with its top-left corner at [at], or with its
   /// bottom-left there when [above].
   void paint(
@@ -72,6 +75,11 @@ final class CanvasLabel {
     Offset at = Offset.zero,
     bool above = false,
   }) {
+    final painter = _layout(text, color);
+    painter.paint(canvas, above ? at.translate(0, -painter.height) : at);
+  }
+
+  TextPainter _layout(String text, Color color) {
     if (text != _text || color != _color) {
       _text = text;
       _color = color;
@@ -84,12 +92,18 @@ final class CanvasLabel {
         textDirection: TextDirection.ltr,
       )..layout();
     }
-    final painter = _painter!;
-    painter.paint(canvas, above ? at.translate(0, -painter.height) : at);
+    return _painter!;
   }
 
-  /// Frees the layout.
-  void dispose() => _painter?.dispose();
+  /// Frees the layout. The label stays usable: Flame removes a component
+  /// from the tree when it moves to another parent, then reuses it, so the
+  /// next [paint] lays the text out again.
+  void dispose() {
+    _painter?.dispose();
+    _painter = null;
+    _text = null;
+    _color = null;
+  }
 }
 
 /// The component one Node shows as in the viewport (FR-015). It never runs

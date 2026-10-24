@@ -3,7 +3,12 @@
 library;
 
 export 'asset_folders.dart'
-    show AssetFolders, discoverAssetFolders, isDeclaredFolder;
+    show
+        AssetFolders,
+        discoverAssetFolders,
+        discoverImages,
+        imageExtensions,
+        isDeclaredFolder;
 export 'catalog/built_in.dart' show builtInTypes;
 export 'catalog/manifest_parse.dart'
     show

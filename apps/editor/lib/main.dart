@@ -9,6 +9,7 @@ import 'package:pyro/project/project.dart';
 import 'package:pyro_ui/pyro_ui.dart';
 
 import 'app/app.dart';
+import 'panels/panels.dart';
 import 'viewport/viewport.dart';
 
 void main() {
@@ -141,7 +142,9 @@ class _EditorWindow extends StatelessWidget {
       command: command,
       settings: settings,
       tabs: SceneTabs(command: command),
+      left: const HierarchyPanel(),
       center: const ViewportPane(),
+      right: const InspectorPanel(),
     );
   }
 }

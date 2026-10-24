@@ -36,6 +36,21 @@ TypeDescriptor custom(String id, {AssetPath? preview}) => TypeDescriptor(
   fields: const IList.empty(),
 );
 
+/// A `TextComponent` subclass with a `message` and a `color` Field, like
+/// the example's Banner.
+TypeDescriptor banner() => custom('Banner').copyWith(
+  supertypes: ISet(const ['TextComponent', 'PositionComponent']),
+  fields: IList(const [
+    FieldDescriptor(
+      name: 'message',
+      type: FieldType.string,
+      nullable: false,
+      defaultValue: 'Pyro',
+    ),
+    FieldDescriptor(name: 'color', type: FieldType.color, nullable: false),
+  ]),
+);
+
 void main() {
   late MemoryFileSystem fs;
   late DiskAssetSource assets;
@@ -122,6 +137,27 @@ void main() {
     expect(component.position, Vector2(10, 20));
     expect(component.size, Vector2(16, 8));
     expect(component.assetPaths, {hero});
+  });
+
+  testWithFlameGame('a sprite keeps its image when it is moved to another '
+      'parent, however often (hierarchy reparenting)', (game) async {
+    final component = previewOf(spriteNode(), context) as SpritePreview;
+    final first = PositionComponent();
+    final second = PositionComponent();
+    await game.world.addAll([first, second]);
+    await first.add(component);
+    await game.ready();
+    await settle();
+    expect(component.sprite, isNotNull);
+
+    for (final parent in [second, first, second]) {
+      component.parent = parent;
+      game.update(0);
+      await game.ready();
+      await settle();
+      expect(component.sprite, isNotNull);
+      expect(component.failed, isFalse);
+    }
   });
 
   testWithFlameGame('a sprite region crops the image', (game) async {
@@ -239,6 +275,35 @@ void main() {
     game.render(PictureRecorder().let(Canvas.new));
   });
 
+  testWithFlameGame(
+    'a labelled placeholder still draws after it is reparented',
+    (game) async {
+      final component =
+          previewOf(
+                CustomNode(
+                  id: const NodeId('g'),
+                  type: const TypeId('goblin'),
+                  transform: NodeTransform(),
+                ),
+                context,
+              )
+              as PlaceholderPreview;
+      final first = PositionComponent();
+      final second = PositionComponent();
+      await game.world.addAll([first, second]);
+      await first.add(component);
+      await game.ready();
+      component.showLabel = true;
+      game.render(PictureRecorder().let(Canvas.new));
+      // Flame removes the component and mounts it again under the new
+      // parent; its label must lay out again rather than reuse a freed one.
+      component.parent = second;
+      game.update(0);
+      await game.ready();
+      game.render(PictureRecorder().let(Canvas.new));
+    },
+  );
+
   testWithFlameGame('a Custom component draws its Manifest preview image', (
     game,
   ) async {
@@ -258,6 +323,119 @@ void main() {
     await game.world.add(component);
     await settle();
     expect(component.assetPaths, {goblinPreview});
+  });
+
+  group('a text component', () {
+    CustomNode bannerNode({Overrides fields = const Overrides.empty()}) =>
+        CustomNode(
+          id: const NodeId('t'),
+          type: const TypeId('Banner'),
+          transform: NodeTransform(position: const Vec2(5, 6)),
+          fields: fields,
+        );
+
+    PlaceholderPreview preview(CustomNode node) =>
+        previewOf(
+              node,
+              PreviewContext(assets: assets, catalog: catalogWith([banner()])),
+            )
+            as PlaceholderPreview;
+
+    test('shows its Field default', () {
+      final component = preview(bannerNode());
+      expect(component.text, 'Pyro');
+      expect(component.textColor, const Color(0xFFFFFFFF));
+    });
+
+    test('shows its Overrides, and sizes itself to the text', () {
+      final component = preview(
+        bannerNode(
+          fields: Overrides({'message': 'Hello', 'color': '#FFFF0000'}),
+        ),
+      );
+      expect(component.text, 'Hello');
+      expect(component.textColor, const Color(0xFFFF0000));
+      expect(component.size.x, greaterThan(PlaceholderPreview.defaultSide));
+    });
+
+    test('follows a patch', () {
+      final component = preview(bannerNode());
+      final before = component.size.x;
+      component.patch(
+        bannerNode(fields: Overrides({'message': 'Hello from Pyro'})),
+        PreviewContext(assets: assets, catalog: catalogWith([banner()])),
+      );
+      expect(component.text, 'Hello from Pyro');
+      expect(component.size.x, greaterThan(before));
+    });
+
+    test('a blank or non-text Override falls back to the placeholder', () {
+      expect(
+        preview(bannerNode(fields: Overrides({'message': ''}))).text,
+        isNull,
+      );
+      expect(
+        preview(bannerNode(fields: Overrides({'message': 3}))).text,
+        isNull,
+      );
+    });
+
+    test('its text wins over a Manifest preview image that is missing', () {
+      final type = banner().copyWith(preview: goblinPreview);
+      final component =
+          previewOf(
+                bannerNode(),
+                PreviewContext(assets: assets, catalog: catalogWith([type])),
+              )
+              as PlaceholderPreview;
+      expect(component.text, 'Pyro');
+      expect(component.assetPaths, isEmpty);
+      expect(component.failed, isFalse);
+    });
+
+    testWithFlameGame(
+      'a failed preview image no longer shows once there is text',
+      (game) async {
+        final type = banner().copyWith(preview: goblinPreview);
+        final withImage = PreviewContext(
+          assets: assets,
+          catalog: catalogWith([type]),
+        );
+        // No text: the preview image is wanted, and the file is missing.
+        final component =
+            previewOf(bannerNode(fields: Overrides({'message': ''})), withImage)
+                as PlaceholderPreview;
+        await game.world.add(component);
+        await settle();
+        expect(component.failed, isTrue);
+
+        component.patch(bannerNode(), withImage);
+        await settle();
+        expect(component.failed, isFalse);
+        expect(component.text, 'Pyro');
+      },
+    );
+
+    test('other Custom components stay placeholders', () {
+      final component =
+          previewOf(
+                CustomNode(
+                  id: const NodeId('g'),
+                  type: const TypeId('goblin'),
+                  transform: NodeTransform(),
+                ),
+                context,
+              )
+              as PlaceholderPreview;
+      expect(component.text, isNull);
+    });
+
+    testWithFlameGame('draws without error', (game) async {
+      final component = preview(bannerNode());
+      await game.world.add(component);
+      await game.ready();
+      game.render(PictureRecorder().let(Canvas.new));
+    });
   });
 
   testWithFlameGame('a type missing from the catalog is a Missing component', (

@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:pyro/project/project.dart';
 import 'package:pyro_runtime/pyro_runtime.dart';
 
 import '../disk_assets.dart';
@@ -51,6 +52,9 @@ mixin _LeasedImage on PreviewComponent {
   /// The image could not be read (missing or undecodable file).
   bool failed = false;
 
+  PreviewContext? _context;
+  bool _released = false;
+
   @override
   Set<AssetPath> get assetPaths => {?_path};
 
@@ -61,6 +65,7 @@ mixin _LeasedImage on PreviewComponent {
     PreviewContext context, {
     bool force = false,
   }) {
+    _context = context;
     if (!force && path == _path) return;
     _path = path;
     unawaited(_load(context));
@@ -70,6 +75,7 @@ mixin _LeasedImage on PreviewComponent {
     final generation = ++_generation;
     final path = _path;
     if (path == null) {
+      failed = false;
       _swap(null);
       return;
     }
@@ -114,8 +120,21 @@ mixin _LeasedImage on PreviewComponent {
   @override
   void onRemove() {
     _generation++;
+    _released = true;
     _swap(null);
     super.onRemove();
+  }
+
+  /// Flame removes a component and mounts it again when it moves to another
+  /// parent; the image went back on removal, so it is read again here.
+  @override
+  void onMount() {
+    super.onMount();
+    final context = _context;
+    if (_released && context != null) {
+      _released = false;
+      unawaited(_load(context));
+    }
   }
 }
 
@@ -245,9 +264,17 @@ class PlaceholderPreview extends PositionComponent
   /// unknown).
   bool missing = false;
 
+  /// The text a text component shows, when the type is one (see
+  /// [textOf]); null for every other placeholder.
+  String? text;
+
+  /// The colour [text] is drawn in.
+  Color textColor = _defaultTextColor;
+
   Image? _image;
   final Vector2 _drawSize = Vector2.zero();
   final CanvasLabel _label = CanvasLabel(fontSize: 10);
+  final CanvasLabel _content = CanvasLabel(fontSize: textFontSize);
 
   static final Paint _imagePaint = Paint()..filterQuality = FilterQuality.none;
   static final Paint _fill = Paint()
@@ -262,16 +289,30 @@ class PlaceholderPreview extends PositionComponent
         label = node.type;
         final type = context.catalog[node.type];
         missing = type == null;
-        showImage(type?.preview, context);
+        final shown = type == null
+            ? (null, _defaultTextColor)
+            : textOf(type, node.fields);
+        text = shown.$1;
+        textColor = shown.$2;
+        // Text wins over the Manifest's preview image: it is not read, so
+        // a missing image can't turn shown text into the error state.
+        showImage(text == null ? type?.preview : null, context);
       case UnknownNode():
         label = node.kind;
         missing = true;
+        text = null;
         showImage(null, context);
       default:
         throw ArgumentError.value(node, 'node', 'not a placeholder Node kind');
     }
     if (size.x == 0 || size.y == 0) {
-      size.setValues(defaultSide, defaultSide);
+      // A text component sizes itself to its text, as in the game.
+      final measured = text == null ? null : _content.measure(text!, textColor);
+      if (measured != null) {
+        size.setValues(measured.width, measured.height);
+      } else {
+        size.setValues(defaultSide, defaultSide);
+      }
     }
   }
 
@@ -283,6 +324,9 @@ class PlaceholderPreview extends PositionComponent
     final rect = size.toRect();
     if (missing || failed) {
       renderError(canvas, size);
+    } else if (text case final text?) {
+      _content.paint(canvas, text, color: textColor);
+      return;
     } else if (_image case final image?) {
       _drawSize.setValues(image.width.toDouble(), image.height.toDouble());
       canvas.drawImageRect(image, _drawSize.toRect(), rect, _imagePaint);
@@ -305,6 +349,7 @@ class PlaceholderPreview extends PositionComponent
   @override
   void onRemove() {
     _label.dispose();
+    _content.dispose();
     super.onRemove();
   }
 }
@@ -324,4 +369,43 @@ void renderError(Canvas canvas, Vector2 size) {
     ..drawRect(rect, _errorStroke)
     ..drawLine(rect.topLeft, rect.bottomRight, _errorStroke)
     ..drawLine(rect.topRight, rect.bottomLeft, _errorStroke);
+}
+
+/// The font size of a text component's preview: Flame's default
+/// `TextPaint` size. The editor can't run the component's `onLoad`, so a
+/// size the code sets itself isn't known.
+const double textFontSize = 24;
+
+const Color _defaultTextColor = Color(0xFFFFFFFF);
+
+final RegExp _colorValue = RegExp(r'^#[0-9A-Fa-f]{8}$');
+
+/// What a text component of [type] shows with [overrides]: the text of its
+/// first `String` field and the colour of its first `Color` field, each the
+/// Override or else the Manifest's default (Flame's white when it has none);
+/// `(null, white)` when [type] isn't a `TextComponent` or has no text.
+///
+/// Preview only: the real component may compute its text in code, so this
+/// is the one thing the editor can know without running it (*Q7*).
+(String?, Color) textOf(TypeDescriptor type, Overrides overrides) {
+  if (!type.supertypes.contains('TextComponent')) {
+    return (null, _defaultTextColor);
+  }
+  Object? valueOf(FieldDescriptor field) => overrides.contains(field.name)
+      ? overrides[field.name]
+      : field.defaultValue;
+  final textField = type.fields
+      .where((field) => field.type == FieldType.string)
+      .firstOrNull;
+  final colorField = type.fields
+      .where((field) => field.type == FieldType.color)
+      .firstOrNull;
+  final text = textField == null ? null : valueOf(textField);
+  final color = colorField == null ? null : valueOf(colorField);
+  return (
+    text is String && text.isNotEmpty ? text : null,
+    color is String && _colorValue.hasMatch(color)
+        ? Color(int.parse(color.substring(1), radix: 16))
+        : _defaultTextColor,
+  );
 }

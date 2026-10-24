@@ -551,7 +551,10 @@ close/reopen cycle, and hot-swaps in the running game.
 - **FR-015**: Preview components MUST render built-in Node kinds for real with Pyro's own Flame
   (sprites from disk images via `AssetSource`, hitboxes as their outlines), and custom
   components as placeholders — a labelled box with the Type ID, or the `preview:` image when
-  the Manifest carries one (*Q6*).
+  the Manifest carries one (*Q6*). A custom component whose supertypes include `TextComponent`
+  shows its text instead: its first `String` Field's value and its first `Color` Field's colour
+  (the Override, else the Manifest default), at Flame's default `TextPaint` size, since the
+  editor can't run the component's code to know more.
 - **FR-016**: The viewport MUST be a `FlameGame` embedded in the app that never ticks user
   logic, and the app MUST NOT import or execute the project's code (*Q7*, §8.3, constitution
   II); everything it draws comes from the document, the catalog and files on disk.

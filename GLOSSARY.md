@@ -145,6 +145,10 @@ _Avoid_: Run game, launch
 One run of the developer's game through Pyro's Play client, from starting `flutter run` to the game's exit; it reports the game's output and Hot-swaps its saved Scenes.
 _Avoid_: run, launch
 
+**Console**:
+Pyro's one log of the generator's, the game's and Pyro's own lines for the open project, with debugger auth codes masked; it keeps the last 10,000 lines.
+_Avoid_: log panel, output
+
 **Contract test**:
 The CI check that `example/`'s generated Registry and Manifest are committed and reviewed, and that every `example/` Scene loads with the real Registry, with no error and no warning.
 

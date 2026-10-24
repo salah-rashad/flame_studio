@@ -4,6 +4,7 @@
 library;
 
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:io' show FileSystemEvent, FileSystemMoveEvent;
 import 'dart:ui' as ui;
 
@@ -86,9 +87,14 @@ final class DiskAssetSource implements AssetSource {
     final directory = fileSystem.directory(_root);
     if (directory.existsSync()) {
       // A watch that fails only stops live reloads.
-      _watch = watch(
-        directory,
-      ).listen(_onEvent, onError: (Object _) {}, cancelOnError: false);
+      _watch = watch(directory).listen(
+        _onEvent,
+        onError: (Object error) => developer.log(
+          'Watching "$_root" for image changes failed: $error',
+          name: 'pyro.viewport',
+        ),
+        cancelOnError: false,
+      );
     }
   }
 

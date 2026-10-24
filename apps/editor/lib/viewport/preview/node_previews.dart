@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:ui';
 
 import 'package:flame/components.dart';
@@ -81,8 +82,13 @@ mixin _LeasedImage on PreviewComponent {
       }
       failed = false;
       _swap(lease);
-    } on Object {
+    } on Object catch (error) {
       if (generation != _generation) return;
+      // The Node shows the error state (FR-021); the cause goes to the log.
+      developer.log(
+        'Could not read the image "$path" for Node $nodeId: $error',
+        name: 'pyro.viewport',
+      );
       failed = true;
       _swap(null);
     }

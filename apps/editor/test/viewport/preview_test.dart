@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io' show FileSystemEvent;
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:file/memory.dart';
 import 'package:flame/components.dart';
 import 'package:flame_test/flame_test.dart';
+import 'package:flutter/painting.dart' show decodeImageFromList;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pyro/project/project.dart';
 import 'package:pyro/viewport/viewport.dart';
@@ -39,10 +41,24 @@ void main() {
   late DiskAssetSource assets;
   late PreviewContext context;
 
+  // The files hold just their size; the decoder hands out clones of
+  // images made up front, so loads finish within the event queue and the
+  // tests never wait on the engine's clock (constitution V).
+  final images = <String, Image>{};
+
+  setUpAll(() async {
+    for (final (w, h) in [(4, 2), (8, 8), (6, 6), (3, 3)]) {
+      images['${w}x$h'] = await decodeImageFromList(await png(w, h));
+    }
+  });
+
+  Future<Image> decode(Uint8List bytes) async =>
+      images['${bytes[0]}x${bytes[1]}']!.clone();
+
   Future<void> write(AssetPath path, int width, int height) async {
     final file = fs.file('$root/$path');
     await file.parent.create(recursive: true);
-    await file.writeAsBytes(await png(width, height));
+    await file.writeAsBytes([width, height]);
   }
 
   setUp(() async {
@@ -52,6 +68,7 @@ void main() {
       fileSystem: fs,
       root: root,
       watch: (_) => const Stream<FileSystemEvent>.empty(),
+      decode: decode,
     );
     context = PreviewContext(
       assets: assets,
@@ -62,8 +79,7 @@ void main() {
   tearDown(() => assets.dispose());
 
   /// Lets the image loads land.
-  Future<void> settle() =>
-      Future<void>.delayed(const Duration(milliseconds: 20));
+  Future<void> settle() => pumpEventQueue();
 
   SpriteNode spriteNode({AssetPath image = hero, SpriteRegion? region}) =>
       SpriteNode(

@@ -130,6 +130,24 @@ void main() {
     },
   );
 
+  testWithGame<EditorGame>(
+    'a Node moved out of a subtree removed in the same batch keeps its component',
+    create,
+    (game) async {
+      final doc = SceneDocument.fromScene(smallScene());
+      await seed(game, doc);
+      final next = doc
+          .moveNode(const NodeId('a1'), parentId: const NodeId('b'))
+          .removeNode(const NodeId('a'));
+      game.tree.apply(reconcile(doc, next), next);
+      await game.ready();
+      final a1 = game.tree.componentOf(const NodeId('a1'));
+      expect(a1, isNotNull);
+      expect(a1!.parent, game.tree.componentOf(const NodeId('b')));
+      expect(game.tree.length, 2);
+    },
+  );
+
   testWithGame<EditorGame>('picking finds the topmost Node, or none', create, (
     game,
   ) async {

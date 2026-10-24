@@ -57,6 +57,7 @@ final class PreviewTree implements PreviewWorld {
 
   @override
   void apply(IList<PreviewOp> ops, SceneDocument document) {
+    final old = _document;
     _document = document;
     final reordered = <NodeId>{};
     for (final op in ops) {
@@ -67,7 +68,7 @@ final class PreviewTree implements PreviewWorld {
         case RemoveNode(:final nodeId):
           final component = _components[nodeId];
           if (component == null) continue;
-          _forget(component);
+          _forget(nodeId, old, document);
           component.removeFromParent();
         case PatchNode(:final nodeId):
           final component = _components[nodeId];
@@ -116,11 +117,15 @@ final class PreviewTree implements PreviewWorld {
   Component _parentOf(NodeId id) =>
       id == _document?.rootId ? root : _components[id]!;
 
-  void _forget(PreviewComponent component) {
-    _components.remove(component.nodeId);
-    _dependents.forget(component);
-    for (final child in component.children.whereType<PreviewComponent>()) {
-      _forget(child);
+  /// Drops the records of [id]'s subtree as it was in [old], keeping the
+  /// Nodes still in [next]: one moved out of a removed subtree has its
+  /// own `ReparentNode`, and Flame only queues that move, so the removed
+  /// component's children can't tell.
+  void _forget(NodeId id, SceneDocument? old, SceneDocument next) {
+    final component = _components.remove(id);
+    if (component != null) _dependents.forget(component);
+    for (final child in old?.childrenOf(id) ?? const <NodeId>[]) {
+      if (!next.contains(child)) _forget(child, old, next);
     }
   }
 

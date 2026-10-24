@@ -111,9 +111,12 @@ class _SceneViewportState extends ConsumerState<SceneViewport> {
     if (widget.visible) {
       _game.show();
       // The paused listener may have missed changes: re-seed from the
-      // current document.
-      ref.invalidate(previewSyncProvider(_binding));
-      _game.overlay.select(ref.read(selectionProvider(_sceneId)));
+      // current document — after this frame, not while the tree builds.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.invalidate(previewSyncProvider(_binding));
+        _game.overlay.select(ref.read(selectionProvider(_sceneId)));
+      });
     } else {
       _game.hide();
     }

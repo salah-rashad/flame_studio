@@ -75,6 +75,7 @@ mixin _LeasedImage on PreviewComponent {
     final generation = ++_generation;
     final path = _path;
     if (path == null) {
+      failed = false;
       _swap(null);
       return;
     }
@@ -288,12 +289,14 @@ class PlaceholderPreview extends PositionComponent
         label = node.type;
         final type = context.catalog[node.type];
         missing = type == null;
-        showImage(type?.preview, context);
         final shown = type == null
             ? (null, _defaultTextColor)
             : textOf(type, node.fields);
         text = shown.$1;
         textColor = shown.$2;
+        // Text wins over the Manifest's preview image: it is not read, so
+        // a missing image can't turn shown text into the error state.
+        showImage(text == null ? type?.preview : null, context);
       case UnknownNode():
         label = node.kind;
         missing = true;

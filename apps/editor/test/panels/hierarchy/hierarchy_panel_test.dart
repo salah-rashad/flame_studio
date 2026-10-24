@@ -311,6 +311,26 @@ void main() {
       expect(childrenOf('a'), ['a1', 'h']);
     });
 
+    panelTest('holding Delete or F2 acts once, not on every key repeat', (
+      tester,
+    ) async {
+      await tester.tap(row('a1'));
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.delete);
+      await tester.pump();
+      expect(current().contains(const NodeId('a1')), isFalse);
+      // The selection is now `a`; the repeat must not delete it too.
+      await tester.sendKeyRepeatEvent(LogicalKeyboardKey.delete);
+      await tester.sendKeyRepeatEvent(LogicalKeyboardKey.delete);
+      await tester.pump();
+      expect(current().contains(const NodeId('a')), isTrue);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.delete);
+
+      await tester.sendKeyRepeatEvent(LogicalKeyboardKey.f2);
+      await tester.pump();
+      expect(find.byType(EditableText), findsNothing);
+    });
+
     panelTest('the root is not deletable', (tester) async {
       await tester.tap(row('level1'));
       await tester.pump();

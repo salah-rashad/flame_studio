@@ -125,7 +125,7 @@ Future<IList<String>> discoverImages(
       fileSystem.path.joinAll([projectRoot, ...folder.split('/')]),
     );
     if (!dir.existsSync()) continue;
-    for (final entity in dir.listSync(recursive: true)) {
+    await for (final entity in dir.list(recursive: true)) {
       if (entity is! File) continue;
       final extension = fileSystem.path
           .extension(entity.path)

@@ -380,6 +380,42 @@ void main() {
       );
     });
 
+    test('its text wins over a Manifest preview image that is missing', () {
+      final type = banner().copyWith(preview: goblinPreview);
+      final component =
+          previewOf(
+                bannerNode(),
+                PreviewContext(assets: assets, catalog: catalogWith([type])),
+              )
+              as PlaceholderPreview;
+      expect(component.text, 'Pyro');
+      expect(component.assetPaths, isEmpty);
+      expect(component.failed, isFalse);
+    });
+
+    testWithFlameGame(
+      'a failed preview image no longer shows once there is text',
+      (game) async {
+        final type = banner().copyWith(preview: goblinPreview);
+        final withImage = PreviewContext(
+          assets: assets,
+          catalog: catalogWith([type]),
+        );
+        // No text: the preview image is wanted, and the file is missing.
+        final component =
+            previewOf(bannerNode(fields: Overrides({'message': ''})), withImage)
+                as PlaceholderPreview;
+        await game.world.add(component);
+        await settle();
+        expect(component.failed, isTrue);
+
+        component.patch(bannerNode(), withImage);
+        await settle();
+        expect(component.failed, isFalse);
+        expect(component.text, 'Pyro');
+      },
+    );
+
     test('other Custom components stay placeholders', () {
       final component =
           previewOf(

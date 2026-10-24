@@ -305,13 +305,16 @@ class _SceneTreeState extends ConsumerState<_SceneTree> {
       }
       return KeyEventResult.handled;
     }
+    // Holding one of these must not rename again or delete the next Node
+    // the selection lands on: only the first press acts.
+    final pressed = event is KeyDownEvent;
     if (key == LogicalKeyboardKey.f2) {
-      _startRename(selected);
+      if (pressed) _startRename(selected);
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.delete ||
         key == LogicalKeyboardKey.backspace) {
-      _actions.delete(selected);
+      if (pressed) _actions.delete(selected);
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;

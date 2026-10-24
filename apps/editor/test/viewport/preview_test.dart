@@ -36,6 +36,21 @@ TypeDescriptor custom(String id, {AssetPath? preview}) => TypeDescriptor(
   fields: const IList.empty(),
 );
 
+/// A `TextComponent` subclass with a `message` and a `color` Field, like
+/// the example's Banner.
+TypeDescriptor banner() => custom('Banner').copyWith(
+  supertypes: ISet(const ['TextComponent', 'PositionComponent']),
+  fields: IList(const [
+    FieldDescriptor(
+      name: 'message',
+      type: FieldType.string,
+      nullable: false,
+      defaultValue: 'Pyro',
+    ),
+    FieldDescriptor(name: 'color', type: FieldType.color, nullable: false),
+  ]),
+);
+
 void main() {
   late MemoryFileSystem fs;
   late DiskAssetSource assets;
@@ -287,6 +302,83 @@ void main() {
     await game.world.add(component);
     await settle();
     expect(component.assetPaths, {goblinPreview});
+  });
+
+  group('a text component', () {
+    CustomNode bannerNode({Overrides fields = const Overrides.empty()}) =>
+        CustomNode(
+          id: const NodeId('t'),
+          type: const TypeId('Banner'),
+          transform: NodeTransform(position: const Vec2(5, 6)),
+          fields: fields,
+        );
+
+    PlaceholderPreview preview(CustomNode node) =>
+        previewOf(
+              node,
+              PreviewContext(assets: assets, catalog: catalogWith([banner()])),
+            )
+            as PlaceholderPreview;
+
+    test('shows its Field default', () {
+      final component = preview(bannerNode());
+      expect(component.text, 'Pyro');
+      expect(component.textColor, const Color(0xFFFFFFFF));
+    });
+
+    test('shows its Overrides, and sizes itself to the text', () {
+      final component = preview(
+        bannerNode(
+          fields: Overrides({'message': 'Hello', 'color': '#FFFF0000'}),
+        ),
+      );
+      expect(component.text, 'Hello');
+      expect(component.textColor, const Color(0xFFFF0000));
+      expect(component.size.x, greaterThan(PlaceholderPreview.defaultSide));
+    });
+
+    test('follows a patch', () {
+      final component = preview(bannerNode());
+      final before = component.size.x;
+      component.patch(
+        bannerNode(fields: Overrides({'message': 'Hello from Pyro'})),
+        PreviewContext(assets: assets, catalog: catalogWith([banner()])),
+      );
+      expect(component.text, 'Hello from Pyro');
+      expect(component.size.x, greaterThan(before));
+    });
+
+    test('a blank or non-text Override falls back to the placeholder', () {
+      expect(
+        preview(bannerNode(fields: Overrides({'message': ''}))).text,
+        isNull,
+      );
+      expect(
+        preview(bannerNode(fields: Overrides({'message': 3}))).text,
+        isNull,
+      );
+    });
+
+    test('other Custom components stay placeholders', () {
+      final component =
+          previewOf(
+                CustomNode(
+                  id: const NodeId('g'),
+                  type: const TypeId('goblin'),
+                  transform: NodeTransform(),
+                ),
+                context,
+              )
+              as PlaceholderPreview;
+      expect(component.text, isNull);
+    });
+
+    testWithFlameGame('draws without error', (game) async {
+      final component = preview(bannerNode());
+      await game.world.add(component);
+      await game.ready();
+      game.render(PictureRecorder().let(Canvas.new));
+    });
   });
 
   testWithFlameGame('a type missing from the catalog is a Missing component', (

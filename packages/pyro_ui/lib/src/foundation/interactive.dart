@@ -220,6 +220,7 @@ class _FsInteractiveState extends State<PrInteractive> {
   void _onPointerUp(PointerUpEvent event) {
     if (event.pointer != _pressPointer) return;
     _cancelPress();
+    if (!mounted) return;
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     if ((Offset.zero & box.size).contains(box.globalToLocal(event.position))) {
@@ -229,6 +230,9 @@ class _FsInteractiveState extends State<PrInteractive> {
 
   void _cancelPress() {
     _pressPointer = null;
+    // The press can outlive the widget (a pointer-down that rebuilt the
+    // screen); its controller is gone with it.
+    if (!mounted) return;
     _controller.update(WidgetState.pressed, false);
   }
 

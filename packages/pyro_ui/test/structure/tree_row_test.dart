@@ -261,6 +261,36 @@ void main() {
       );
     });
 
+    testWidgets('takes focus from another focused widget when rename starts', (
+      tester,
+    ) async {
+      final other = FocusNode();
+      addTearDown(other.dispose);
+      Widget app({required bool renaming}) => Column(
+        children: [
+          Focus(focusNode: other, child: const SizedBox(height: 10)),
+          Expanded(
+            child: PrTreeRow<String>(
+              depth: 0,
+              name: 'Player',
+              renaming: renaming,
+              onRenameCommit: (_) {},
+            ),
+          ),
+        ],
+      );
+      await pumpFs(tester, app(renaming: false));
+      other.requestFocus();
+      await tester.pump();
+      expect(other.hasFocus, isTrue);
+
+      await pumpFs(tester, app(renaming: true));
+      await tester.pump();
+      final field = tester.widget<EditableText>(find.byType(EditableText));
+      expect(field.focusNode.hasFocus, isTrue);
+      expect(other.hasFocus, isFalse);
+    });
+
     testWidgets('Enter commits', (tester) async {
       final log = <String>[];
       await pumpFs(tester, renaming(log));

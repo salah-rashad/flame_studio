@@ -254,7 +254,14 @@ class _FsTreeRowState<T extends Object> extends State<PrTreeRow<T>> {
   void _startRename() {
     _renameDone = false;
     _renameController = TextEditingController(text: widget.name);
-    _renameFocus = FocusNode(debugLabel: 'rename')..addListener(_onRenameFocus);
+    final focus = FocusNode(debugLabel: 'rename')..addListener(_onRenameFocus);
+    _renameFocus = focus;
+    // `autofocus` is ignored while something else in the scope has focus,
+    // which is the case when the app starts the rename from the keyboard
+    // (F2 in the tree). Ask for focus once the field is in the tree.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && identical(_renameFocus, focus)) focus.requestFocus();
+    });
   }
 
   void _endRename() {
@@ -577,6 +584,15 @@ class _FsTreeRowState<T extends Object> extends State<PrTreeRow<T>> {
   }
 
   Widget _renameField(PrColors c) {
+    // A press anywhere else confirms the rename, whatever it lands on:
+    // losing focus alone isn't enough, since most places can't take it.
+    return TapRegion(
+      onTapOutside: (_) => _commitRename(),
+      child: _renameBox(c),
+    );
+  }
+
+  Widget _renameBox(PrColors c) {
     return Container(
       height: PrSizes.controlSm,
       // 3px padding + 1px border keeps the text where the name was, in place

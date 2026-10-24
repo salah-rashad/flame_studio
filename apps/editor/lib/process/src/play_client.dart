@@ -3,6 +3,7 @@ import 'dart:io' show Process, ProcessException;
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 
+import 'play_defaults.dart';
 import 'play_event.dart';
 import 'play_session.dart';
 import 'scene_watcher.dart';
@@ -32,8 +33,8 @@ final class PlayClient {
     this._startProcess = Process.start,
     FileSystem fileSystem = const LocalFileSystem(),
     this._watchDirectory = watchRecursively,
-    this.quietPeriod = const Duration(milliseconds: 150),
-    this.stopTimeout = const Duration(seconds: 5),
+    this.quietPeriod = PlayDefaults.sceneQuiet,
+    this.stopTimeout = PlayDefaults.stopTimeout,
   }) : _fs = fileSystem;
 
   /// The `flutter` executable.

@@ -28,8 +28,9 @@ IList<PreviewOp> reconcile(SceneDocument? old, SceneDocument next);
    Node whose *parent* changed but which is itself `identical` produces only
    `ReparentNode` — never `PatchNode`.
 2. **Minimality**: a one-Node edit in a 1,000-Node document yields exactly one op
-   (`PatchNode`), or two when it is a move (`ReparentNode`). This is SC-006 and the
-   constitution III rebuild-scope rule made testable.
+   (`PatchNode`), and a move exactly one `ReparentNode`: a parent whose only change is
+   its `childIds` has nothing to patch. This is SC-006 and the constitution III
+   rebuild-scope rule made testable.
 3. **Order**: `childIds` order is authoritative; a reorder within a parent is a
    `ReparentNode` with the new index.
 4. **Subtree atomicity**: the document's `removeNode`/`moveNode` are subtree operations; the

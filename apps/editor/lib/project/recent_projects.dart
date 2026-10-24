@@ -96,13 +96,33 @@ final class RecentProjectsStore {
   }
 
   /// [value] with [projectRoot] opened: moved to the front of the list,
-  /// remembered as last opened.
+  /// remembered as last opened. [projectRoot] is [normalize]d first.
   static RecentProjects opened(RecentProjects value, String projectRoot) {
-    final rest = value.paths.where((p) => p != projectRoot);
+    final root = normalize(projectRoot);
+    final rest = value.paths.where((p) => p != root);
+    return value.copyWith(paths: IList([root, ...rest]), lastOpened: root);
+  }
+
+  /// [value] without [projectRoot]: off the list, its dock sizes dropped,
+  /// and no longer last opened. Only ever on the user's request — a
+  /// missing folder is marked, never removed automatically (FR-003).
+  static RecentProjects removed(RecentProjects value, String projectRoot) {
+    final root = normalize(projectRoot);
     return value.copyWith(
-      paths: IList([projectRoot, ...rest]),
-      lastOpened: projectRoot,
+      paths: value.paths.removeWhere((p) => p == root),
+      lastOpened: value.lastOpened == root ? null : value.lastOpened,
+      sizes: value.sizes.remove(root),
     );
+  }
+
+  /// [path] trimmed and without trailing slashes (`/` itself stays), so one
+  /// folder is one entry however it was typed.
+  static String normalize(String path) {
+    var result = path.trim();
+    while (result.length > 1 && result.endsWith('/')) {
+      result = result.substring(0, result.length - 1);
+    }
+    return result;
   }
 
   static PrShellSizes _sizeFrom(Map<Object?, Object?> values) => PrShellSizes(

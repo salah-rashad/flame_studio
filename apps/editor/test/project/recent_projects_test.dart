@@ -62,5 +62,28 @@ void main() {
       expect(await store().read(errors.add), RecentProjects.empty);
       expect(errors, hasLength(1));
     });
+
+    test('opened normalizes, so a trailing slash is the same project', () {
+      var value = RecentProjectsStore.opened(RecentProjects.empty, '/a/');
+      value = RecentProjectsStore.opened(value, '/a');
+      expect(value.paths, ['/a']);
+      expect(value.lastOpened, '/a');
+    });
+
+    test('removed drops the path, its sizes and lastOpened', () {
+      final value = RecentProjectsStore.opened(
+        RecentProjectsStore.opened(RecentProjects.empty, '/b'),
+        '/a',
+      ).copyWith(sizes: IMap(const {'/a': PrShellSizes(left: 300)}));
+      final removed = RecentProjectsStore.removed(value, '/a/');
+      expect(removed.paths, ['/b']);
+      expect(removed.lastOpened, isNull);
+      expect(removed.sizes.containsKey('/a'), isFalse);
+    });
+
+    test('normalize keeps the root and trims', () {
+      expect(RecentProjectsStore.normalize(' /a/b// '), '/a/b');
+      expect(RecentProjectsStore.normalize('/'), '/');
+    });
   });
 }

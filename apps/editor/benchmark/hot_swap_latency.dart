@@ -7,9 +7,10 @@
 //   dart run benchmark/hot_swap_latency.dart [project]   (default ../../example)
 //
 // It drives `example/`: it rewrites assets/scenes/level1.scene.json and
-// lib/code_marker.dart, restores both when it ends, and waits for the game's
-// "[pyro_example] Scene reloaded" line. Times run to that line, which the
-// game prints once the swap is done; the frame that shows it follows within
+// lib/code_marker.dart, restores both when it ends, and waits for the
+// Runtime's "[pyro] Scene reloaded" Hot-swap report (spec 007,
+// contracts/hot-swap-reports.md). Times run to that line, which the Runtime
+// prints once the swap is done; the frame that shows it follows within
 // 16 ms. Prints a Markdown table and exits 1 if a criterion fails.
 import 'dart:async';
 import 'dart:io';
@@ -18,7 +19,7 @@ import 'package:pyro/process/process.dart';
 
 const _scene = 'assets/scenes/level1.scene.json';
 const _marker = 'lib/code_marker.dart';
-const _reloaded = '[pyro_example] Scene reloaded';
+const _reloaded = '[pyro] Scene reloaded';
 const _loaded = '[pyro_example] Scene loaded';
 const _shipPosition = '"position": [400, 300]';
 

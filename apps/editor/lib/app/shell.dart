@@ -4,11 +4,13 @@ import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pyro/panels/panels.dart';
 import 'package:pyro/project/project.dart';
 import 'package:pyro_ui/pyro_ui.dart';
 
 import 'dialogs.dart';
 import 'open_scene.dart';
+import 'play_toolbar.dart';
 import 'providers.dart';
 import 'save_scene.dart';
 import 'shortcuts.dart';
@@ -66,6 +68,7 @@ class PyroEditorWindow extends ConsumerStatefulWidget {
 
 class _PyroEditorWindowState extends ConsumerState<PyroEditorWindow> {
   PrShellSizes _sizes = PrShellSizes.standard;
+  var _consoleCollapsed = false;
   late final AppLifecycleListener _listener;
 
   /// The panels' focus scopes (T016): Hierarchy, Viewport, Inspector —
@@ -159,7 +162,7 @@ class _PyroEditorWindowState extends ConsumerState<PyroEditorWindow> {
           titleBarLeadingInset: Platform.isMacOS
               ? macTrafficLightsInset
               : plainTitleBarInset,
-          toolbar: const SizedBox(height: PrSizes.toolbar),
+          toolbar: PlayToolbar(command: widget.command),
           left: dock(0, widget.left, 'Hierarchy'),
           center: dock(
             1,
@@ -178,7 +181,10 @@ class _PyroEditorWindowState extends ConsumerState<PyroEditorWindow> {
             'Viewport',
           ),
           right: dock(2, widget.right, 'Inspector'),
-          bottom: null,
+          bottom: const ConsolePanel(),
+          bottomCollapsed: _consoleCollapsed,
+          onBottomCollapsedChanged: (collapsed) =>
+              setState(() => _consoleCollapsed = collapsed),
           statusBar: _StatusBar(
             project: project,
             catalog: ref.watch(typeCatalogProvider),
@@ -363,14 +369,27 @@ class _PanelPlaceholder extends StatelessWidget {
 
   final String label;
 
+  /// Below this height the empty state would overflow; only the label
+  /// shows.
+  static const double _fullHeight = 240;
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: PrEmptyState(
-        icon: PrIcons.box,
-        title: label,
-        message: 'This panel arrives with its story.',
-        action: PrButton(label: 'Coming soon', onPressed: () {}),
+    return LayoutBuilder(
+      builder: (context, constraints) => Center(
+        child: constraints.maxHeight < _fullHeight
+            ? Text(
+                label,
+                style: PrText.small.copyWith(
+                  color: PrColors.of(context).textSecondary,
+                ),
+              )
+            : PrEmptyState(
+                icon: PrIcons.box,
+                title: label,
+                message: 'This panel arrives with its story.',
+                action: PrButton(label: 'Coming soon', onPressed: () {}),
+              ),
       ),
     );
   }

@@ -145,6 +145,10 @@ _Avoid_: Run game, launch
 One run of the developer's game through Pyro's Play client, from starting `flutter run` to the game's exit; it reports the game's output and Hot-swaps its saved Scenes.
 _Avoid_: run, launch
 
+**Console**:
+Pyro's one log of the generator's, the game's and Pyro's own lines for the open project, with debugger auth codes masked; it keeps the last 10,000 lines.
+_Avoid_: log panel, output
+
 **Contract test**:
 The CI check that `example/`'s generated Registry and Manifest are committed and reviewed, and that every `example/` Scene loads with the real Registry, with no error and no warning.
 
@@ -154,6 +158,9 @@ Connecting the developer's IDE debugger to a game Pyro is already running.
 **Hot-swap**:
 Replacing a Scene inside a running game with its newly saved version, without restarting the game. It happens only when the Scene's content changed.
 _Avoid_: Scene reload, live reload
+
+**Hot-swap report**:
+The one line the Runtime prints in a debug build when a Scene loads (`[pyro] Scene loaded: <path>`), is Hot-swapped (`reloaded`), or fails to Hot-swap (`not reloaded`); Pyro reads it to know a Hot-swap reached the game.
 
 **Stale reference**:
 A component of a Node that a Hot-swap removed, still held by game code; debug builds warn the first time one is moved or added back.

@@ -190,6 +190,65 @@ void main() {
     await finish(tester, harness);
   });
 
+  testWidgets('picking a sprite image gives an unsized sprite the '
+      "image's size, in one undo step", (tester) async {
+    final harness = await openInspector(
+      tester,
+      decodedImage: await testImage(tester, 48, 32),
+    );
+    harness.select('s');
+    await tester.pumpAndSettle();
+    expect((harness.node('s') as SpriteNode).transform.size, Vec2.zero);
+
+    PrDropdown<String> image() => tester.widget<PrDropdown<String>>(
+      find.descendant(
+        of: propertyRow('image'),
+        matching: find.byType(PrDropdown<String>),
+      ),
+    );
+    image().onChanged!('assets/images/villain.png');
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pump();
+    final sprite = harness.node('s') as SpriteNode;
+    expect(sprite.image, 'assets/images/villain.png');
+    expect(sprite.transform.size, const Vec2(48, 32));
+
+    harness.notifier.undo();
+    await tester.pump();
+    final undone = harness.node('s') as SpriteNode;
+    expect(undone.image, 'assets/images/s.png');
+    expect(undone.transform.size, Vec2.zero);
+    await finish(tester, harness);
+  });
+
+  testWidgets('picking a sprite image keeps a size the author set', (
+    tester,
+  ) async {
+    final harness = await openInspector(
+      tester,
+      decodedImage: await testImage(tester, 48, 32),
+    );
+    harness.select('s');
+    await tester.pumpAndSettle();
+    tester.widget<PrVector2Property>(vectorRow('size')).onCommit(10, 12);
+    await tester.pump();
+
+    tester
+        .widget<PrDropdown<String>>(
+          find.descendant(
+            of: propertyRow('image'),
+            matching: find.byType(PrDropdown<String>),
+          ),
+        )
+        .onChanged!('assets/images/villain.png');
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pump();
+    final sprite = harness.node('s') as SpriteNode;
+    expect(sprite.image, 'assets/images/villain.png');
+    expect(sprite.transform.size, const Vec2(10, 12));
+    await finish(tester, harness);
+  });
+
   testWidgets('Color, entity, Sprite and SpriteAnimation fields are '
       'read-only; a non-constant default shows its source (FR-033, §7.3)', (
     tester,

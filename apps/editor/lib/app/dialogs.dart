@@ -46,21 +46,22 @@ class NewSceneResult {
   /// The Scene's name, without the extension.
   final String name;
 
-  /// The project-relative folder to save into, such as `assets/scenes/`.
+  /// The project-relative folder to save into, such as `assets/scenes`.
   final String folder;
 }
 
 /// Asks for the new Scene's [defaultName] and folder; [folders] lists the
 /// declared asset folders, [defaultFolder] the offered one
-/// (`assets/scenes/`, *Q53*). When [folderDeclared] is false the dialog
-/// carries the warning that the game cannot load from an undeclared folder
-/// — never a pubspec edit (FR-008).
+/// (`assets/scenes`, *Q53*). While [isDeclared] says the chosen folder is
+/// not one the pubspec declares, the dialog carries the warning that the
+/// game cannot load from an undeclared folder — never a pubspec edit
+/// (FR-008).
 Future<NewSceneResult?> showNewSceneDialog(
   BuildContext context, {
   required String defaultName,
   required List<String> folders,
   required String defaultFolder,
-  required bool folderDeclared,
+  required bool Function(String folder) isDeclared,
 }) {
   var name = defaultName;
   var folder = defaultFolder;
@@ -72,7 +73,7 @@ Future<NewSceneResult?> showNewSceneDialog(
       content: _NewSceneForm(
         folders: folders,
         initialFolder: defaultFolder,
-        folderDeclared: folderDeclared,
+        isDeclared: isDeclared,
         onName: (value) => name = value,
         onFolder: (value) => folder = value,
       ),
@@ -97,14 +98,14 @@ class _NewSceneForm extends StatefulWidget {
   const _NewSceneForm({
     required this.folders,
     required this.initialFolder,
-    required this.folderDeclared,
+    required this.isDeclared,
     required this.onName,
     required this.onFolder,
   });
 
   final List<String> folders;
   final String initialFolder;
-  final bool folderDeclared;
+  final bool Function(String folder) isDeclared;
   final ValueChanged<String> onName;
   final ValueChanged<String> onFolder;
 
@@ -154,7 +155,7 @@ class _NewSceneFormState extends State<_NewSceneForm> {
                 PrDropdownOption(value: folder, label: folder),
             ],
           ),
-        if (!widget.folderDeclared)
+        if (!widget.isDeclared(_folder))
           Row(
             spacing: PrSpacing.s2,
             children: [

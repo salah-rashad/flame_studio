@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Phase 2 done (2026-10-20): Scene format, #2 Document model, #7 Generator and #8 Runtime. Phase 3 (vertical slice) done (2026-10-22, [`specs/005-vertical-slice/`](../specs/005-vertical-slice/spec.md)): the whole loop ran on Linux and on the reference Mac and met every limit ([`ARCHITECTURE.md`](ARCHITECTURE.md), "Vertical slice"). Next: Phase 4 (Editor) |
+| **Status** | Phase 2 done (2026-10-20): Scene format, #2 Document model, #7 Generator and #8 Runtime. Phase 3 (vertical slice) done (2026-10-22, [`specs/005-vertical-slice/`](../specs/005-vertical-slice/spec.md)): the whole loop ran on Linux and on the reference Mac and met every limit ([`ARCHITECTURE.md`](ARCHITECTURE.md), "Vertical slice"). Phase 4 (Editor) done (2026-10-24, [`specs/006-editor/`](../specs/006-editor/spec.md)): a scene built from scratch in Pyro in `example/`, saved, reopened unchanged, with a deleted Behavior shown as Missing and its values kept ([`ARCHITECTURE.md`](ARCHITECTURE.md), "Editor"). Next: Phase 5 (Play) |
 | **Source of truth** | [`project-plan.md`](project-plan.md) §14 owns scope, estimates and build order; this file only groups that order into phases and tracks progress |
 | **Sync rule** | When §14 changes (an item, an estimate, the order), change this file in the same commit. When a step here is finished, tick it here; §14 changes only if its scope or estimate changed |
 
@@ -24,7 +24,7 @@ flowchart LR
   P0["Phase 0<br/>De-risking spikes ✅"] --> P1["Phase 1<br/>Foundations ✅"]
   P1 --> P2["Phase 2<br/>Data contract ✅"]
   P2 --> P3["Phase 3<br/>Vertical slice ✅"]
-  P3 --> P4["Phase 4<br/>Editor ⬜"]
+  P3 --> P4["Phase 4<br/>Editor ✅"]
   P4 --> P5["Phase 5<br/>Play ⬜"]
   P5 --> M1(["Early preview"])
   M1 --> P6["Phase 6<br/>Testers and feedback ⬜"]
@@ -39,22 +39,22 @@ flowchart LR
 | 1 — Foundations | #0 repo setup, #14 design system (all of it) | 3 + 23 | 0 | ✅ |
 | 2 — Data contract | #2 Document model, #7 Generator, #8 Runtime | 16 | 0 | ✅ |
 | 3 — Vertical slice | `example/` skeleton (part of #13), #12 contract test, first slice of #11 | 1.5 + (in #11) | 0 | ✅ |
-| 4 — Editor | #1 preview part with the editor window, #6, #4, #3, #5, #9 | 18 | 18 | ⬜ |
+| 4 — Editor | #1 preview part with the editor window, #6, #4, #3, #5, #9 | 18 | 0 | ✅ |
 | 5 — Play | Rest of #11 preview part, README recipe | 4 | 4 | ⬜ |
-| **Early preview** | | **~65.5** | **~22** | |
+| **Early preview** | | **~65.5** | **~4** | |
 | 6 — Testers and feedback | 5–8 testers, response table | — | — | ⬜ |
 | 7 — v0.1 breadth | #10, then the deferred parts of #1–#6, #9 and #11 | 20.5 | 20.5 | ⬜ |
 | 8 — Release | #15 with pub.dev, rest of #13, #14 final pass, #16 | 7.5 | 7.5 | ⬜ |
-| **v0.1** | | **~93.5** | **~51.5** | |
+| **v0.1** | | **~93.5** | **~33.5** | |
 
-**Left to the early preview:** ~22 evenings ≈ 7 weeks, ~10 weeks with a 1.4× overrun.
-**Left to v0.1:** ~51.5 evenings ≈ 17 weeks, ~24 weeks with a 1.4× overrun.
+**Left to the early preview:** ~4 evenings ≈ 1.5 weeks, ~2 weeks with a 1.4× overrun.
+**Left to v0.1:** ~33.5 evenings ≈ 11 weeks, ~16 weeks with a 1.4× overrun.
 
 §14 counts the early preview as ~48 evenings. The ~65.5 above is larger because Phase 1 holds all
 ~23 evenings of #14, while §14 puts only a ~5.5-evening core in the preview. The other ~17.5 were
 built ahead of the preview, so the preview's panels use the Pyro components throughout (*Q84,
-Q87*). The ~43.5 done are the repo setup, the whole design system, the Document model, the
-Generator, the Runtime and the vertical slice. The spikes come on top.
+Q87*). The ~61.5 done are the repo setup, the whole design system, the Document model, the
+Generator, the Runtime, the vertical slice and the editor. The spikes come on top.
 
 ---
 
@@ -160,30 +160,30 @@ Hot-swap fails, decide the preview's default Play target before Phase 4. ✅ mac
 passed, so the macOS desktop target stays the default Play target (ARCHITECTURE.md, "Vertical
 slice").
 
-## Phase 4 — Editor ⬜
+## Phase 4 — Editor ✅
 
 The panels are built from the Pyro components (`Pr` widgets) throughout; a component that's
 missing is proposed, and the author decides whether it is built (*Q87*). All 29 already exist,
 including the ones these panels lean on most (`PrTreeRow`, `PrPropertyRow`, `PrNumberProperty`,
 `PrVector2Property`). The order is §14's.
 
-- [ ] **#1 App shell and editor window, preview part** (3): Riverpod providers (§8.5); project
+- [x] **#1 App shell and editor window, preview part** (3): Riverpod providers (§8.5); project
   list and open project, basic SDK detection (*Q39*), Runtime compatibility check from
   `pubspec.lock` (*Q49*); the editor window on `PrEditorShell` with panel slots, scene tabs, new,
   open and save scene, the dirty marker, a close confirmation and the recovery *Restore* prompt.
   The window part (~1) had no item before (*Q88*). Wrap `DocumentSession` in
   `documentProvider(sceneId)`; call `RecoveryStore.find` before opening a Scene and pass the
   compatibility check's version to `save`
-- [ ] **#6 Built-in Node kinds, editor side** (2): the Type catalog (Manifest parser, hand-written
+- [x] **#6 Built-in Node kinds, editor side** (2): the Type catalog (Manifest parser, hand-written
   descriptors for entity, sprite, rectangle and circle hitboxes, reload when the Manifest file
   changes, §9.2), preview components for them, placeholders for custom components (*Q6*)
-- [ ] **#4 Viewport** (6.5): preview world, reconciler, pan/zoom, selection, move gizmo, disk
+- [x] **#4 Viewport** (6.5): preview world, reconciler, pan/zoom, selection, move gizmo, disk
   assets through `AssetSource` (*Q79*). §8.3
-- [ ] **#3 Hierarchy** (2): add, delete, rename, reparent by drag (on `PrTreeRow`)
-- [ ] **#5 Inspector** (2.5): transform; editors for `int`, `double`, `bool`, `String`, enum,
+- [x] **#3 Hierarchy** (2): add, delete, rename, reparent by drag (on `PrTreeRow`)
+- [x] **#5 Inspector** (2.5): transform; editors for `int`, `double`, `bool`, `String`, enum,
   `Vector2` and an asset-path dropdown; Override markers and *Reset to default* (ADR 0003). Other
   Field types show read-only and round-trip untouched. §8.4
-- [ ] **#9 Behaviors in the inspector** (2): add/remove, compatibility filtering by parent type,
+- [x] **#9 Behaviors in the inspector** (2): add/remove, compatibility filtering by parent type,
   Missing behavior and Missing component states with values kept (*Q32*)
 
 **Tests:** reconciler (document diff → component operations); a few panel widget tests for
@@ -191,7 +191,7 @@ reparenting, Override reset and Missing behavior. §13
 
 **Done when:** in `example/`, a scene is built from scratch in Pyro (entity, sprite, hitbox, a
 custom Behavior with edited fields), saved, closed and reopened unchanged, and deleting the
-Behavior's class shows it as Missing with its values kept.
+Behavior's class shows it as Missing with its values kept. ✅
 
 ## Phase 5 — Play ⬜
 

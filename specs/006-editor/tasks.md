@@ -146,18 +146,18 @@
 
 **Independent Test**: it *is* the test — quickstart.md §2–§5 on the reference Mac.
 
-- [ ] T045 [US7] Run quickstart.md §2 (the capstone): build a scene from scratch in `example/` with the panels only (entity, sprite, hitbox, `Spin` with edited fields), save, `git diff` shows the canonical form, close/reopen identical, second save is a no-op, the contract tests pass on the new scene, and the Phase 3 loop hot-swaps it via `bin/play.dart`.
-- [ ] T046 [US7] Run quickstart.md §3 (the Missing drill) and §4 (save gates + recovery drills: changed-on-disk refusal with force, recovery *Restore* after a kill, repair report on a hand-broken tree).
-- [ ] T047 [US7] Run quickstart.md §5 (profile mode): record ≤ 16 ms frames for gizmo drag, number scrub, hierarchy selection and inspector typing on a 1,000-Node scene, and the ≤ 200 ms image-change refresh with only dependents rebuilt.
-- [ ] T048 [US7] Record the results in `docs/ARCHITECTURE.md` (numbers, findings, workarounds) and tick Phase 4 in `docs/phases.md` (status line and counts; §14 only if scope/estimates moved) — **in the same change** (FR-040/041).
+- [X] T045 [US7] Run quickstart.md §2 (the capstone): build a scene from scratch in `example/` with the panels only (entity, sprite, hitbox, `Spin` with edited fields), save, `git diff` shows the canonical form, close/reopen identical, second save is a no-op, the contract tests pass on the new scene, and the Phase 3 loop hot-swaps it via `bin/play.dart`.
+- [X] T046 [US7] Run quickstart.md §3 (the Missing drill) and §4 (save gates + recovery drills: changed-on-disk refusal with force, recovery *Restore* after a kill, repair report on a hand-broken tree).
+- [X] T047 [US7] Run quickstart.md §5 (profile mode): record ≤ 16 ms frames for gizmo drag, number scrub, hierarchy selection and inspector typing on a 1,000-Node scene, and the ≤ 200 ms image-change refresh with only dependents rebuilt.
+- [X] T048 [US7] Record the results in `docs/ARCHITECTURE.md` (numbers, findings, workarounds) and tick Phase 4 in `docs/phases.md` (status line and counts; §14 only if scope/estimates moved) — **in the same change** (FR-040/041).
 
 ---
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T049 Workspace-wide gates from the repo root: `dart format --set-exit-if-changed`, `flutter analyze --fatal-infos` and `flutter test` in every member; the CI contract job green on the pushed branch.
-- [ ] T050 Close the two flagged items from plan.md: the `yaml` dependency note (done in T001 — verify recorded) and the `PrMenuItem` disabled-reason decision (taken or explicitly declined, with the reason, in plan.md or decisions.md if it becomes a *Q*).
-- [ ] T051 Self-review the whole change against the constitution (boundaries: no Flame/Riverpod in `pyro_ui`, panels never import `flame`, `document/`/`process/` untouched; integrity: every save path through `DocumentSession`; performance budgets stated and measured); open the PR from `specs/006-editor` with Conventional Commits citing the *Q* numbers implemented.
+- [X] T049 Workspace-wide gates from the repo root: `dart format --set-exit-if-changed`, `flutter analyze --fatal-infos` and `flutter test` in every member; the CI contract job green on the pushed branch.
+- [X] T050 Close the two flagged items from plan.md: the `yaml` dependency note (done in T001 — verify recorded) and the `PrMenuItem` disabled-reason decision (taken or explicitly declined, with the reason, in plan.md or decisions.md if it becomes a *Q*).
+- [X] T051 Self-review the whole change against the constitution (boundaries: no Flame/Riverpod in `pyro_ui`, panels never import `flame`, `document/`/`process/` untouched; integrity: every save path through `DocumentSession`; performance budgets stated and measured); open the PR from `specs/006-editor` with Conventional Commits citing the *Q* numbers implemented.
 
 ---
 

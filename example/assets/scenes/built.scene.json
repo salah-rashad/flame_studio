@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "rootId": "00baa34c-1d66-4d71-9344-35a39cd748c4",
+  "nodes": {
+    "00baa34c-1d66-4d71-9344-35a39cd748c4": {
+      "childIds": [
+        "7130d741-1680-4c95-888a-ec89aa860179"
+      ],
+      "kind": "root"
+    },
+    "7130d741-1680-4c95-888a-ec89aa860179": {
+      "behaviors": [
+        {
+          "fields": {
+            "turnsPerSecond": 1.5
+          },
+          "type": "Spin"
+        }
+      ],
+      "childIds": [
+        "9fce423c-7a3f-4068-98cb-14c2e67a19f6",
+        "a780f27f-f856-40f0-9889-834a910e8a6c"
+      ],
+      "kind": "entity",
+      "name": "Entity",
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [125, 20],
+        "scale": [1, 1],
+        "size": [0, 0]
+      }
+    },
+    "9fce423c-7a3f-4068-98cb-14c2e67a19f6": {
+      "kind": "sprite",
+      "name": "Sprite",
+      "props": {
+        "image": "assets/images/ship.png"
+      },
+      "transform": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "position": [0, 0],
+        "scale": [1, 1],
+        "size": [64, 64]
+      }
+    },
+    "a780f27f-f856-40f0-9889-834a910e8a6c": {
+      "kind": "rectangleHitbox",
+      "name": "Rectangle hitbox",
+      "props": {
+        "anchor": "topLeft",
+        "angle": 0,
+        "collisionType": "active",
+        "isSolid": false,
+        "position": [0, 0],
+        "size": [16, 16]
+      }
+    }
+  }
+}
+ 

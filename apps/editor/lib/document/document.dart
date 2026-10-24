@@ -5,6 +5,7 @@
 /// values it publishes are immutable.
 library;
 
+export 'src/atomic_write.dart' show writeAtomically;
 export 'src/document_session.dart' show DocumentSession, SessionServices;
 export 'src/errors.dart'
     show

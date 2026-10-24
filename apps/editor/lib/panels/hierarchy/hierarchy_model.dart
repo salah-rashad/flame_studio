@@ -133,6 +133,17 @@ bool isMissing(Node node, TypeCatalog catalog) => switch (node) {
   _ => false,
 };
 
+/// Whether [node] carries a Behavior whose type the catalog doesn't know
+/// (FR-037): the Behavior is kept, and the row says so. Like [isMissing],
+/// never true from a stale catalog.
+bool hasMissingBehavior(Node node, TypeCatalog catalog) =>
+    catalog.origin is! ManifestStale &&
+    (switch (node) {
+      EntityNode(:final behaviors) => behaviors,
+      CustomNode(:final behaviors) => behaviors,
+      _ => const <BehaviorAttachment>[],
+    }).any((behavior) => catalog[behavior.type] == null);
+
 /// Whether [node] can have children at all; leaf kinds' rows only accept a
 /// drop above or below them.
 bool acceptsChildren(Node node, TypeCatalog catalog) => switch (node) {

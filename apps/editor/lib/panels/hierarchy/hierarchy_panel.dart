@@ -459,6 +459,7 @@ class _NodeRow extends ConsumerWidget {
       collapsedNodesProvider(sceneId).select((set) => set.contains(id)),
     );
     final missing = isMissing(node, catalog);
+    final missingBehavior = hasMissingBehavior(node, catalog);
     final isRoot = node is RootNode;
     return PrTreeRow<NodeId>(
       depth: row.depth,
@@ -473,6 +474,8 @@ class _NodeRow extends ConsumerWidget {
       tone: missing ? PrTreeRowTone.error : PrTreeRowTone.normal,
       badges: [
         if (missing) const PrBadge(kind: PrBadgeKind.missing, label: 'Missing'),
+        if (missingBehavior)
+          const PrBadge(kind: PrBadgeKind.warning, label: 'Missing behavior'),
       ],
       onTap: () => onSelect(id),
       onDoubleTap: isRoot ? null : () => onRename(id),

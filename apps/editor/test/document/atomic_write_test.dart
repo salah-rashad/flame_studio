@@ -3,7 +3,6 @@ import 'dart:io' as io;
 import 'package:file/local.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pyro/document/document.dart';
-import 'package:pyro/document/src/atomic_write.dart';
 import 'package:pyro_runtime/pyro_runtime.dart';
 
 import 'helpers/failing_file_system.dart';

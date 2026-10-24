@@ -141,6 +141,11 @@ void main() {
     await tester.tap(find.text('save'));
     await tester.pumpAndSettle();
     expect(find.text('New Scene'), findsOneWidget);
+    // The pubspec declares assets/scenes/, so no undeclared-folder warning.
+    expect(
+      find.textContaining('is not declared in pubspec.yaml'),
+      findsNothing,
+    );
 
     await tester.enterText(
       find.widgetWithText(PrTextField, 'Scene name'),

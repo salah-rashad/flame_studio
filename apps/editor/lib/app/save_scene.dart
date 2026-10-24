@@ -141,7 +141,7 @@ Future<String?> _askForPath(
 ) async {
   final project = container.read(projectProvider);
   if (project == null || !context.mounted) return null;
-  const defaultFolder = 'assets/scenes/';
+  const defaultFolder = 'assets/scenes';
   final folders = await discoverAssetFolders(
     project.root,
     fileSystem: fileSystem,
@@ -157,7 +157,7 @@ Future<String?> _askForPath(
     defaultName: 'untitled',
     folders: offered,
     defaultFolder: defaultFolder,
-    folderDeclared: isDeclaredFolder(folders, defaultFolder),
+    isDeclared: (folder) => isDeclaredFolder(folders, folder),
   );
   if (result == null) return null;
   return fileSystem.path.joinAll([

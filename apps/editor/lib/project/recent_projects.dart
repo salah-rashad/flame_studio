@@ -6,7 +6,7 @@ import 'package:file/local.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:pyro_ui/pyro_ui.dart';
 
-import '../document/src/atomic_write.dart';
+import '../document/document.dart' show writeAtomically;
 
 part 'recent_projects.freezed.dart';
 

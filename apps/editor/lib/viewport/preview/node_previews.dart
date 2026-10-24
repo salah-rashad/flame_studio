@@ -81,6 +81,11 @@ mixin _LeasedImage on PreviewComponent {
       }
       failed = false;
       _swap(lease);
+      // The end of SC-005's budget: the next frame draws it.
+      developer.Timeline.instantSync(
+        'Pyro image shown',
+        arguments: {'path': path, 'node': nodeId},
+      );
     } on Object catch (error) {
       if (generation != _generation) return;
       // The Node shows the error state (FR-021); the cause goes to the log.

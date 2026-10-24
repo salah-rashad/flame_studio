@@ -207,6 +207,11 @@ final class DiskAssetSource implements AssetSource {
     final batch = {..._pending};
     _pending.clear();
     if (batch.isEmpty) return;
+    // Marks the start of SC-005's ≤ 200 ms budget in the timeline.
+    developer.Timeline.instantSync(
+      'Pyro asset changed',
+      arguments: {'paths': batch.join(', ')},
+    );
     invalidate(batch);
     _changes.add(batch);
   }

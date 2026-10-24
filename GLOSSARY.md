@@ -159,6 +159,9 @@ Connecting the developer's IDE debugger to a game Pyro is already running.
 Replacing a Scene inside a running game with its newly saved version, without restarting the game. It happens only when the Scene's content changed.
 _Avoid_: Scene reload, live reload
 
+**Hot-swap report**:
+The one line the Runtime prints in a debug build when a Scene loads (`[pyro] Scene loaded: <path>`), is Hot-swapped (`reloaded`), or fails to Hot-swap (`not reloaded`); Pyro reads it to know a Hot-swap reached the game.
+
 **Stale reference**:
 A component of a Node that a Hot-swap removed, still held by game code; debug builds warn the first time one is moved or added back.
 _Avoid_: Dangling reference

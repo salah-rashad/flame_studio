@@ -84,7 +84,9 @@ void main() {
 
       test("masks the tooling daemon's ws address at the end of a line", () {
         expect(
-          redactAuthCodes('The Dart Tooling Daemon is at ws://127.0.0.1:9/AbC='),
+          redactAuthCodes(
+            'The Dart Tooling Daemon is at ws://127.0.0.1:9/AbC=',
+          ),
           'The Dart Tooling Daemon is at ws://127.0.0.1:9/<auth-code>=',
         );
       });

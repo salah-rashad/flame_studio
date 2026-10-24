@@ -846,8 +846,9 @@ run doesn't show that other Nodes are left alone; `disk_assets_test.dart` does.
    chosen folder, and a test covers the declared case.
 2. **The hierarchy showed no mark for an entity holding a Missing Behavior**, though quickstart §3
    expects one. A "Missing behavior" badge now shows on the row, never from a stale catalog.
-3. **A new sprite is 0×0, so it is invisible until sized.** Hitboxes start at 16×16. The author
-   decides whether a new sprite should start at its image's size.
+3. **A new sprite was 0×0, so it was invisible until sized.** Choosing its image now gives a
+   sprite with no size the image's size (or its region's) in the same undo step; a size the
+   author set is kept. Checked in the app: `ship.png` made the sprite 32×32 and it showed.
 4. **The viewport draws about 60 frames a second while idle** (Flame's loop), at ~1.3 ms of
    build and ~1.4 ms of raster each. Fine for the budget; a battery cost to weigh later.
 5. **The repair report is a dialog on open, not a banner**; the tab is dirty as expected.

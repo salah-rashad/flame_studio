@@ -217,7 +217,9 @@ class FieldRow extends ConsumerWidget {
           source: source,
           onReset: onReset,
           tooltip: tooltip,
-          onChanged: (path) => set({'asset': path}, end: true),
+          onChanged: (path) => node is SpriteNode && index == null
+              ? _pickSpriteImage(context, ref, edits, path)
+              : set({'asset': path}, end: true),
         );
       case FieldType.color ||
           FieldType.sprite ||
@@ -226,6 +228,30 @@ class FieldRow extends ConsumerWidget {
         throw StateError('${field.type} is read-only, handled above');
     }
   }
+}
+
+/// Sets a sprite's image, and its size too while it has none: the image's
+/// own size, read once from disk (a missing or undecodable file just leaves
+/// the size). One transaction, so one undo takes both back.
+Future<void> _pickSpriteImage(
+  BuildContext context,
+  WidgetRef ref,
+  NodeEdits edits,
+  String path,
+) async {
+  Vec2? size;
+  try {
+    final image = await ref
+        .read(diskAssetsProvider)
+        ?.loadImage(AssetPath(path));
+    if (image != null) {
+      size = Vec2(image.width.toDouble(), image.height.toDouble());
+    }
+  } on Object {
+    // Not an image: the path is still stored, as before.
+  }
+  if (!context.mounted) return;
+  edits.edit('image', (n) => withSpriteImage(n, path, size), end: true);
 }
 
 String? _rangeMessage(FieldDescriptor field) {

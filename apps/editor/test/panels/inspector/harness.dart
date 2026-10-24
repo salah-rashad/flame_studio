@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:file/memory.dart';
 import 'package:flutter/material.dart';
@@ -160,6 +162,7 @@ Future<InspectorHarness> openInspector(
   WidgetTester tester, {
   Scene? scene,
   List<TypeDescriptor>? types,
+  ui.Image? decodedImage,
 }) async {
   final fs = MemoryFileSystem.test();
   fs.directory('/proj/assets/scenes').createSync(recursive: true);
@@ -195,6 +198,16 @@ flutter:
         () => FixedCatalog(types ?? [heroType()]),
       ),
       assetFileSystemProvider.overrideWithValue(fs),
+      // Every image file decodes to [decodedImage], so a size is known.
+      if (decodedImage != null)
+        diskAssetsProvider.overrideWith(
+          (ref) => DiskAssetSource(
+            fileSystem: fs,
+            root: '/proj',
+            watch: (_) => const Stream.empty(),
+            decode: (_) async => decodedImage,
+          ),
+        ),
     ],
   );
   addTearDown(container.dispose);
@@ -255,3 +268,16 @@ Finder boolRow(String label) => find.byWidgetPredicate(
 Finder propertyRow(String label) => find.byWidgetPredicate(
   (widget) => widget is PrPropertyRow && widget.label == label,
 );
+
+/// A [width]×[height] image, drawn by the engine.
+Future<ui.Image> testImage(WidgetTester tester, int width, int height) async {
+  final image = await tester.runAsync(() {
+    final recorder = ui.PictureRecorder();
+    ui.Canvas(recorder).drawRect(
+      ui.Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()),
+      ui.Paint()..color = const ui.Color(0xFFFF0000),
+    );
+    return recorder.endRecording().toImage(width, height);
+  });
+  return image!;
+}

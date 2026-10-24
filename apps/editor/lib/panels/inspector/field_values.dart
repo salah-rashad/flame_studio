@@ -167,6 +167,23 @@ Node resetBehaviorField(Node node, int index, FieldDescriptor field) =>
           behavior.copyWith(fields: behavior.fields.reset(field.name)),
     );
 
+/// [node] with its sprite image set to [path]. A sprite that has no size
+/// yet — a new one is 0×0, so nothing shows — takes [imageSize] (or its
+/// region's size) with it; a size the author already set is kept. Other
+/// kinds come back unchanged.
+Node withSpriteImage(Node node, String path, Vec2? imageSize) {
+  if (node is! SpriteNode) return node;
+  final size = node.transform.size;
+  final fit = node.region?.size ?? imageSize;
+  final unsized = size.x == 0 && size.y == 0;
+  return node.copyWith(
+    image: AssetPath(path),
+    transform: unsized && fit != null
+        ? node.transform.copyWith(size: fit)
+        : null,
+  );
+}
+
 /// [node] with [field]'s Override removed, so the code default applies
 /// again (*Reset to default*, ADR 0003). Built-in properties have no
 /// default to return to, so they come back unchanged.

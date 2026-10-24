@@ -17,7 +17,13 @@ import 'scene_tabs.dart';
 ///
 /// Wrap the window's content; every action goes through the same flows
 /// the tabs and menus use — never around `DocumentSession`.
-class PyroShortcuts extends StatelessWidget {
+///
+/// The bindings fire only while focus sits beneath them, so the layer owns
+/// an autofocused root [Focus]: the shortcuts work as soon as the window
+/// shows, with nothing clicked or tabbed to. A pointer down that leaves
+/// focus outside the layer (a click on empty space) brings it back to the
+/// root; focus already inside — a panel's scope, a field — stays put.
+class PyroShortcuts extends StatefulWidget {
   /// Creates the shortcut layer.
   const PyroShortcuts({
     super.key,
@@ -39,6 +45,35 @@ class PyroShortcuts extends StatelessWidget {
 
   /// The file system ⌘O discovers scenes on.
   final FileSystem fileSystem;
+
+  @override
+  State<PyroShortcuts> createState() => _PyroShortcutsState();
+}
+
+class _PyroShortcutsState extends State<PyroShortcuts> {
+  /// The layer's root focus: the fallback target the bindings hang off.
+  /// Not a Tab stop; Tab goes straight to the panels.
+  final FocusNode _root = FocusNode(
+    debugLabel: 'PyroShortcuts',
+    skipTraversal: true,
+  );
+
+  OpenSceneCommand get command => widget.command;
+  List<FocusScopeNode> get panels => widget.panels;
+  FileSystem get fileSystem => widget.fileSystem;
+
+  @override
+  void dispose() {
+    _root.dispose();
+    super.dispose();
+  }
+
+  /// A click anywhere in the window: when focus isn't inside the layer any
+  /// more, hand it back to the root so the shortcuts keep working. A
+  /// focusable widget under the pointer still takes focus on its own tap.
+  void _onPointerDown(PointerDownEvent _) {
+    if (!_root.hasFocus) _root.requestFocus();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +130,11 @@ class PyroShortcuts extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.f6, shift: true): () =>
             _cyclePanel(forward: false),
       },
-      child: child,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: _onPointerDown,
+        child: Focus(focusNode: _root, autofocus: true, child: widget.child),
+      ),
     );
   }
 

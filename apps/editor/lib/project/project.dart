@@ -52,4 +52,11 @@ export 'recent_projects.dart' show RecentProjects, RecentProjectsStore;
 export 'runtime_compat.dart'
     show RuntimeCompatStatus, RuntimeCompatibility, checkRuntimeCompatibility;
 export 'sdk.dart'
-    show PathVersion, SdkInfo, SdkSource, detectSdk, flutterPathVersion;
+    show
+        PathVersion,
+        SdkInfo,
+        SdkSource,
+        dartExecutable,
+        detectSdk,
+        flutterExecutable,
+        flutterPathVersion;

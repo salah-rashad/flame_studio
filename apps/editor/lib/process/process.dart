@@ -8,7 +8,10 @@ library;
 
 export 'src/console_buffer.dart' show ConsoleBuffer;
 export 'src/console_line.dart' show ConsoleLine, ConsoleSeverity, ConsoleSource;
+export 'src/play_block.dart' show PlayBlock;
 export 'src/play_client.dart' show PlayClient, ProcessStarter;
+export 'src/play_controller.dart'
+    show GameStopped, PlayController, PlayNotice, PlayPhase, PlayStarter;
 export 'src/play_defaults.dart' show PlayDefaults;
 export 'src/play_event.dart'
     show

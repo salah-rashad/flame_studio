@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pyro/app/app.dart';
@@ -27,6 +29,9 @@ final projectImagesProvider = FutureProvider.autoDispose<List<String>>((
 /// One Editable field of the selected Node (FR-029–FR-033): the editor its
 /// Field type calls for, the Override marker and *Reset to default*, and
 /// the type · default · tooltip line. Watches only its own Node.
+///
+/// With [behavior] it is a field of the Node's Behavior at that index
+/// instead of the Node's own.
 class FieldRow extends ConsumerWidget {
   /// Creates the row of [field] on Node [nodeId].
   const FieldRow({
@@ -35,6 +40,7 @@ class FieldRow extends ConsumerWidget {
     required this.nodeId,
     required this.field,
     required this.gestures,
+    this.behavior,
   });
 
   /// The Scene's provider key.
@@ -42,6 +48,10 @@ class FieldRow extends ConsumerWidget {
 
   /// The Node the field belongs to.
   final NodeId nodeId;
+
+  /// The index of the Node's Behavior the field belongs to, or null for a
+  /// field of the Node itself.
+  final int? behavior;
 
   /// The Manifest's description of the field.
   final FieldDescriptor field;
@@ -53,22 +63,47 @@ class FieldRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final node = ref.watch(nodeProvider((sceneId, nodeId)));
     if (node == null) return const SizedBox.shrink();
-    final reading = readField(node, field);
-    final edits = NodeEdits(ref, sceneId, nodeId, gestures);
+    final index = behavior;
+    final attachment = index == null
+        ? null
+        : behaviorsOf(node).elementAtOrNull(index);
+    if (index != null && attachment == null) return const SizedBox.shrink();
+    final reading = attachment == null
+        ? readField(node, field)
+        : readBehaviorField(attachment, field);
+    final edits = NodeEdits(
+      ref,
+      sceneId,
+      nodeId,
+      gestures,
+      scope: index == null ? '' : 'behavior$index/',
+    );
     final source = reading.overridden
         ? PrValueSource.overridden
         : PrValueSource.codeDefault;
     final onReset = reading.overridden
-        ? () => edits.reset(field.name, (n) => resetField(n, field))
+        ? () => edits.reset(
+            field.name,
+            (n) => index == null
+                ? resetField(n, field)
+                : resetBehaviorField(n, index, field),
+          )
         : null;
     final tooltip = fieldTooltip(field);
     final value = reading.value;
     final defaultSource = defaultSourceOf(field);
 
-    void set(Object? next, {bool end = false}) =>
-        edits.edit(field.name, (n) => writeField(n, field, next), end: end);
+    void set(Object? next, {bool end = false}) => edits.edit(
+      field.name,
+      (n) => index == null
+          ? writeField(n, field, next)
+          : writeBehaviorField(n, index, field, next),
+      end: end,
+    );
 
-    if (!isEditable(node, field)) {
+    if (attachment == null
+        ? !isEditable(node, field)
+        : !isEditableType(field.type)) {
       return _ReadOnlyRow(
         label: field.name,
         tooltip: tooltip,
@@ -213,8 +248,35 @@ String _describe(Object value) {
   }
   return switch (value) {
     final List<Object?> list => '[${list.join(', ')}]',
+    final Map<Object?, Object?> map => jsonEncode(map),
     _ => '$value',
   };
+}
+
+/// The values a Scene keeps for something the project no longer defines — a
+/// Missing Behavior or component (FR-037): shown as they are written,
+/// editable nowhere, and saved verbatim (*Q32*).
+class KeptValues extends StatelessWidget {
+  /// Creates the rows of [values].
+  const KeptValues({super.key, required this.values});
+
+  /// The kept values by field name.
+  final Map<String, Object?> values;
+
+  @override
+  Widget build(BuildContext context) {
+    return PrPropertyList(
+      children: [
+        for (final MapEntry(:key, :value) in values.entries)
+          _ReadOnlyRow(
+            label: key,
+            tooltip: 'Kept as the scene has it',
+            source: PrValueSource.overridden,
+            text: value == null ? 'null' : _describe(value),
+          ),
+      ],
+    );
+  }
 }
 
 /// A read-only value (FR-033), or a default shown as its source text: the

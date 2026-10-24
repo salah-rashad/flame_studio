@@ -5,6 +5,7 @@ import 'package:pyro/project/project.dart';
 import 'package:pyro_runtime/pyro_runtime.dart';
 import 'package:pyro_ui/pyro_ui.dart';
 
+import '../behaviors.dart';
 import '../hierarchy/node_edits.dart';
 import 'field_editors.dart';
 import 'inspector_edits.dart';
@@ -103,13 +104,16 @@ class _SceneInspector extends ConsumerWidget {
     return ListView(
       children: [
         if (missing)
-          const PrBanner(
+          PrBanner(
             kind: PrStatusKind.warning,
             message: TextSpan(
-              text:
-                  "This Node's type isn't in the project's types, so its "
-                  'fields are kept as they are and not shown. Its name and '
-                  'transform can still be edited.',
+              text: shape.kind == CustomNode
+                  ? '${shape.type!.value} no longer exists in your code. Its '
+                        'values are kept; its name and transform can still be '
+                        'edited.'
+                  : "This Node's type isn't in the project's types, so its "
+                        'fields are kept as they are and not shown. Its name '
+                        'and transform can still be edited.',
             ),
           ),
         PrPropertyList(
@@ -148,7 +152,37 @@ class _SceneInspector extends ConsumerWidget {
               ],
             ),
           ),
+        if (shape.kind == CustomNode && type == null)
+          _Section(
+            title: shape.type!.value,
+            icon: PrIcons.circleDot,
+            child: _KeptComponentValues(sceneId: sceneId, nodeId: nodeId),
+          ),
+        if (shape.kind == EntityNode || shape.kind == CustomNode)
+          BehaviorsSection(
+            key: ValueKey('behaviors/$nodeId'),
+            sceneId: sceneId,
+            nodeId: nodeId,
+            nodeType: shape.type,
+            gestures: gestures,
+          ),
       ],
+    );
+  }
+}
+
+/// The values a Missing component keeps (FR-037), read-only.
+class _KeptComponentValues extends ConsumerWidget {
+  const _KeptComponentValues({required this.sceneId, required this.nodeId});
+
+  final String sceneId;
+  final NodeId nodeId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final node = ref.watch(nodeProvider((sceneId, nodeId)));
+    return KeptValues(
+      values: node is CustomNode ? node.fields.values : const {},
     );
   }
 }

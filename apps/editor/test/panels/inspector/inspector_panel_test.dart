@@ -224,7 +224,11 @@ void main() {
     final harness = await openInspector(tester);
     harness.select('gone');
     await tester.pump();
-    expect(find.textContaining("isn't in the project's types"), findsOneWidget);
+    expect(
+      find.textContaining('no longer exists in your code'),
+      findsOneWidget,
+    );
+    // Its values show, read-only.
     expect(labels(tester), [
       'name',
       'position',
@@ -232,7 +236,12 @@ void main() {
       'scale',
       'angle',
       'anchor',
+      'secret',
     ]);
+    expect(
+      tester.widget<PrPropertyRow>(propertyRow('secret')).readOnly,
+      isTrue,
+    );
     tester.widget<PrVector2Property>(vectorRow('position')).onCommit(5, 6);
     await tester.pump();
     final gone = harness.node('gone') as CustomNode;

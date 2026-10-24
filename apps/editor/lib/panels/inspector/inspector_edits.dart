@@ -20,7 +20,13 @@ final class GestureKeys {
 /// Scene's document — the only way a panel changes it.
 final class NodeEdits {
   /// Creates the writer for [nodeId] of scene [sceneId].
-  NodeEdits(this.ref, this.sceneId, this.nodeId, this.gestures);
+  NodeEdits(
+    this.ref,
+    this.sceneId,
+    this.nodeId,
+    this.gestures, {
+    this.scope = '',
+  });
 
   /// Reads the document's notifier.
   final WidgetRef ref;
@@ -34,6 +40,10 @@ final class NodeEdits {
   /// The panel's edit runs.
   final GestureKeys gestures;
 
+  /// Tells apart the properties of what is edited on the Node — one of its
+  /// Behaviors — from the Node's own: the edit runs are kept per scope.
+  final String scope;
+
   /// Applies [change] to the Node as a step of the run on [property]; with
   /// [end] the run is over and the next edit starts a new undo step.
   void edit(
@@ -41,14 +51,14 @@ final class NodeEdits {
     Node Function(Node node) change, {
     bool end = false,
   }) {
-    final key = '$nodeId/$property';
+    final key = '$nodeId/$scope$property';
     _transact('Set $property', change, gestures.keyFor(key));
     if (end) gestures.end(key);
   }
 
   /// Applies [change] as a step of its own (*Reset to default*).
   void reset(String property, Node Function(Node node) change) {
-    gestures.end('$nodeId/$property');
+    gestures.end('$nodeId/$scope$property');
     _transact('Reset $property', change, null);
   }
 

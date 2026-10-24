@@ -104,6 +104,69 @@ Node writeField(Node node, FieldDescriptor field, Object? value) {
   }
 }
 
+/// The Behaviors attached to [node]: only an entity or a Custom component
+/// holds any.
+List<BehaviorAttachment> behaviorsOf(Node node) => switch (node) {
+  EntityNode(:final behaviors) => behaviors,
+  CustomNode(:final behaviors) => behaviors,
+  _ => const [],
+};
+
+/// [node] with its Behaviors replaced by [behaviors].
+Node withBehaviors(Node node, List<BehaviorAttachment> behaviors) =>
+    switch (node) {
+      EntityNode() => node.copyWith(behaviors: behaviors),
+      CustomNode() => node.copyWith(behaviors: behaviors),
+      _ => node,
+    };
+
+/// [field]'s current value on a Behavior: its Override, else the Manifest's
+/// evaluated default.
+FieldReading readBehaviorField(
+  BehaviorAttachment behavior,
+  FieldDescriptor field,
+) => behavior.fields.contains(field.name)
+    ? (value: behavior.fields[field.name], overridden: true)
+    : (value: field.defaultValue, overridden: false);
+
+/// [node] with the Behavior at [index] changed by [change]; the Behavior's
+/// other values, and its unknown keys, are kept.
+Node _withBehavior(
+  Node node,
+  int index,
+  BehaviorAttachment Function(BehaviorAttachment behavior) change,
+) {
+  final behaviors = behaviorsOf(node);
+  if (index < 0 || index >= behaviors.length) return node;
+  return withBehaviors(node, [
+    for (var i = 0; i < behaviors.length; i++)
+      i == index ? change(behaviors[i]) : behaviors[i],
+  ]);
+}
+
+/// [node] with [field] of its Behavior at [index] overridden to [value].
+Node writeBehaviorField(
+  Node node,
+  int index,
+  FieldDescriptor field,
+  Object? value,
+) => _withBehavior(
+  node,
+  index,
+  (behavior) =>
+      behavior.copyWith(fields: behavior.fields.put(field.name, value)),
+);
+
+/// [node] with the Override of [field] on its Behavior at [index] removed
+/// (*Reset to default*).
+Node resetBehaviorField(Node node, int index, FieldDescriptor field) =>
+    _withBehavior(
+      node,
+      index,
+      (behavior) =>
+          behavior.copyWith(fields: behavior.fields.reset(field.name)),
+    );
+
 /// [node] with [field]'s Override removed, so the code default applies
 /// again (*Reset to default*, ADR 0003). Built-in properties have no
 /// default to return to, so they come back unchanged.

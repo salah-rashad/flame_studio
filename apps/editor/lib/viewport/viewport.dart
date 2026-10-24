@@ -2,5 +2,7 @@
 /// the overlay and the disk asset source (spec 006, work items 4, 6).
 library;
 
+export 'disk_assets.dart'
+    show AssetDependents, DiskAssetSource, ImageLease, assetQuietPeriod;
 export 'reconciler.dart'
     show AddNode, PatchNode, PreviewOp, RemoveNode, ReparentNode, reconcile;

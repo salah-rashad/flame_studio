@@ -77,14 +77,19 @@ class FixedCatalog extends TypeCatalogNotifier {
 
   final List<TypeDescriptor> types;
 
-  @override
-  TypeCatalog build() => TypeCatalog(
+  static TypeCatalog catalogOf(List<TypeDescriptor> types) => TypeCatalog(
     types: IMap({
       for (final type in [...builtInTypes, ...types]) type.id: type,
     }),
     problems: const IList.empty(),
     origin: const ManifestUpToDate(),
   );
+
+  @override
+  TypeCatalog build() => catalogOf(types);
+
+  /// Swaps the project's types, as a rewritten Manifest does.
+  void replace(List<TypeDescriptor> types) => state = catalogOf(types);
 }
 
 /// root → hero (Hero), gone (a type the catalog lacks), box (entity,

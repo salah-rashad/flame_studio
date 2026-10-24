@@ -1,4 +1,7 @@
+import 'dart:ui' show PointerDeviceKind;
+
 import 'package:file/memory.dart';
+import 'package:flutter/gestures.dart' show kSecondaryButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -292,6 +295,70 @@ void main() {
       expect(renamed.name, 'Boss');
       expect(row('Boss'), findsOneWidget);
       expect(childrenOf('root'), ['a', 'b', 'c']);
+    });
+
+    Future<void> startRenameOfB(WidgetTester tester) async {
+      await tester.tap(row('b'));
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.f2);
+      await tester.pump();
+    }
+
+    EditableText renameField(WidgetTester tester) =>
+        tester.widget<EditableText>(find.byType(EditableText));
+
+    String nameOfB() =>
+        (current().node(const NodeId('b'))! as EntityNode).name!;
+
+    panelTest('F2 focuses the rename field, so typing needs no click', (
+      tester,
+    ) async {
+      await startRenameOfB(tester);
+      expect(renameField(tester).focusNode.hasFocus, isTrue);
+    });
+
+    panelTest('Rename from the context menu focuses the field', (tester) async {
+      await tester.tap(row('b'));
+      await tester.pump();
+      await tester.tap(row('b'), buttons: kSecondaryButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rename'));
+      await tester.pumpAndSettle();
+      expect(renameField(tester).focusNode.hasFocus, isTrue);
+    });
+
+    panelTest('clicking inside the rename field keeps editing', (tester) async {
+      await startRenameOfB(tester);
+      // A real click: the pointer goes down, frames pass, then it lifts.
+      final click = await tester.startGesture(
+        tester.getCenter(find.byType(EditableText)),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+      await click.up();
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(EditableText), findsOneWidget);
+      expect(renameField(tester).focusNode.hasFocus, isTrue);
+      expect(nameOfB(), 'b');
+    });
+
+    panelTest('clicking another row ends the rename and commits it', (
+      tester,
+    ) async {
+      await startRenameOfB(tester);
+      await tester.enterText(find.byType(EditableText), 'Boss');
+      await tester.tap(row('c'));
+      await tester.pump();
+      expect(find.byType(EditableText), findsNothing);
+      expect(nameOfB(), 'Boss');
+    });
+
+    panelTest('clicking empty space ends the rename', (tester) async {
+      await startRenameOfB(tester);
+      await tester.tapAt(const Offset(10, 390), kind: PointerDeviceKind.mouse);
+      await tester.pump();
+      expect(find.byType(EditableText), findsNothing);
     });
 
     panelTest('delete takes the subtree; one undo brings it back', (

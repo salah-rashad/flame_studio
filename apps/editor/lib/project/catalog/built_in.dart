@@ -9,14 +9,21 @@ import 'manifest_parse.dart';
 /// a FieldDescriptor and always written in full (*Q89*), so the inspector
 /// renders it from `NodeTransform` for every positioned kind.
 final IList<TypeDescriptor> builtInTypes = IList([
-  const TypeDescriptor(
-    id: TypeId('entity'),
+  TypeDescriptor(
+    id: const TypeId('entity'),
     role: TypeRole.component,
     label: 'Entity',
-    supertypes: ISet.empty(),
+    // The class behind an `entity` Node and its chain, so a Behavior whose
+    // parent type is any of them fits (*Q57*).
+    supertypes: ISet(const [
+      'PyroEntity',
+      'PositionedEntity',
+      'PositionComponent',
+      'Component',
+    ]),
     acceptsBehaviors: true,
     builtIn: true,
-    fields: IList.empty(),
+    fields: const IList.empty(),
   ),
   TypeDescriptor(
     id: const TypeId('sprite'),

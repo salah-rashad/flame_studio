@@ -370,7 +370,11 @@ class _SceneTreeState extends ConsumerState<_SceneTree> {
             onKeyEvent: _onKey,
             child: Listener(
               behavior: HitTestBehavior.translucent,
-              onPointerDown: (_) => _focus.requestFocus(),
+              // Not while renaming: the click is the rename field's, to
+              // place the caret, and taking focus would end the rename.
+              onPointerDown: (_) {
+                if (_renaming == null) _focus.requestFocus();
+              },
               child: ListView.builder(
                 controller: _scroll,
                 itemExtent: PrSizes.rowTree,

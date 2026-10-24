@@ -9,6 +9,8 @@ export 'asset_folders.dart'
         discoverImages,
         imageExtensions,
         isDeclaredFolder;
+export 'catalog/behaviors.dart'
+    show behaviorOffers, behaviorRefusal, satisfiesParentType;
 export 'catalog/built_in.dart' show builtInTypes;
 export 'catalog/manifest_parse.dart'
     show

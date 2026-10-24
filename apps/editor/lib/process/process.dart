@@ -6,8 +6,8 @@
 /// imports Flutter, so `bin/play.dart` runs it with `dart run`.
 library;
 
-export 'src/play_defaults.dart' show PlayDefaults;
 export 'src/play_client.dart' show PlayClient, ProcessStarter;
+export 'src/play_defaults.dart' show PlayDefaults;
 export 'src/play_event.dart'
     show
         PlayDebuggerAvailable,

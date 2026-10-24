@@ -245,6 +245,9 @@ class _WelcomeWindowState extends State<_WelcomeWindow> {
   @override
   Widget build(BuildContext context) {
     final c = PrColors.of(context);
+    final labels = RecentProjectsStore.distinctLabels([
+      for (final entry in _recent) entry.root,
+    ]);
     return Scaffold(
       backgroundColor: c.bgApp,
       body: Center(
@@ -267,12 +270,9 @@ class _WelcomeWindowState extends State<_WelcomeWindow> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   spacing: PrSpacing.s1,
                   children: [
-                    for (final entry in _recent)
+                    for (final (i, entry) in _recent.indexed)
                       _RecentProjectTile(
-                        label: entry.root
-                            .split('/')
-                            .where((part) => part.isNotEmpty)
-                            .last,
+                        label: labels[i],
                         root: entry.root,
                         sdk: entry.sdk,
                         exists: entry.exists,
@@ -317,7 +317,7 @@ class _WelcomeWindowState extends State<_WelcomeWindow> {
   );
 }
 
-/// A recent project: its folder name [label] over its full [root] and the SDK
+/// A recent project: its distinct [label] over its full [root] and the SDK
 /// icon or, when the folder is gone, a warning and "Folder not found".
 class _RecentProjectTile extends StatelessWidget {
   const _RecentProjectTile({

@@ -80,6 +80,26 @@ void main() {
       expect(storedPaths(), ['/work/pyro/example']);
     });
 
+    testWidgets('same-named projects show distinct labels and full paths', (
+      tester,
+    ) async {
+      fs.directory('/work/pyro/example').createSync(recursive: true);
+      fs.directory('/old/Tools/pyro/example').createSync(recursive: true);
+      recent([
+        '/work/pyro/example',
+        '/work/pyro/example/',
+        '/old/Tools/pyro/example',
+      ]);
+      await pumpApp(tester);
+
+      // The trailing-slash duplicate is one row.
+      expect(find.text('/work/pyro/example'), findsOneWidget);
+      expect(find.text('/old/Tools/pyro/example'), findsOneWidget);
+      expect(find.text('work/pyro/example'), findsOneWidget);
+      expect(find.text('Tools/pyro/example'), findsOneWidget);
+      expect(find.text('example'), findsNothing);
+    });
+
     testWidgets('open-by-path refuses a folder that does not exist', (
       tester,
     ) async {

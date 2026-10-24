@@ -51,6 +51,9 @@ final class RecentProjectsStore {
 
   /// Reads the settings; a missing or unreadable file starts empty
   /// (reported to the caller through [onError], never thrown).
+  ///
+  /// Paths come back [normalize]d and deduplicated, most recent first: an
+  /// older file may list one project with and without a trailing slash.
   Future<RecentProjects> read([void Function(Object error)? onError]) async {
     if (!file.existsSync()) return RecentProjects.empty;
     try {
@@ -60,19 +63,25 @@ final class RecentProjectsStore {
       }
       final paths = json['paths'];
       final sizes = json['sizes'];
+      final lastOpened = json['lastOpened'] as String?;
+      final sizeEntries = <String, PrShellSizes>{};
+      if (sizes is Map) {
+        for (final entry in sizes.entries) {
+          if (entry.value is! Map) continue;
+          sizeEntries.putIfAbsent(
+            normalize(entry.key as String),
+            () => _sizeFrom(entry.value as Map),
+          );
+        }
+      }
       return RecentProjects(
-        paths: IList([
+        paths: IList({
           if (paths is List)
             for (final path in paths)
-              if (path is String) path,
-        ]),
-        lastOpened: json['lastOpened'] as String?,
-        sizes: IMap({
-          if (sizes is Map)
-            for (final entry in sizes.entries)
-              if (entry.value is Map)
-                entry.key as String: _sizeFrom(entry.value as Map),
+              if (path is String) normalize(path),
         }),
+        lastOpened: lastOpened == null ? null : normalize(lastOpened),
+        sizes: IMap(sizeEntries),
       );
     } on Exception catch (error) {
       onError?.call(error);
@@ -123,6 +132,42 @@ final class RecentProjectsStore {
       result = result.substring(0, result.length - 1);
     }
     return result;
+  }
+
+  /// A label per path that tells same-named projects apart: the folder
+  /// name, grown by parent folders only where two labels would collide
+  /// (`pyro/example` and `Tools/pyro/example`, but `game` alone).
+  static List<String> distinctLabels(List<String> paths) {
+    final segments = [
+      for (final path in paths)
+        normalize(path).split('/').where((part) => part.isNotEmpty).toList(),
+    ];
+    final depth = List.filled(paths.length, 1);
+    String label(int i) {
+      final parts = segments[i];
+      if (parts.isEmpty) return '/';
+      final take = depth[i].clamp(1, parts.length);
+      return parts.sublist(parts.length - take).join('/');
+    }
+
+    while (true) {
+      final byLabel = <String, List<int>>{};
+      for (var i = 0; i < paths.length; i++) {
+        byLabel.putIfAbsent(label(i), () => []).add(i);
+      }
+      var grew = false;
+      for (final group in byLabel.values) {
+        if (group.length < 2) continue;
+        for (final i in group) {
+          if (depth[i] < segments[i].length) {
+            depth[i]++;
+            grew = true;
+          }
+        }
+      }
+      if (!grew) break;
+    }
+    return [for (var i = 0; i < paths.length; i++) label(i)];
   }
 
   static PrShellSizes _sizeFrom(Map<Object?, Object?> values) => PrShellSizes(

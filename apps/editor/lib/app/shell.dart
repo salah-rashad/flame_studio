@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,16 @@ import 'open_scene.dart';
 import 'providers.dart';
 import 'save_scene.dart';
 import 'shortcuts.dart';
+
+/// The title bar's leading inset on macOS: the traffic lights (close,
+/// minimise, zoom) sit over the full-size content view there, so the
+/// title keeps this much clear on each side. Wide enough for macOS 26's
+/// larger buttons, with a margin.
+const double macTrafficLightsInset = 88;
+
+/// The title bar's leading inset elsewhere, where the native title bar
+/// keeps the window buttons out of the content.
+const double plainTitleBarInset = PrSpacing.s3;
 
 /// The editor window (spec 006, T012): the `PrEditorShell` layout with
 /// the panel slots, the status bar and the title bar, dock sizes
@@ -135,12 +146,19 @@ class _PyroEditorWindowState extends ConsumerState<PyroEditorWindow> {
         command: widget.command,
         panels: panelNodes,
         child: PrEditorShell(
-          titleBar: Text(
-            title,
-            style: PrText.small.copyWith(
-              color: PrColors.of(context).textSecondary,
+          titleBar: Center(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: PrText.small.copyWith(
+                color: PrColors.of(context).textSecondary,
+              ),
             ),
           ),
+          titleBarLeadingInset: Platform.isMacOS
+              ? macTrafficLightsInset
+              : plainTitleBarInset,
           toolbar: const SizedBox(height: PrSizes.toolbar),
           left: dock(0, widget.left, 'Hierarchy'),
           center: dock(

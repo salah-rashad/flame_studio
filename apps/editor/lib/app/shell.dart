@@ -10,6 +10,7 @@ import 'package:pyro_ui/pyro_ui.dart';
 
 import 'dialogs.dart';
 import 'open_scene.dart';
+import 'play_toolbar.dart';
 import 'providers.dart';
 import 'save_scene.dart';
 import 'shortcuts.dart';
@@ -161,7 +162,7 @@ class _PyroEditorWindowState extends ConsumerState<PyroEditorWindow> {
           titleBarLeadingInset: Platform.isMacOS
               ? macTrafficLightsInset
               : plainTitleBarInset,
-          toolbar: const SizedBox(height: PrSizes.toolbar),
+          toolbar: PlayToolbar(command: widget.command),
           left: dock(0, widget.left, 'Hierarchy'),
           center: dock(
             1,

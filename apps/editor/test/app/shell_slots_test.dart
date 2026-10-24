@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pyro/app/app.dart';
+import 'package:pyro/app/play_toolbar.dart';
 import 'package:pyro/panels/panels.dart';
 import 'package:pyro/project/project.dart';
 import 'package:pyro_ui/pyro_ui.dart';
@@ -68,6 +69,15 @@ void main() {
       find.text('No output yet. Press Play to run the game.'),
       findsOneWidget,
     );
+    await unmountWindow(tester, container);
+  });
+
+  testWidgets('the toolbar holds Play (T024)', (tester) async {
+    final container = await pumpWindow(tester);
+    expect(find.byType(PlayToolbar), findsOneWidget);
+    expect(find.text('Play'), findsOneWidget);
+    // /work/example has no SDK in this harness: Play says why it waits.
+    expect(find.textContaining('No Flutter SDK was found'), findsOneWidget);
     await unmountWindow(tester, container);
   });
 }

@@ -137,6 +137,10 @@ class _SceneViewportState extends ConsumerState<SceneViewport> {
         selectionProvider(_sceneId),
         (_, id) => _game.overlay.select(id),
       );
-    return GameWidget(game: _game, focusNode: _focus, autofocus: false);
+    // The world draws past the widget's edges (a Node far from the camera,
+    // a zoomed-in sprite); clip it so it never shows over the other panels.
+    return ClipRect(
+      child: GameWidget(game: _game, focusNode: _focus, autofocus: false),
+    );
   }
 }

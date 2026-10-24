@@ -40,7 +40,10 @@ LockState probe(String project, {String? workspaceRoot}) {
     // A whole-workspace build holds this exclusively; package builds share
     // it. Probing shared only reports the former.
     final ws = _tryLock(
-      p.join(workspaceRoot, '.dart_tool/build/lock/build_runner.workspace.lock'),
+      p.join(
+        workspaceRoot,
+        '.dart_tool/build/lock/build_runner.workspace.lock',
+      ),
       FileLock.shared,
     );
     if (ws == LockState.held) return ws;
@@ -76,15 +79,18 @@ Future<void> main(List<String> args) async {
   }
   final project = p.normalize(p.absolute(o.rest.single));
   final ws = o['workspace-root'] as String?;
-  final requested =
-      File(p.join(project, '.dart_tool/build/lock/build_runner.lock.requested'));
+  final requested = File(
+    p.join(project, '.dart_tool/build/lock/build_runner.lock.requested'),
+  );
 
   if (o['studio'] as bool) return _studio(project, ws);
 
   final sw = Stopwatch()..start();
   final first = probe(project, workspaceRoot: ws);
-  stdout.writeln('${first.name} (probe took ${sw.elapsedMicroseconds} µs, '
-      '.requested exists: ${requested.existsSync()})');
+  stdout.writeln(
+    '${first.name} (probe took ${sw.elapsedMicroseconds} µs, '
+    '.requested exists: ${requested.existsSync()})',
+  );
   if (!(o['poll'] as bool)) return;
 
   var last = first;
@@ -93,8 +99,10 @@ Future<void> main(List<String> args) async {
     final s = probe(project, workspaceRoot: ws);
     if (s != last) {
       final t = DateTime.now().difference(t0).inMilliseconds;
-      stdout.writeln('+$t ms: ${last.name} -> ${s.name} '
-          '(.requested exists: ${requested.existsSync()})');
+      stdout.writeln(
+        '+$t ms: ${last.name} -> ${s.name} '
+        '(.requested exists: ${requested.existsSync()})',
+      );
       last = s;
     }
   });
@@ -106,10 +114,12 @@ Future<void> _studio(String project, String? ws) async {
   final manifest = File(p.join(project, 'lib/flame_studio.manifest.json'));
   final t0 = DateTime.now();
   void log(String m) => stdout.writeln(
-      '[studio +${DateTime.now().difference(t0).inMilliseconds} ms] $m');
+    '[studio +${DateTime.now().difference(t0).inMilliseconds} ms] $m',
+  );
 
-  String? lastManifest =
-      manifest.existsSync() ? manifest.readAsStringSync() : null;
+  String? lastManifest = manifest.existsSync()
+      ? manifest.readAsStringSync()
+      : null;
   Timer.periodic(const Duration(milliseconds: 250), (_) {
     final now = manifest.existsSync() ? manifest.readAsStringSync() : null;
     if (now != lastManifest) {
@@ -129,11 +139,11 @@ Future<void> _studio(String project, String? ws) async {
       continue;
     }
     log('lock ${state.name} -> starting own `build_runner watch`');
-    final proc = await Process.start(
-      Platform.resolvedExecutable,
-      ['run', 'build_runner', 'watch'],
-      workingDirectory: project,
-    );
+    final proc = await Process.start(Platform.resolvedExecutable, [
+      'run',
+      'build_runner',
+      'watch',
+    ], workingDirectory: project);
     log('own watcher pid ${proc.pid}');
     for (final s in [proc.stdout, proc.stderr]) {
       s.transform(utf8.decoder).transform(const LineSplitter()).listen((l) {

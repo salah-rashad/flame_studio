@@ -30,7 +30,8 @@ class SpikeGame extends FlameGame {
   void update(double dt) {
     super.update(dt);
     // Read every frame so a Dart-only hot reload shows up immediately.
-    hud.text = 'rebuilds: ${scene.rebuildCount}   '
+    hud.text =
+        'rebuilds: ${scene.rebuildCount}   '
         'hash: ${scene.hash.substring(0, 8)}   '
         'code: $dartMarker';
   }

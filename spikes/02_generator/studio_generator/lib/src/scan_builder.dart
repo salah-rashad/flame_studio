@@ -54,10 +54,11 @@ class StudioScanBuilder implements Builder {
       if (cls.isPrivate) problems.add('$name must be public');
       if (cls.isAbstract) problems.add('$name must not be abstract');
       final ctor = cls.unnamedConstructor;
-      if (ctor == null ||
-          ctor.formalParameters.any((p) => p.isRequired)) {
-        problems.add('$name needs an unnamed constructor callable with no '
-            'arguments');
+      if (ctor == null || ctor.formalParameters.any((p) => p.isRequired)) {
+        problems.add(
+          '$name needs an unnamed constructor callable with no '
+          'arguments',
+        );
       }
 
       final supertypes = [
@@ -86,14 +87,18 @@ class StudioScanBuilder implements Builder {
         if (editable == null) continue;
         final where = '$source: $name.${field.name}';
         if (field.isPrivate || field.isFinal || field.isStatic) {
-          problems.add('$where: @Editable fields must be public, '
-              'non-final instance fields');
+          problems.add(
+            '$where: @Editable fields must be public, '
+            'non-final instance fields',
+          );
           continue;
         }
         final kind = _fieldKind(field.type);
         if (kind == null) {
-          problems.add('$where: unsupported Field type '
-              '${field.type.getDisplayString()}');
+          problems.add(
+            '$where: unsupported Field type '
+            '${field.type.getDisplayString()}',
+          );
           continue;
         }
         final e = ConstantReader(editable);

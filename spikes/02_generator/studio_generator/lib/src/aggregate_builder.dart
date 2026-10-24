@@ -94,8 +94,10 @@ String _registry(List<Map<String, Object?>> types) {
   }
   b
     ..writeln()
-    ..writeln('typedef StudioSetter = void Function(Object target, '
-        'Object? value);')
+    ..writeln(
+      'typedef StudioSetter = void Function(Object target, '
+      'Object? value);',
+    )
     ..writeln()
     ..writeln('class StudioType {')
     ..writeln('  const StudioType(this.id, this.create, this.setters);')
@@ -110,8 +112,10 @@ String _registry(List<Map<String, Object?>> types) {
     final cls = '${prefix[r['library']]}.${r['className']}';
     b.writeln("'${_id(t)}': StudioType('${_id(t)}', $cls.new, {");
     for (final s in (r['setters'] as List).cast<Map<String, Object?>>()) {
-      b.writeln("'${s['name']}': (t, v) => (t as $cls).${s['name']} = "
-          '${_convert(s, prefix)},');
+      b.writeln(
+        "'${s['name']}': (t, v) => (t as $cls).${s['name']} = "
+        '${_convert(s, prefix)},',
+      );
     }
     b.writeln('}),');
   }

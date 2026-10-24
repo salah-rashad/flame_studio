@@ -26,7 +26,8 @@ void main(List<String> args) {
       'flavor',
       allowed: ['flutter', 'dart'],
       defaultsTo: 'flutter',
-      help: 'flutter: real Flame (Flutter SDK pins build_runner). '
+      help:
+          'flutter: real Flame (Flutter SDK pins build_runner). '
           'dart: pure Dart with Flame-shaped stubs (newest build_runner).',
     )
     ..addFlag(
@@ -45,7 +46,9 @@ void main(List<String> args) {
   final flutter = o['flavor'] == 'flutter';
   final pyro = o['pyro'] as bool;
   if (pyro && !flutter) {
-    stderr.writeln('--pyro needs the flutter flavor (pyro_runtime is Flutter).');
+    stderr.writeln(
+      '--pyro needs the flutter flavor (pyro_runtime is Flutter).',
+    );
     exit(64);
   }
   final annotations = pyro
@@ -126,7 +129,7 @@ targets:
 
   final flameImports = flutter
       ? "import 'package:flame/components.dart';\n"
-          "import 'package:flame_behaviors/flame_behaviors.dart';\n"
+            "import 'package:flame_behaviors/flame_behaviors.dart';\n"
       : "import 'package:sample_game/flame_stub.dart';\n";
   if (!flutter) _writeStub(lib.path);
 
@@ -219,10 +222,12 @@ ${flutter ? "import 'package:flame/game.dart';" : "import 'flame_stub.dart';"}
 class SampleGame extends FlameGame {}
 ''');
 
-  stdout.writeln('Wrote $out: $total+ files in lib/ '
-      '(core $core, util $util, systems $systems, '
-      'behaviors $behaviors, components $components; '
-      'flavor ${o['flavor']}, triggers ${o['triggers']})');
+  stdout.writeln(
+    'Wrote $out: $total+ files in lib/ '
+    '(core $core, util $util, systems $systems, '
+    'behaviors $behaviors, components $components; '
+    'flavor ${o['flavor']}, triggers ${o['triggers']})',
+  );
 }
 
 String _n(int i) => i.toString().padLeft(3, '0');
@@ -234,7 +239,8 @@ void _write(String lib, String rel, String content) {
 }
 
 /// Roughly 60 lines of ordinary code, so files cost something to analyze.
-String _body(String name, int seed) => '''
+String _body(String name, int seed) =>
+    '''
 /// Synthetic class $name.
 class $name {
   final List<double> values = List.generate(${seed % 9 + 3}, (i) => i * 1.5);
@@ -249,7 +255,10 @@ enum ${name}State { idle, running, done }
 $name make$name() => $name();
 ''';
 
-String _methods(String name, int seed) => List.generate(6, (m) => '''
+String _methods(String name, int seed) => List.generate(
+  6,
+  (m) =>
+      '''
 double compute$m(double x) {
     var acc = x;
     for (var i = 0; i < ${m + 3}; i++) {
@@ -258,7 +267,8 @@ double compute$m(double x) {
     }
     return acc;
   }
-''').join('\n  ');
+''',
+).join('\n  ');
 
 void _writeStub(String lib) {
   _write(lib, 'flame_stub.dart', '''

@@ -120,11 +120,9 @@ void main() {
         'animation': 'walk',
         'asset': 'assets/anims/goblin.anim.json',
       });
-      expect(
-        const AssetRef(AssetPath('a.png')).toJson(),
-        {'asset': 'a.png'},
-        reason: 'animation is written only when set',
-      );
+      expect(const AssetRef(AssetPath('a.png')).toJson(), {
+        'asset': 'a.png',
+      }, reason: 'animation is written only when set');
     });
 
     test('a SpriteAnimation reference round-trips; a third key stays plain '

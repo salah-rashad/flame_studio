@@ -21,12 +21,13 @@ final _log = <String>[];
 var verbose = false;
 
 Future<void> main(List<String> args) async {
-  final o = (ArgParser()
-        ..addOption('project', defaultsTo: '../sample')
-        ..addOption('runs', defaultsTo: '5')
-        ..addOption('settle-ms', defaultsTo: '500')
-        ..addFlag('verbose', abbr: 'v'))
-      .parse(args);
+  final o =
+      (ArgParser()
+            ..addOption('project', defaultsTo: '../sample')
+            ..addOption('runs', defaultsTo: '5')
+            ..addOption('settle-ms', defaultsTo: '500')
+            ..addFlag('verbose', abbr: 'v'))
+          .parse(args);
   project = p.normalize(p.absolute(o['project'] as String));
   final runs = int.parse(o['runs'] as String);
   final settle = Duration(milliseconds: int.parse(o['settle-ms'] as String));
@@ -36,18 +37,22 @@ Future<void> main(List<String> args) async {
   // the real generator's files (spec 003, research R13).
   final pyro = File(p.join(project, 'lib/pyro.manifest.json')).existsSync();
   final manifest = File(
-    p.join(project, pyro ? 'lib/pyro.manifest.json' : 'lib/flame_studio.manifest.json'),
+    p.join(
+      project,
+      pyro ? 'lib/pyro.manifest.json' : 'lib/flame_studio.manifest.json',
+    ),
   );
   final registry = File(
     p.join(project, pyro ? 'lib/pyro.g.dart' : 'lib/flame_studio.g.dart'),
   );
 
   final start = Stopwatch()..start();
-  watcher = await Process.start(
-    Platform.resolvedExecutable,
-    ['run', 'build_runner', 'watch', '--verbose-durations'],
-    workingDirectory: project,
-  );
+  watcher = await Process.start(Platform.resolvedExecutable, [
+    'run',
+    'build_runner',
+    'watch',
+    '--verbose-durations',
+  ], workingDirectory: project);
   for (final s in [watcher.stdout, watcher.stderr]) {
     s.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
       _log.add(line);
@@ -58,9 +63,11 @@ Future<void> main(List<String> args) async {
       }
     });
   }
-  unawaited(watcher.exitCode.then((c) {
-    stdout.writeln('watcher exited with $c');
-  }));
+  unawaited(
+    watcher.exitCode.then((c) {
+      stdout.writeln('watcher exited with $c');
+    }),
+  );
   final first = await _built.stream.first.timeout(const Duration(minutes: 3));
   stdout.writeln('Watch ready after ${start.elapsedMilliseconds} ms: $first');
   await Future<void>.delayed(settle);
@@ -93,10 +100,12 @@ Future<void> main(List<String> args) async {
 
       int? mMs, gMs, bMs;
       String? builtLine;
-      unawaited(builtF.then((l) {
-        bMs = sw.elapsedMilliseconds;
-        builtLine = l;
-      }));
+      unawaited(
+        builtF.then((l) {
+          bMs = sw.elapsedMilliseconds;
+          builtLine = l;
+        }),
+      );
       final deadline = DateTime.now().add(const Duration(seconds: 60));
       while (DateTime.now().isBefore(deadline)) {
         if (mMs == null && manifest.readAsStringSync() != m0) {
@@ -105,7 +114,8 @@ Future<void> main(List<String> args) async {
         if (gMs == null && registry.readAsStringSync() != g0) {
           gMs = sw.elapsedMilliseconds;
         }
-        final outputsDone = (!manifestChanges || mMs != null) &&
+        final outputsDone =
+            (!manifestChanges || mMs != null) &&
             (!registryChanges || gMs != null);
         if (bMs != null && outputsDone) break;
         await Future<void>.delayed(const Duration(milliseconds: 5));
@@ -181,7 +191,8 @@ Future<void> main(List<String> args) async {
     'F new annotated file',
     file: File(p.join(project, 'lib/behaviors/zz_new.dart')),
     create: true,
-    edit: (_, n) => '''
+    edit: (_, n) =>
+        '''
 ${pyro ? "import 'package:pyro_annotations/pyro_annotations.dart';" : "import 'package:studio_annotations/studio_annotations.dart';"}
 ${File(p.join(project, 'lib/flame_stub.dart')).existsSync() ? "import 'package:sample_game/flame_stub.dart';" : "import 'package:flame_behaviors/flame_behaviors.dart';"}
 
@@ -195,8 +206,10 @@ class NewBehavior$n extends Behavior<PositionedEntity> {
     registryChanges: true,
   );
 
-  stdout.writeln('\n| Scenario | Manifest updated | Registry updated | '
-      'Build done (harness) | build_runner reports |');
+  stdout.writeln(
+    '\n| Scenario | Manifest updated | Registry updated | '
+    'Build done (harness) | build_runner reports |',
+  );
   stdout.writeln('|---|---|---|---|---|');
   for (final e in results.entries) {
     String med(List<int?> xs) {
@@ -208,9 +221,11 @@ class NewBehavior$n extends Behavior<PositionedEntity> {
     final reported = e.value
         .map((s) => RegExp(r'in ([\d.]+m?s)').firstMatch(s.line ?? '')?[1])
         .join(', ');
-    stdout.writeln('| ${e.key} | ${med([for (final s in e.value) s.m])} | '
-        '${med([for (final s in e.value) s.g])} | '
-        '${med([for (final s in e.value) s.b])} | $reported |');
+    stdout.writeln(
+      '| ${e.key} | ${med([for (final s in e.value) s.m])} | '
+      '${med([for (final s in e.value) s.g])} | '
+      '${med([for (final s in e.value) s.b])} | $reported |',
+    );
   }
 
   watcher.kill();

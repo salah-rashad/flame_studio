@@ -23,9 +23,9 @@ void main() {
   });
 
   test('Registry and Manifest list the same Type IDs', () {
-    final manifest = jsonDecode(
-      File('lib/flame_studio.manifest.json').readAsStringSync(),
-    ) as Map<String, Object?>;
+    final manifest =
+        jsonDecode(File('lib/flame_studio.manifest.json').readAsStringSync())
+            as Map<String, Object?>;
     final ids = [for (final t in manifest['types'] as List) t['id']];
     expect(ids, studioRegistry.keys.toList());
   });

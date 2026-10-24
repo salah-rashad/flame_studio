@@ -57,7 +57,9 @@ class DiskAssetBundle extends AssetBundle {
   @override
   Future<String> loadString(String key, {bool cache = true}) async {
     final data = await load(key);
-    return utf8.decode(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+    return utf8.decode(
+      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+    );
   }
 
   @override

@@ -102,13 +102,15 @@ Future<void> main(List<String> args) async {
       .transform(utf8.decoder)
       .transform(const LineSplitter())
       .listen((l) => say('stderr: ${redact(l)}'));
-  unawaited(flutter.exitCode.then((code) async {
-    say('flutter run exited with $code');
-    _deleteInfoFile();
-    await _restoreFiles();
-    await stdout.flush();
-    exit(code == 0 ? 0 : 1);
-  }));
+  unawaited(
+    flutter.exitCode.then((code) async {
+      say('flutter run exited with $code');
+      _deleteInfoFile();
+      await _restoreFiles();
+      await stdout.flush();
+      exit(code == 0 ? 0 : 1);
+    }),
+  );
   ProcessSignal.sigint.watch().listen((_) => _quit());
   ProcessSignal.sigterm.watch().listen((_) => _quit());
 
@@ -124,9 +126,11 @@ Future<void> main(List<String> args) async {
 
   if (auto) {
     final ok = await _runAutoChecks();
-    say(ok
-        ? 'AUTO CHECKS (a)+(b): PASS'
-        : 'AUTO CHECKS (a)+(b): FAIL — see log above');
+    say(
+      ok
+          ? 'AUTO CHECKS (a)+(b): PASS'
+          : 'AUTO CHECKS (a)+(b): FAIL — see log above',
+    );
     if (ci) {
       // Scripted run: nobody is there to do check (c), so stop here.
       await _quit(code: ok ? 0 : 1);
@@ -149,22 +153,26 @@ void say(String message) {
 /// `ws://127.0.0.1:1235/AbCd123=`) in output we didn't write ourselves, e.g.
 /// the engine's "listening on" line on desktop.
 String redact(String line) => line.replaceAllMapped(
-      RegExp(r'((?:https?|wss?)://[^/\s"]+/)[A-Za-z0-9_\-]+=(?=[/"\s]|$)'),
-      (m) => '${m[1]}<auth-code>=',
-    );
+  RegExp(r'((?:https?|wss?)://[^/\s"]+/)[A-Za-z0-9_\-]+=(?=[/"\s]|$)'),
+  (m) => '${m[1]}<auth-code>=',
+);
 
 void _printHelp() {
-  say('commands (type + Enter):  s = edit scene + reload   '
-      'd = Dart-only edit + reload   t = touch scene + reload   '
-      'r = hot reload   '
-      'R = hot restart   u = print attach URI   q = quit');
+  say(
+    'commands (type + Enter):  s = edit scene + reload   '
+    'd = Dart-only edit + reload   t = touch scene + reload   '
+    'r = hot reload   '
+    'R = hot restart   u = print attach URI   q = quit',
+  );
 }
 
 void _printAttachHelp() {
-  say(vmServiceUri == null
-      ? 'VM service not reported yet'
-      : 'Debugger available: attach with the "info file" entry in '
-          'game/.vscode/launch.json ($infoFilePath); u prints the URI');
+  say(
+    vmServiceUri == null
+        ? 'VM service not reported yet'
+        : 'Debugger available: attach with the "info file" entry in '
+              'game/.vscode/launch.json ($infoFilePath); u prints the URI',
+  );
 }
 
 void _printAttachUri() {
@@ -246,8 +254,10 @@ void _onEvent(String event, Map params) {
       vmServiceUri = params['wsUri'] as String?;
       devFsBaseUri = params['baseUri'] as String?;
       final authOn = redact(vmServiceUri ?? '') != vmServiceUri;
-      say('app.debugPort: debugger available (auth code '
-          '${authOn ? 'on' : 'OFF'}) baseUri=${params['baseUri']}');
+      say(
+        'app.debugPort: debugger available (auth code '
+        '${authOn ? 'on' : 'OFF'}) baseUri=${params['baseUri']}',
+      );
       if (vmServiceUri != null) _writeInfoFile(vmServiceUri!);
     case 'app.started':
       if (!started.isCompleted) started.complete();
@@ -273,9 +283,11 @@ Future<Object?> send(String method, Map<String, Object?> params) {
   final id = nextId++;
   final c = Completer<Object?>();
   pending[id] = c;
-  flutter.stdin.writeln(jsonEncode([
-    {'id': id, 'method': method, 'params': params},
-  ]));
+  flutter.stdin.writeln(
+    jsonEncode([
+      {'id': id, 'method': method, 'params': params},
+    ]),
+  );
   return c.future;
 }
 
@@ -296,15 +308,19 @@ Future<bool> reload({bool full = false}) async {
 Future<bool> _restart({bool full = false}) async {
   final sw = Stopwatch()..start();
   try {
-    final result = await send('app.restart', {
-      'appId': appId,
-      'fullRestart': full,
-      'pause': false,
-      'reason': 'manual',
-    }) as Map?;
+    final result =
+        await send('app.restart', {
+              'appId': appId,
+              'fullRestart': full,
+              'pause': false,
+              'reason': 'manual',
+            })
+            as Map?;
     final code = result?['code'];
-    say('${full ? 'hot restart' : 'hot reload'} → code=$code '
-        '"${result?['message']}" in ${sw.elapsedMilliseconds}ms');
+    say(
+      '${full ? 'hot restart' : 'hot reload'} → code=$code '
+      '"${result?['message']}" in ${sw.elapsedMilliseconds}ms',
+    );
     return code == 0;
   } catch (e) {
     say('${full ? 'hot restart' : 'hot reload'} failed: $e');
@@ -339,9 +355,14 @@ Future<Map<String, dynamic>> _vmCall(
   final id = 'driver-${_vmNextId++}';
   final c = Completer<Map<String, dynamic>>();
   _vmPending[id] = c;
-  _vmSocket!.add(jsonEncode(
-    {'jsonrpc': '2.0', 'id': id, 'method': method, 'params': params},
-  ));
+  _vmSocket!.add(
+    jsonEncode({
+      'jsonrpc': '2.0',
+      'id': id,
+      'method': method,
+      'params': params,
+    }),
+  );
   return c.future;
 }
 
@@ -353,9 +374,9 @@ Future<Map<String, dynamic>> _vmCall(
 Future<bool> repointAssetDirectory() async {
   try {
     final view = await _firstView();
-    final assetDir = Uri.parse(devFsBaseUri!)
-        .resolve('build/flutter_assets')
-        .toFilePath();
+    final assetDir = Uri.parse(
+      devFsBaseUri!,
+    ).resolve('build/flutter_assets').toFilePath();
     await _vmCall('_flutter.setAssetBundlePath', {
       'isolateId': ?(view['isolate'] as Map?)?['id'],
       'viewId': view['id'],
@@ -400,7 +421,8 @@ void editScene() {
       case 'title':
         // Unique per edit, so an edit is never a no-op even if a previous run
         // left the file modified.
-        node['text'] = 'Scene edit $editCount @ '
+        node['text'] =
+            'Scene edit $editCount @ '
             '${DateTime.now().toIso8601String().substring(11, 19)}';
     }
   }
@@ -461,8 +483,10 @@ Future<bool> _runAutoChecks() async {
   final reloadedB = await reload();
   final logB = await waiter;
   final passB = reloadedB && (logB?.contains('unchanged') ?? false);
-  say('check (b): ${passB ? 'PASS' : 'FAIL'}  (${logB ?? 'no log in 20s'})'
-      '  — HUD should now show "code: dart-v$markerVersion"');
+  say(
+    'check (b): ${passB ? 'PASS' : 'FAIL'}  (${logB ?? 'no log in 20s'})'
+    '  — HUD should now show "code: dart-v$markerVersion"',
+  );
 
   return passA && passB;
 }
@@ -500,8 +524,9 @@ Future<void> _quit({int code = 0}) async {
   await _restoreFiles();
   _deleteInfoFile();
   try {
-    await send('app.stop', {'appId': appId})
-        .timeout(const Duration(seconds: 5));
+    await send('app.stop', {
+      'appId': appId,
+    }).timeout(const Duration(seconds: 5));
   } catch (_) {}
   flutter.kill();
   await stdout.flush();

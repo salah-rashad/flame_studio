@@ -27,17 +27,21 @@ import 'disk_asset_source.dart';
 import 'tiled_disk_loader.dart';
 
 final _env = Platform.environment;
-final tiledMode = TiledMode.values.byName(_env['FLAME_SPIKE_TILED'] ?? 'resolved');
+final tiledMode = TiledMode.values.byName(
+  _env['FLAME_SPIKE_TILED'] ?? 'resolved',
+);
 final sharedCache = (_env['FLAME_SPIKE_CACHE'] ?? 'generation') == 'shared';
 final shotsDir = _env['FLAME_SPIKE_SHOTS'];
 final keepAtlasCache = _env['FLAME_SPIKE_KEEP_ATLAS'] == '1';
 
 void log(String event, [Map<String, Object?> data = const {}]) {
-  stdout.writeln(jsonEncode({
-    'event': event,
-    't': DateTime.now().millisecondsSinceEpoch,
-    ...data,
-  }));
+  stdout.writeln(
+    jsonEncode({
+      'event': event,
+      't': DateTime.now().millisecondsSinceEpoch,
+      ...data,
+    }),
+  );
 }
 
 void main() {
@@ -99,7 +103,8 @@ class _SpikeAppState extends State<SpikeApp> {
     // Two frames: one for Flame to process the add/remove, one to paint.
     await SchedulerBinding.instance.endOfFrame;
     await SchedulerBinding.instance.endOfFrame;
-    final ro = _boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+    final ro =
+        _boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     final image = await ro.toImage(pixelRatio: 2);
     final png = await image.toByteData(format: ui.ImageByteFormat.png);
     image.dispose();
@@ -132,13 +137,17 @@ class _SpikeAppState extends State<SpikeApp> {
                           controller: _pathField,
                           decoration: const InputDecoration(
                             isDense: true,
-                            labelText: 'Project folder (not this app\'s bundle)',
+                            labelText:
+                                'Project folder (not this app\'s bundle)',
                           ),
                           onSubmitted: _open,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      FilledButton(onPressed: _browse, child: const Text('Browse…')),
+                      FilledButton(
+                        onPressed: _browse,
+                        child: const Text('Browse…'),
+                      ),
                     ],
                   ),
                 ),
@@ -175,7 +184,11 @@ class _Slot {
 
   final String label;
   final Vector2 position;
-  final Future<PositionComponent> Function(_Viewport game, List<TrackingImages> images) build;
+  final Future<PositionComponent> Function(
+    _Viewport game,
+    List<TrackingImages> images,
+  )
+  build;
 
   PositionComponent? component;
   Set<String> deps = {};
@@ -262,7 +275,9 @@ class _Viewport extends FlameGame {
   /// `generation` mode the Images caches it used, are dropped only once the
   /// new one is ready, so nothing on screen ever draws a disposed image.
   Future<void> _build(_Slot slot) async {
-    final images = sharedCache ? [sharedImages] : [TrackingImages(bundle: bundle)];
+    final images = sharedCache
+        ? [sharedImages]
+        : [TrackingImages(bundle: bundle)];
     final deps = <String>{};
     final old = slot.component;
     final oldImages = slot.images;
@@ -312,13 +327,20 @@ class _Viewport extends FlameGame {
 
   void onFileEvent(FileSystemEvent e) {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final paths = [e.path, if (e is FileSystemMoveEvent && e.destination != null) e.destination!];
+    final paths = [
+      e.path,
+      if (e is FileSystemMoveEvent && e.destination != null) e.destination!,
+    ];
     for (final path in paths) {
       final n = p.normalize(path);
       _pending.add(n);
       _firstEventAt.putIfAbsent(n, () => now);
     }
-    log('fs-event', {'type': e.runtimeType.toString(), 'path': e.path, if (e is FileSystemMoveEvent) 'to': e.destination});
+    log('fs-event', {
+      'type': e.runtimeType.toString(),
+      'path': e.path,
+      if (e is FileSystemMoveEvent) 'to': e.destination,
+    });
     // Editors save in bursts (write, chmod, rename); coalesce them.
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 30), _flush);
@@ -346,7 +368,10 @@ class _Viewport extends FlameGame {
       for (final s in affected) {
         final c = s.component;
         if (c is SpriteComponent) {
-          log('evicted', {'slot': s.label, 'oldImageDisposed': c.sprite!.image.debugDisposed});
+          log('evicted', {
+            'slot': s.label,
+            'oldImageDisposed': c.sprite!.image.debugDisposed,
+          });
         }
       }
       onChanged('mid-swap');

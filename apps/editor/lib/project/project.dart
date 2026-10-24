@@ -44,4 +44,5 @@ export 'catalog/provider.dart'
 export 'recent_projects.dart' show RecentProjects, RecentProjectsStore;
 export 'runtime_compat.dart'
     show RuntimeCompatStatus, RuntimeCompatibility, checkRuntimeCompatibility;
-export 'sdk.dart' show SdkInfo, SdkSource, detectSdk, flutterPathVersion;
+export 'sdk.dart'
+    show PathVersion, SdkInfo, SdkSource, detectSdk, flutterPathVersion;

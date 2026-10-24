@@ -51,6 +51,9 @@ final class RecentProjectsStore {
 
   /// Reads the settings; a missing or unreadable file starts empty
   /// (reported to the caller through [onError], never thrown).
+  ///
+  /// Paths come back [normalize]d and deduplicated, most recent first: an
+  /// older file may list one project with and without a trailing slash.
   Future<RecentProjects> read([void Function(Object error)? onError]) async {
     if (!file.existsSync()) return RecentProjects.empty;
     try {
@@ -60,19 +63,25 @@ final class RecentProjectsStore {
       }
       final paths = json['paths'];
       final sizes = json['sizes'];
+      final lastOpened = json['lastOpened'] as String?;
+      final sizeEntries = <String, PrShellSizes>{};
+      if (sizes is Map) {
+        for (final entry in sizes.entries) {
+          if (entry.value is! Map) continue;
+          sizeEntries.putIfAbsent(
+            normalize(entry.key as String),
+            () => _sizeFrom(entry.value as Map),
+          );
+        }
+      }
       return RecentProjects(
-        paths: IList([
+        paths: IList({
           if (paths is List)
             for (final path in paths)
-              if (path is String) path,
-        ]),
-        lastOpened: json['lastOpened'] as String?,
-        sizes: IMap({
-          if (sizes is Map)
-            for (final entry in sizes.entries)
-              if (entry.value is Map)
-                entry.key as String: _sizeFrom(entry.value as Map),
+              if (path is String) normalize(path),
         }),
+        lastOpened: lastOpened == null ? null : normalize(lastOpened),
+        sizes: IMap(sizeEntries),
       );
     } on Exception catch (error) {
       onError?.call(error);
@@ -96,13 +105,69 @@ final class RecentProjectsStore {
   }
 
   /// [value] with [projectRoot] opened: moved to the front of the list,
-  /// remembered as last opened.
+  /// remembered as last opened. [projectRoot] is [normalize]d first.
   static RecentProjects opened(RecentProjects value, String projectRoot) {
-    final rest = value.paths.where((p) => p != projectRoot);
+    final root = normalize(projectRoot);
+    final rest = value.paths.where((p) => p != root);
+    return value.copyWith(paths: IList([root, ...rest]), lastOpened: root);
+  }
+
+  /// [value] without [projectRoot]: off the list, its dock sizes dropped,
+  /// and no longer last opened. Only ever on the user's request — a
+  /// missing folder is marked, never removed automatically (FR-003).
+  static RecentProjects removed(RecentProjects value, String projectRoot) {
+    final root = normalize(projectRoot);
     return value.copyWith(
-      paths: IList([projectRoot, ...rest]),
-      lastOpened: projectRoot,
+      paths: value.paths.removeWhere((p) => p == root),
+      lastOpened: value.lastOpened == root ? null : value.lastOpened,
+      sizes: value.sizes.remove(root),
     );
+  }
+
+  /// [path] trimmed and without trailing slashes (`/` itself stays), so one
+  /// folder is one entry however it was typed.
+  static String normalize(String path) {
+    var result = path.trim();
+    while (result.length > 1 && result.endsWith('/')) {
+      result = result.substring(0, result.length - 1);
+    }
+    return result;
+  }
+
+  /// A label per path that tells same-named projects apart: the folder
+  /// name, grown by parent folders only where two labels would collide
+  /// (`pyro/example` and `Tools/pyro/example`, but `game` alone).
+  static List<String> distinctLabels(List<String> paths) {
+    final segments = [
+      for (final path in paths)
+        normalize(path).split('/').where((part) => part.isNotEmpty).toList(),
+    ];
+    final depth = List.filled(paths.length, 1);
+    String label(int i) {
+      final parts = segments[i];
+      if (parts.isEmpty) return '/';
+      final take = depth[i].clamp(1, parts.length);
+      return parts.sublist(parts.length - take).join('/');
+    }
+
+    while (true) {
+      final byLabel = <String, List<int>>{};
+      for (var i = 0; i < paths.length; i++) {
+        byLabel.putIfAbsent(label(i), () => []).add(i);
+      }
+      var grew = false;
+      for (final group in byLabel.values) {
+        if (group.length < 2) continue;
+        for (final i in group) {
+          if (depth[i] < segments[i].length) {
+            depth[i]++;
+            grew = true;
+          }
+        }
+      }
+      if (!grew) break;
+    }
+    return [for (var i = 0; i < paths.length; i++) label(i)];
   }
 
   static PrShellSizes _sizeFrom(Map<Object?, Object?> values) => PrShellSizes(

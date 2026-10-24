@@ -62,5 +62,57 @@ void main() {
       expect(await store().read(errors.add), RecentProjects.empty);
       expect(errors, hasLength(1));
     });
+
+    test('read normalizes trailing slashes and drops duplicates', () async {
+      fs.file('/app-support/recent_projects.json').writeAsStringSync('''
+{
+  "paths": ["/w/pyro/example/", "/w/pyro/example", "/old/pyro/example"],
+  "lastOpened": "/w/pyro/example/",
+  "sizes": {"/w/pyro/example/": {"left": 300.0}}
+}
+''');
+      final read = await store().read();
+      expect(read.paths, ['/w/pyro/example', '/old/pyro/example']);
+      expect(read.lastOpened, '/w/pyro/example');
+      expect(read.sizes['/w/pyro/example']?.left, 300);
+    });
+
+    test('opened normalizes, so a trailing slash is the same project', () {
+      var value = RecentProjectsStore.opened(RecentProjects.empty, '/a/');
+      value = RecentProjectsStore.opened(value, '/a');
+      expect(value.paths, ['/a']);
+      expect(value.lastOpened, '/a');
+    });
+
+    test('removed drops the path, its sizes and lastOpened', () {
+      final value = RecentProjectsStore.opened(
+        RecentProjectsStore.opened(RecentProjects.empty, '/b'),
+        '/a',
+      ).copyWith(sizes: IMap(const {'/a': PrShellSizes(left: 300)}));
+      final removed = RecentProjectsStore.removed(value, '/a/');
+      expect(removed.paths, ['/b']);
+      expect(removed.lastOpened, isNull);
+      expect(removed.sizes.containsKey('/a'), isFalse);
+    });
+
+    test('normalize keeps the root and trims', () {
+      expect(RecentProjectsStore.normalize(' /a/b// '), '/a/b');
+      expect(RecentProjectsStore.normalize('/'), '/');
+    });
+
+    test('distinctLabels grows parents only where names collide', () {
+      expect(
+        RecentProjectsStore.distinctLabels([
+          '/Users/me/Flutter_Dart/Tools/pyro/example',
+          '/Users/me/MyProjects/Flutter_Dart/pyro/example',
+          '/Users/me/game',
+        ]),
+        ['Tools/pyro/example', 'Flutter_Dart/pyro/example', 'game'],
+      );
+      expect(
+        RecentProjectsStore.distinctLabels(['/a/example', '/b/a/example']),
+        ['a/example', 'b/a/example'],
+      );
+    });
   });
 }

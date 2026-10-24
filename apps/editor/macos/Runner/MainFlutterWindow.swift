@@ -11,8 +11,10 @@ class MainFlutterWindow: NSWindow {
     RegisterGeneratedPlugins(registry: flutterViewController)
 
     // The editor shell draws its own title bar (spec 006, T012): hide the
-    // native one and keep the traffic lights over the full-size content
-    // view, whose title bar keeps a leading inset clear for them.
+    // native one — its title text too, or it draws over the shell's — and
+    // keep the traffic lights over the full-size content view, whose title
+    // bar keeps a leading inset clear for them (macTrafficLightsInset).
+    self.titleVisibility = .hidden
     self.titlebarAppearsTransparent = true
     self.styleMask.insert(.fullSizeContentView)
     self.isMovableByWindowBackground = true

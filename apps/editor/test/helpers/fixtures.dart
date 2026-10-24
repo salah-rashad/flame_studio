@@ -3,7 +3,7 @@ import 'dart:io';
 /// The reference project's Manifest, read in place so the catalog has one
 /// set of fixtures (spec 006, T005). `flutter test` runs with the package
 /// root as the working directory.
-const String exampleManifestPath = '../../../example/lib/pyro.manifest.json';
+const String exampleManifestPath = '../../example/lib/pyro.manifest.json';
 
 /// The bytes of `example/lib/pyro.manifest.json`.
 String readExampleManifest() {

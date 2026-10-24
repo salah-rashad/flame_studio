@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pyro/document/document.dart';
+import 'package:pyro/project/project.dart';
 import 'package:pyro_runtime/pyro_runtime.dart';
 import 'package:pyro_ui/pyro_ui.dart';
 
 /// The editor's dialogs on `showFsDialog` (spec 006, T014): unsaved
-/// changes, new scene, save refused, recovery *Restore*.
+/// changes, new scene, save refused, recovery *Restore* — and the Type
+/// catalog's problems (T022).
 
 /// The unsaved-changes dialog's answers (FR-007).
 enum UnsavedChangesAnswer { save, discard, cancel }
@@ -267,3 +269,73 @@ Future<void> showRepairReportDialog(
     primary: const PrDialogAction(label: 'OK'),
   ),
 );
+
+/// The Type catalog's status and problems (FR-014): why the catalog is
+/// stale when it is, then every [ManifestProblem] with its code, message
+/// and location. The types themselves never vanish while the dialog is up
+/// (*Q105*).
+Future<void> showCatalogProblemsDialog(
+  BuildContext context, {
+  required TypeCatalog catalog,
+}) {
+  final c = PrColors.of(context);
+  Widget line(String text, Color color) =>
+      Text(text, style: PrText.small.copyWith(color: color));
+  return showFsDialog<void>(
+    context,
+    dialog: PrDialog(
+      title: 'Type catalog',
+      width: PrDialogWidth.form,
+      content: SizedBox(
+        width: double.infinity,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 320),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: PrSpacing.s3,
+              children: [
+                switch (catalog.origin) {
+                  ManifestStale(:final reason) => line(
+                    'The types are stale — $reason. The last good types are '
+                    'still in use.',
+                    c.warning,
+                  ),
+                  ManifestAbsent() => line(
+                    'This project has no annotated types, so only the '
+                    'built-in kinds are available.',
+                    c.textSecondary,
+                  ),
+                  ManifestUpToDate() => line(
+                    'All types are up to date.',
+                    c.textSecondary,
+                  ),
+                },
+                if (catalog.problems.isEmpty)
+                  line('The Manifest reports no problems.', c.textSecondary)
+                else
+                  for (final problem in catalog.problems)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: PrSpacing.s1,
+                      children: [
+                        Text(
+                          problem.code,
+                          style: PrText.monoSmall.copyWith(
+                            color: problem.isWarning ? c.warning : c.error,
+                          ),
+                        ),
+                        line(problem.message, c.textPrimary),
+                        if (problem.location != null)
+                          line(problem.location!, c.textSecondary),
+                      ],
+                    ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      primary: const PrDialogAction(label: 'OK'),
+    ),
+  );
+}

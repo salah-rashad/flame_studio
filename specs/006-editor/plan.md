@@ -87,6 +87,18 @@ boundary MUST say so in its plan"):
    not smuggled in. Phase 4 works without it (entries disabled, reason in the hierarchy's
    Add-child tooltip).
 
+**Outcome (T050, 2026-10-24).**
+
+1. `yaml: ^3.1.4` was added in T001 (the `^1.14.0` in the task text was a mistyped version) (`apps/editor/pubspec.yaml`) and is used by
+   `lib/project/asset_folders.dart` and `lib/project/runtime_compat.dart`; BSD-3, compatible with
+   the MIT distribution.
+2. The `PrMenuItem` disabled-reason delta is **declined**, and `pyro_ui` has no such addition.
+   The Add menu disables the refused entries, and the reasons show in the tooltip of the Add
+   button (`addRefusals`, hitbox-under-root among them), which was enough in use: the rule that a
+   user can't guess is stated where the Add button is. The Add Behavior list needs no reason on a
+   line, since it offers only what fits and puts the reason on its disabled button. If testers
+   miss a reason on the line itself, it comes back as a *Q87* proposal.
+
 **Tech constraints**: Flutter stable 3.44.2 with prerelease freezed (*Q94*) — no toolchain
 change this phase; MIT-compatible dependencies only.
 

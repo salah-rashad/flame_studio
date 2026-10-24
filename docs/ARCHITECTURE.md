@@ -789,3 +789,73 @@ turns a second.
 4. **A save in an editor arrives as an atomic rename**: the first reload lists
    `assets/scenes/.!NNNNN!level1.scene.json` with the Scene (`sed -i` on macOS). One reload, as
    designed.
+
+## Editor
+
+**Question:** can an author build, save and reopen a scene in Pyro alone, with every value the
+editor doesn't understand kept
+([`specs/006-editor/`](../specs/006-editor/spec.md))? The parts are:
+- the editor window with scene tabs, the save gates and the recovery *Restore* prompt;
+- the Type catalog, read from `lib/pyro.manifest.json` as it changes;
+- the viewport (reconciler, disk assets, move gizmo), the hierarchy, the inspector and Behaviors.
+
+**Answer:** yes, on the reference Mac, with the gaps listed under *Findings*. Run on 2026-10-24:
+macOS 26.2, Apple M4, **Flutter 3.47.7** (CI pins 3.44.2, which was not run here), driving the real app through
+its window.
+
+| Quickstart | Result |
+|---|---|
+| §1 automated checks | ✅ every member's tests and analysis pass; `dart format` clean (two files that were not are formatted now). `packages/pyro_ui/example`'s 5 goldens fail locally, identically at the commit before this phase's last fixes: the goldens are rendered on CI's `macos-26`, and fonts differ here |
+| §2 capstone, steps 3–5 | ✅ new scene → entity, sprite (`ship.png`, picked from the dropdown, size 64×64), rectangle hitbox, `Spin` with `turnsPerSecond` 1.5; the Override marker shows, ↺ resets and a re-set sticks; one ⌘Z reverted a whole gizmo drag; the saved file is canonical (sorted keys, whole numbers without `.0`, Overrides only) |
+| §2 step 6 | ✅ clean close asks nothing; reopened, the document is identical and a second save leaves the same bytes (`md5` equal) |
+| §2 step 7 | ✅ `example/` tests pass with the new scene under `assets/scenes/` (its contract test loads every scene); `build_runner` leaves `pyro.g.dart` and `pyro.manifest.json` unchanged |
+| §2 step 8 | ✅ through `bin/play.dart`, a save of `level1` from Pyro hot-reloaded in 188 ms and the game printed "Scene reloaded" |
+| §3 Missing drill | ✅ with `Spin`'s class removed and the Manifest regenerated, the card reads "Missing — Spin no longer exists in your code. Its values are kept." with `turnsPerSecond` 1.5 read-only; a save wrote the Behavior verbatim; with the class back, the card is editable again with 1.5 |
+| §4 changed on disk | ✅ the save is refused; *Overwrite* wrote the file, *Reload from disk* reopened it |
+| §4 recovery | ✅ unsaved edit, 40 s, `kill -9`, relaunch: the *Restore* prompt named the scene and its time; restoring left the tab dirty with the edit |
+| §4 repair | ✅ a node taken out of its parent's `childIds` opened with a report ("Node "hull" had no parent; moved it under the root") and a dirty tab |
+| §5 frame budget | ✅ see below |
+
+**Frame budget** (`flutter run --profile`, a generated 1,000-Node scene of 333 entities with a
+sprite and a hitbox each, from a temporary probe on `addTimingsCallback`; times are build and
+raster per frame, in ms, and the worst frame's total span from vsync to raster):
+
+| Interaction | Worst build | Worst raster | Worst total |
+|---|---|---|---|
+| Move-gizmo drag | 5.5 | 2.0 | 8.3 |
+| Number scrub (position X) | 2.6 | 2.5 | 4.7 |
+| ↓ through the hierarchy (30 rows) | 6.6 | 2.8 | 9.6 |
+| Typing in a field | 3.8 | 2.1 | 43.6 (once) |
+| Idle | 1.5 | 1.8 | 3.5 |
+
+No frame's build or raster reached 16 ms. The one total of 43.6 ms came during typing with a
+build of 2.0 ms and a raster of 1.4: the frame started late, not slow. It is not reproduced.
+
+**Image change** (SC-005): from a second connection to the VM service, rewriting `ship.png`
+produced the app's `Pyro asset changed` mark 65–141 ms after the write (the file event plus the
+50 ms quiet period), and all 333 sprites that read it logged `Pyro image shown` within 2.3 ms of
+the mark: the whole change shows in well under 200 ms. All 333 sprites read this file, so this
+run doesn't show that other Nodes are left alone; `disk_assets_test.dart` does.
+
+**Findings**
+
+1. **The new-scene dialog warned about `assets/scenes/` even though the pubspec declares it.**
+   The offered folder was written `assets/scenes/` and the declared folders are stored without
+   the trailing slash, so they never matched, and the folder list showed it twice. The warning
+   also ignored the folder chosen in the dropdown. Fixed: the dialog asks `isDeclared` for the
+   chosen folder, and a test covers the declared case.
+2. **The hierarchy showed no mark for an entity holding a Missing Behavior**, though quickstart §3
+   expects one. A "Missing behavior" badge now shows on the row, never from a stale catalog.
+3. **A new sprite is 0×0, so it is invisible until sized.** Hitboxes start at 16×16. The author
+   decides whether a new sprite should start at its image's size.
+4. **The viewport draws about 60 frames a second while idle** (Flame's loop), at ~1.3 ms of
+   build and ~1.4 ms of raster each. Fine for the budget; a battery cost to weigh later.
+5. **The repair report is a dialog on open, not a banner**; the tab is dirty as expected.
+   *Reload from disk* reopens the scene at the end of the tab strip.
+6. **F2 can't be driven from automation on macOS** (the key is taken as a system key), so the
+   rename was driven through the context menu and double-click, and F2 stays covered by widget
+   tests. A run by hand should press F2 once.
+7. **Rename had three defects only a real window shows**, fixed in this phase: the field was not
+   focused when started from the keyboard or the menu (autofocus gives way to the focus already
+   in the scope), a click inside it ended the rename, and that click left a press on a disposed
+   row (*WidgetStatesController was used after being disposed*).
